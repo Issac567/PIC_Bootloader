@@ -14,8 +14,7 @@ The goal of this project is to provide a clean, understandable reference impleme
 ## 📂 Repository Structure
 
 * `/BootLoader16F88.X`      → MPLAB X Bootloader firmware  
-* `/BootloaderApp16F88.X`   → MPLAB X Application firmware  
-* `/BootloaderUploader/B4J` → B4J PC uploader tool
+* `/B4J-BootloaderUploader` → B4J PC uploader tool
 
 ---
 
@@ -53,7 +52,7 @@ I use **MPLAB X IDE 6.05** (supports Pickit 3/3.5 if using this!)
 * Provides visual status using **PORTB.4 LED**
 * Jumps to application if no bootloader request is detected
 
-### 2️⃣ BootloaderApp16F88.X (Application)
+### 2️⃣ Bootloader16F88.X (Application)
 
 * User application firmware
 * Lives in application memory space
@@ -82,7 +81,7 @@ I use **MPLAB X IDE 6.05** (supports Pickit 3/3.5 if using this!)
   * **Verify** programmed data
 * Handles word-addressed PIC flash correctly
 * Designed specifically for PIC16F88 bootloader protocol
-* Load Firmware `BootloaderApp16F88.X.production.hex` under `dist/default/production/`
+* Load Firmware `Bootloader16F88.X.production.hex` under `dist/default/production/`
 
 ---
 
@@ -143,7 +142,6 @@ I use **MPLAB X IDE 6.05** (supports Pickit 3/3.5 if using this!)
 
 ## 📌 Notes
 
-* Bootloader and application are **separate MPLAB X projects**
 * Designed for clarity and learning, not maximum flash compression
 * Code is intentionally readable and well-structured
 
