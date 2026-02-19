@@ -1,0 +1,14 @@
+#Fri Feb 06 21:58:55 PST 2026
+EndAddrFlash=4095
+HandShakeDelayMS=200
+EmptyFlashValue=63
+PacketDelayMS=1
+PicName=16F88
+StartAddrFlash=1536
+UseWriteBurst=true
+WordsPerPacket=4
+StopBit=2
+Notes=Requires 2 stop bits at high baud rates to provide a critical timing buffer
+ExpectedBytes=5120
+UseWordScaling=true
+is24Bit=false

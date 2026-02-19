@@ -1,0 +1,792 @@
+﻿B4A=true
+Group=Default Group
+ModulesStructureVersion=1
+Type=Class
+Version=9.85
+@EndOfDesignText@
+
+' VERSION 2.17
+' Using .Exe from Build Standalone Package you must include the .map files in 
+' \BootloaderUploader\Objects\temp\build\bin\configs
+
+'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
+
+Sub Class_Globals
+	
+	'---------------------------------------
+	' Map Config Variables
+	'---------------------------------------
+	Private intStartAddrFlash As Int 						' Used with Intel Conversion
+	Private intEndAddrFlash   As Int						' Not used just for display in logmessage
+	Private intEmptyFlashValue As Int						' 16F = 0x3F, 18F = 0xFF, 24F = 0x00 Phantom 24bit
+	Private intWordsPerPacket As Int						' Number of Instruction Words per block
+	Private intPacketDelayMS As Int							' Delay for Tx Write Packets
+	Private intHandShakeDelayMS As Int						' Delay for 0x55 and 0xAA in between	
+	Private intStopBit As Int = 1							' Default
+	Private strNotes As String 
+	Private intExpectedFirmwareBytes As Int					' Total Firmware bytes
+	Private blnUseWriteBurst  As Boolean					' True = Tx Write Packet as whole, no delays in between!
+	Private blnUseWordScaling As Boolean					' 16F = 2 Bytes(14bit), 18F = 1 Byte(8bit), 24F = 2 Bytes(16bit). Used with Intel Conversion
+	Private blnUse24BitScaling As Boolean					' 24 Bit need step 4, others step 2. Used with Intel Conversion
+	
+	'---------------------------------------
+	' jSerial Library + Astream
+	'---------------------------------------
+	Private serial1 As Serial								' UART COM
+	Private astream As AsyncStreams							' Read/Write Stream
+	
+	'---------------------------------------
+	' UI Elements
+	'---------------------------------------
+	Private Root As B4XView
+	Private xui As XUI
+	
+	Private btnFlash As Button
+	Private btnLoadFile As Button
+	Private btnOpen As Button
+	Private txtLog As TextArea
+	Private cmbPort As ComboBox
+	Private cmbPicList As ComboBox
+	Private prgBar As ProgressBar
+	
+	Private firmware() As Byte								' firmware binary from FILE
+	Private firmwareVerify() As Byte						' firmware binary from PIC
+	Private cntVerify As Int								' Counter detection of incoming bytes from PIC
+	Private blnProgrammingInProgress As Boolean				' For exit app msgbox while flashing
+	Private blnVerifyRequest As Boolean						' <StartFlashVerify> from PIC
+	Private blnHandShakeSuccess As Boolean					' <InitReceived> from PIC
+	Private blnExitTimeoutError As Boolean					' <TimeoutError> from PIC
+	Private blnAppExitAstreamError	As Boolean				' Astream error exit loop from app
+	Private blnAppStopQuit As Boolean						' Exit loop for Stop and Quit from app
+	Private blnACK As Boolean								' <ACK> from PIC used in Firmware Upload.  Needs this <ACK> from PIC to continue next Block Write bytes
+	Private blnTimeOut As Boolean							' <ISR Timeout>Timeout Detected from PIC
+	
+	Private rxBufferString As String						' Buffer Newdata in string format
+	Private rxBufferByte() As Byte							' Buffer Newdata in byte format 
+
+	Private strLastFilePath As String						' Reloads firmware from FILE when PIC name changed so Firmware array be corrected
+End Sub
+
+Public Sub Initialize
+	serial1.Initialize("serial")
+End Sub
+
+'--------------------------------------------------------
+'This event will be called once, before the page becomes visible.
+'--------------------------------------------------------
+Private Sub B4XPage_Created (Root1 As B4XView)
+	Root = Root1
+	Root.LoadLayout("MainPage")
+		
+	B4XPages.SetTitle(Me, "PIC Bootloader Upload")
+	
+	' Form dimensions
+	Dim wMap As Map
+	wMap.Initialize
+	If File.Exists(File.DirApp, "Settings.map") Then
+		wMap = File.ReadMap(File.DirApp, "Settings.map")
+	End If
+	
+	B4XPages.GetNativeParent(Me).WindowHeight = wMap.GetDefault("FormHeight", 700)
+	B4XPages.GetNativeParent(Me).WindowWidth = wMap.GetDefault("FormWidth", 600)
+	B4XPages.GetNativeParent(Me).WindowTop = wMap.GetDefault("FormTop", 0)
+	B4XPages.GetNativeParent(Me).WindowLeft = wMap.GetDefault("FormLeft", 0)
+	
+	' Load all available COM Ports
+	cmbPort.Items.AddAll(serial1.ListPorts)
+	
+	' Load PIC names from map files
+	Dim getList As List = LoadAllPicNames
+	For Each name As String In getList
+		cmbPicList.Items.Add(name)
+	Next
+		
+	' Set prompt text for combo box
+	Dim jo As JavaObject = cmbPort
+	jo.RunMethod("setPromptText", Array("Choose Port"))
+	Dim jo As JavaObject = cmbPicList
+	jo.RunMethod("setPromptText", Array("PIC List"))
+End Sub
+Private Sub B4XPage_CloseRequest As ResumableSub
+	
+	' Flash in progress alert user!
+	If blnProgrammingInProgress = True Then
+		Dim sf4 As Object = xui.Msgbox2Async("Flash in progress!", "Quit?", "Yes", "", "No", Null)
+		Wait For (sf4) Msgbox_Result(ret3 As Int)
+				
+		If ret3 = xui.DialogResponse_Negative Then
+			Return False  ' will not exit
+		End If
+	End If
+	
+	' Close them when exiting!
+	If astream.IsInitialized Then 		
+		astream.Close
+		serial1.Close
+	End If
+	
+	' Save screen dimension
+	Dim wMap As Map
+	wMap.Initialize
+	wMap.Put("FormHeight", B4XPages.GetNativeParent(Me).WindowHeight)
+	wMap.Put("FormWidth", B4XPages.GetNativeParent(Me).WindowWidth)
+	wMap.Put("FormTop", B4XPages.GetNativeParent(Me).WindowTop)
+	wMap.Put("FormLeft", B4XPages.GetNativeParent(Me).WindowLeft)
+	File.WriteMap(File.DirApp, "Settings.map", wMap)
+	
+	Return True	
+End Sub
+
+'--------------------------------------------------------
+' Astream Functions
+'--------------------------------------------------------
+Sub AStream_NewData (Buffer() As Byte)	
+	' Option display Hex for Debugging!
+	'Dim AddHexView As String = BytesToHexString(Buffer).ToUpperCase
+	'LogMessage("Hex", AddHexView)
+	
+	' Append ASCII string for <…> parsing
+	rxBufferString = rxBufferString & BytesToString(Buffer, 0, Buffer.Length, "UTF8") 
+	
+	' Append raw bytes for verfiy firmware (stricktly bytes only!)
+	rxBufferByte = AppendBytes(rxBufferByte, Buffer)
+
+	' PIC sends with > as last byte to confirm end of message or bytes
+	' When VerifyRequest = true, it does not received ">". Sticktly bytes only!
+	If rxBufferString.Contains(">") Or blnVerifyRequest = True Then
+		HandleMessage(rxBufferString, rxBufferByte)
+		rxBufferString = ""
+		rxBufferByte = Array As Byte() ' Resets to an empty array (length 0)
+	End If
+	
+End Sub
+Sub AppendBytes(OldBuffer() As Byte, NewBuffer() As Byte) As Byte()
+	' Total length = old + new
+	Dim totalLength As Int = OldBuffer.Length + NewBuffer.Length
+	If totalLength = 0 Then Return Array As Byte() ' nothing to append
+
+	' Allocate new array (Old + New total)
+	Dim newArray(totalLength) As Byte
+
+	' Copy old data to newArray()
+	Dim i As Int
+	For i = 0 To OldBuffer.Length - 1
+		newArray(i) = OldBuffer(i)
+	Next
+	
+	Dim StartLen As Int = OldBuffer.Length
+
+	' Copy new data to newArray()
+	For i = 0 To NewBuffer.Length - 1
+		newArray(StartLen + i) = NewBuffer(i)
+	Next
+
+	Return newArray
+End Sub
+Sub HandleMessage(msg As String, buffer() As Byte)
+	
+	' We dont want to log Incoming <ACK> while Firmware upload!
+	' We dont want to log Incoming PIC bytes for verify
+	If blnVerifyRequest <> True And msg <> "<ACK>" Then
+		LogMessage("PIC", msg)
+	End If
+	
+	' 0x55 and 0xAA received by PIC
+	Select Case msg
+		Case "<InitReceived>"
+			blnHandShakeSuccess = True
+			LogMessage("Status", "Bootloader responded. Done sending 0x55 0xAA")
+		
+		Case "<InitFromApp>"
+			LogMessage("Status", "App responded. Entering bootloader...")
+			
+		' Timeout 3 times = error by PIC
+		Case "<ErrorTimeout>"
+			blnExitTimeoutError = True
+			EnableFunction
+			LogMessage("Status", "PIC reported timeout error, try again")
+			
+		' 3 seconds timeout.  if no handshake it will enter application
+		Case "<HandShakeTimeout>"
+			LogMessage("Status", "Timeout exiting bootloader --> entering application.")
+			
+		' Start of verify flash program code
+		Case "<StartFlashVerify>"
+			cntVerify = 0
+			blnVerifyRequest = True
+			LogMessage("Status", "Waiting for verification...")
+			
+		' End of verify flash program code
+		Case "<EndFlashVerify>"
+			EnableFunction
+			VerifyStatus
+			
+		' End of Erase Flash. When Pic send this delay a bit and start the flash upload
+		Case "<EndFlashErase>"
+			Sleep(200)
+			SendFirmware
+		
+		' B4J expects <ACK> from PIC so it sends next packets in Firmware Upload routine
+		Case "<ACK>"
+			blnACK = True
+		
+		' Timeout occurred with Flash Write.  This will attempt a redo
+		Case "<ISR Timeout>"
+			blnTimeOut = True
+				
+		Case Else
+			' This is triggered by <StartFlashVerify> from PIC after Flash Write is completed
+			If blnVerifyRequest = True Then
+				'LogMessage("Incoming", BytesToHexString(buffer))  ' debugging only!!!
+								
+				For x = 0 To buffer.Length - 1  ' This method is better.  Newdata does not guarantee all block in one event
+					' This array will compare to firmware() which is Converted FILE binary
+					firmwareVerify(cntVerify) = buffer(x)
+										
+					' Update progress bar
+					prgBar.Progress = Min(1, cntVerify / intExpectedFirmwareBytes)
+					cntVerify = cntVerify + 1
+					
+					' Check if we reached the expected firmware size
+					If cntVerify >= intExpectedFirmwareBytes Then
+						' Let <EndFlashVerify> display the status of Verify!
+						' Just enable button here
+						EnableFunction
+						Exit
+					End If
+				Next
+			End If
+	End Select
+			
+End Sub
+Sub AStream_Error
+	LogMessage("Status", "Error: " & LastException)
+	AStream_Terminated
+End Sub
+Sub AStream_Terminated
+	blnAppExitAstreamError = True
+	
+	If astream.IsInitialized Then
+		astream.Close
+		serial1.Close
+	End If
+	EnableFunction
+	LogMessage("Status", "Connection is broken.")
+End Sub
+
+'--------------------------------------------------------
+' Buttons and Combo Box functions
+'--------------------------------------------------------
+Private Sub cmbPort_SelectedIndexChanged(Index As Int, Value As Object)
+	btnOpen.Enabled = Index > -1 'enable the button if there is a selected item
+End Sub
+
+Private Sub cmbPicList_SelectedIndexChanged(Index As Int, Value As Object)
+	If LoadConfiguration(Value) = False Then
+		LogMessage("Config", "Error loading configuration for " & Value)
+	End If
+End Sub
+
+Private Sub btnOpen_Click
+	
+	' Open Port (57600 Baud)
+	If btnOpen.Text = "Open Port" Then
+		Try
+			serial1.Open(cmbPort.Value)
+			serial1.SetParams(serial1.BAUDRATE_57600, serial1.DATABITS_8, intStopBit, serial1.PARITY_NONE)  ' Set baud=57600, 8 data bits, config value, no parity
+			astream.Initialize(serial1.GetInputStream, serial1.GetOutputStream, "astream")
+		Catch
+			LogMessage("Status", "Error Open Port" & LastException)
+			Return
+		End Try
+		btnOpen.Text = "Close Port"
+		LogMessage("Status", "Port Opened")
+		
+	' Close Port
+	Else
+		If astream.IsInitialized Then
+			astream.Close
+			serial1.Close
+		End If
+		btnOpen.Text = "Open Port"
+		LogMessage("Status", "Port Closed")
+	End If
+End Sub
+
+'--------------------------------------------------------
+' Load Intel Hex file and convert it to binary (LSB->MSB)
+'--------------------------------------------------------
+Private Sub btnLoadFile_Click
+	If cmbPicList.SelectedIndex = -1 Then
+		xui.Msgbox2Async("Please select PIC Name from the list!  Conversion requires PIC configuration input!", "PIC Name?", "Ok", "", "", Null)
+		Return
+	End If
+	
+	' Init File Chooser
+	Dim fc As FileChooser
+	fc.Initialize
+	fc.Title = "Intel Hex File Only!"
+	
+	' Add Intel Hex filter only!
+	Dim l As List
+	l.Initialize
+	l.Add("*.hex")
+	fc.SetExtensionFilter("Intel Hex", l)
+	
+	' Get File Path
+	Dim filepath As String
+	filepath = fc.ShowOpen(B4XPages.GetNativeParent(Me))
+   
+	If filepath <> "" Then
+		strLastFilePath = filepath
+		LogMessage("Status", "File Path: " & filepath)	
+		firmware = ConvertHexIntelToBinaryRange(filepath, intStartAddrFlash)
+	Else
+		strLastFilePath = ""
+		LogMessage("Status", "No file selected.")
+	End If
+End Sub
+Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int) As Byte()
+	Try
+		
+		Dim lines As List = File.ReadList("", filepath)
+	    
+		Dim startByte As Int
+		
+		If blnUseWordScaling = True Then
+			startByte = startAddr * 2		' eg. PIC 16F88
+		Else
+			startByte = startAddr			' eg. PIC 18F27K42, PIC 24F?
+		End If
+	    
+		' Create binary array relative to startAddr
+		Dim firmwareData(intExpectedFirmwareBytes) As Byte
+	    
+		' Firmware() and FirmwareVerify() contains empty fields for comparison!	
+		If blnUse24BitScaling = True Then
+			'LSB, Mid, MSB, Phantom format for PIC24
+			For i = 0 To firmwareData.Length - 1 Step 4
+				firmwareData(i) = 0xFF   				' Low Byte
+				firmwareData(i+1) = 0xFF 				' Mid Byte
+				firmwareData(i+2) = 0xFF 				' High Byte
+				firmwareData(i+3) = intEmptyFlashValue 	' Phantom (Void) Byte
+			Next
+		Else
+			' eg. LSB(0xFF) Then MSB(0x3F) format in binary Firmware() for 16F and 18F
+			For i = 0 To firmwareData.Length - 1 Step 2
+				firmwareData(i) = 0xFF
+				firmwareData(i+1) = intEmptyFlashValue	' eg. 0x3F MSB on PIC16F88, 0xFF MSB on PIC18F27K42
+			Next
+		End If
+		
+		' Detect if type of intel hex
+		Dim blnDetectRecord As Boolean = False
+	    
+		firmware = Array As Byte() ' Resets to an empty array (length 0)
+		
+		' Process each HEX line
+		For Each line As String In lines
+			If line.Length = 0 Or line.CharAt(0) <> ":" Then Continue
+	        
+			Dim byteCount As Int = Bit.ParseInt(line.SubString2(1, 3), 16)
+			Dim wordAddr As Int = Bit.ParseInt(line.SubString2(3, 7), 16)
+			Dim recordType As Int = Bit.ParseInt(line.SubString2(7, 9), 16)
+	        
+			' Only data records
+			If recordType <> 0 Then Continue
+	        
+			Dim byteAddr As Int = wordAddr
+	        
+			For i = 0 To byteCount - 1
+				Dim b As Int = Bit.ParseInt(line.SubString2(9 + i * 2, 11 + i * 2), 16)
+				Dim arrayIndex As Int = byteAddr - startByte + i
+	            
+				' Only write if within requested range
+				If arrayIndex >= 0 And arrayIndex < firmwareData.Length Then
+					firmwareData(arrayIndex) = b
+					blnDetectRecord = True
+				End If
+			Next
+		Next
+	    
+		' Status logging
+		If blnDetectRecord Then
+			btnFlash.Enabled = True
+			LogMessage("Status", "Firmware conversion completed, binary arrays: " & NumberFormat2(firmwareData.Length, 1, 0, 0, True) & " bytes")
+		Else
+			btnFlash.Enabled = False
+			LogMessage("Status", "Did not detect valid Intel HEX Record")
+		End If
+	    
+		Return firmwareData
+	
+	Catch
+		Dim EmptyArr() As Byte = Array As Byte()
+		xui.Msgbox2Async("Error occurred! " & LastException, "Error", "Ok", "", "", Null)
+		Return EmptyArr
+	End Try
+End Sub
+
+'--------------------------------------------------------
+' Start Handshake and Flash Upload
+'--------------------------------------------------------
+Private Sub btnFlash_Click
+	
+	' Validation Checks
+	If btnOpen.Text = "Open Port" Then
+		xui.Msgbox2Async("Please choose and open port!", "Port Closed", "Ok", "", "", Null)
+	' Validation Checks
+	Else If cmbPicList.Items.Size = 0 Then
+		xui.Msgbox2Async("Configuration is missing!", "Configuration", "Ok", "", "", Null)
+	' Flashing Logic
+	Else If btnFlash.Text = "Flash" Then
+		Dim sf2 As Object = xui.Msgbox2Async("If the PIC application is running, it will enter bootloader mode automatically. " & _
+  											 "If not, please click OK and then power cycle (turn off and on) your microchip to enter bootloader mode.", _
+                                      		 "Attention!", "Ok", "Cancel", "", Null)
+		Wait For (sf2) Msgbox_Result(ret As Int)
+		If ret = xui.DialogResponse_Positive Then
+			SendHandshakeLoop
+		End If
+	' Flash Stop Logic
+	Else
+		Dim sf3 As Object = xui.Msgbox2Async("Flash in progress! Do you want to stop?", "Flashing", "Yes", "", "No", Null)
+		Wait For (sf3) Msgbox_Result(ret2 As Int)		
+		If ret2 = xui.DialogResponse_Positive Then
+			LogMessage("Status", "User stop flash!")
+			EnableFunction
+		End If
+	End If
+
+End Sub
+Sub SendHandshakeLoop
+	' Just to be sure if initialized!
+	If astream.IsInitialized = False Then
+		EnableFunction
+		LogMessage("Handshake", "Error Astream not initialized")
+		Return
+	End If
+	
+	Dim b() As Byte = Array As Byte(0x55)
+	Dim b2() As Byte = Array As Byte(0xAA)
+	Dim xTract As Int = 0
+	
+	DisableFunction
+	
+	Do While True
+		' Status boolean
+		If GetBooleanStatus = True Then Return
+		
+		' Exit and Start firmware upload if PIC signals handshake success
+		If blnHandShakeSuccess = True Then
+			Return
+		Else
+			If xTract = 0 Then
+				astream.Write(b)
+				LogMessage("Handshake", "Sending byte: 0x55")
+			Else
+				astream.Write(b2)
+				LogMessage("Handshake", "Sending byte: 0xAA")
+			End If
+		End If
+				
+		' Avoid flooding UART
+		Sleep(intHandShakeDelayMS)
+		
+		xTract = xTract + 1
+		If xTract >= 2 Then xTract = 0
+	Loop
+End Sub
+Sub SendFirmware
+	' Firmware Binary file must include all flash data including empty addresses!
+	Dim intBlockSize As Int
+	Dim totalBlocks As Int = Ceil(firmware.Length / intBlockSize)
+	Dim block(intBlockSize) As Byte
+	Dim i As Int = 0
+
+	intBlockSize = intWordsPerPacket * 2 ' eg. 4 words = 8 intBlockSize
+	
+	LogMessage("FirmwareUpload", "Firmware size: " & firmware.Length & " bytes, total blocks: " & totalBlocks & ", bytes/block: " & intBlockSize)
+
+	Do While i <= firmware.Length
+
+		' Copy bytes into block, pad with 0xFF if last block is smaller
+		Dim remaining As Int = firmware.Length - i
+		Dim currentBlockSize As Int = Min(intBlockSize, remaining)
+		For j = 0 To intBlockSize - 1
+			If j < currentBlockSize Then
+				block(j) = firmware(i + j)
+			Else
+				block(j) = 0xFF   ' padding
+			End If
+		Next
+
+		' Check for global abort
+		If GetBooleanStatus = True Then Return
+
+		' Wait for ACK or handle timeout
+		Do While blnACK = False
+			If GetBooleanStatus = True Then Return
+
+			If blnTimeOut = True Then
+				LogMessage("FirmwareUpload", "Timeout detected, retrying at byte #" & i)
+				blnTimeOut = False
+				Continue    ' retry immediately
+			End If
+
+			Sleep(0)
+		Loop
+		
+		' Reset ACK for next block
+		blnACK = False
+		
+		' Send block
+		If blnUseWriteBurst = False Then
+			For x = 0 To intBlockSize - 1
+				Dim b(1) As Byte
+				b(0) = block(x)
+				astream.Write(b)
+				Sleep(intPacketDelayMS)
+			Next
+		Else
+			astream.Write(block)
+			Sleep(intPacketDelayMS)
+		End If
+
+		' Update progress bar
+		prgBar.Progress = Min(1, (i + intBlockSize) / firmware.Length)
+
+		' Move to next block
+		i = i + intBlockSize
+	Loop
+
+	LogMessage("FirmwareUpload", "Firmware upload completed!")
+End Sub
+Sub GetBooleanStatus As Boolean
+	' PIC reported timeout error (Handshake does not have this!)
+	If blnExitTimeoutError = True Then
+		Return True
+	End If
+		
+	' Astream error or terminated
+	If blnAppExitAstreamError = True Then
+		Return True
+	End If
+		
+	' Stop or Quit Detected
+	If blnAppStopQuit = True Then
+		Return True
+	End If
+	
+	Return False
+End Sub
+
+'--------------------------------------------------------
+' Verify Firmware
+'--------------------------------------------------------
+Sub VerifyStatus
+	If VerifyFirmware = True Then
+		LogMessage("Status", "Programming/Verify Success")
+	Else
+		LogMessage("Status", "Programming/Verify Failed!")
+	End If
+End Sub
+Sub VerifyFirmware() As Boolean
+	' Make sure both arrays are the same length
+	If firmware.Length <> firmwareVerify.Length Then
+		Return False
+	End If
+
+	' Compare byte by byte
+	For i = 0 To firmware.Length - 1
+		If firmware(i) <> firmwareVerify(i) Then
+			LogMessage("Status", "Mismatch at byte " & i & _
+                       ": firmware = " & BytesToHexString2(firmware(i)) & _
+                       " vs verify = " & BytesToHexString2(firmwareVerify(i)))
+			Return False
+		End If
+	Next
+
+	' All bytes match
+	Return True
+End Sub
+
+'--------------------------------------------------------
+' Disable/Enable
+'--------------------------------------------------------
+Sub DisableFunction
+	btnOpen.Enabled = False
+	btnLoadFile.Enabled = False
+	cmbPort.Enabled = False
+	cmbPicList.Enabled = False
+	cntVerify = 0
+	blnProgrammingInProgress = True
+	btnFlash.Text = "Stop"
+	blnAppStopQuit = False
+	blnHandShakeSuccess = False
+	blnExitTimeoutError = False
+	blnAppExitAstreamError = False
+	blnTimeOut = False
+	txtLog.Text = ""
+End Sub
+Sub EnableFunction
+	btnOpen.Enabled = True
+	btnLoadFile.Enabled = True
+	cmbPort.Enabled = True
+	cmbPicList.Enabled = True
+	blnVerifyRequest = False
+	blnProgrammingInProgress = False
+	btnFlash.Text = "Flash"
+	blnAppStopQuit = True
+	blnACK = False
+End Sub
+
+'--------------------------------------------------------
+' Load all Map files from /configs and return PicName list
+'--------------------------------------------------------
+Sub LoadAllPicNames() As List
+	Dim picList As List
+	picList.Initialize
+    
+	' Make sure folder exists
+	If File.Exists(File.DirApp, "configs") = False Then
+		LogMessage("Config", "Missing configs directory, creating one!")
+		File.MakeDir(File.DirApp, "configs")
+		Return picList ' empty list
+	End If
+    
+	' Get all files in configs folder
+	Dim cfgDir As String = File.Combine(File.DirApp, "configs")
+	Dim files As List = File.ListFiles(cfgDir)
+    
+	For Each f As String In files
+		If f.ToLowerCase.EndsWith(".map") Then
+			Try
+				Dim cfg As Map = File.ReadMap(cfgDir, f)
+				If cfg.ContainsKey("PicName") Then
+					picList.Add(cfg.Get("PicName"))
+				Else
+					' fallback to filename if PicName missing
+					LogMessage("Config", "Missing Pic Name - " & f)
+				End If
+			Catch
+				' skip files that fail to load
+				Log(LastException.Message)
+			End Try
+		End If
+	Next
+    
+	Return picList
+End Sub
+Sub LoadConfiguration(SelectedPicName As String) As Boolean
+	' Make sure folder exists
+	If File.Exists(File.DirApp, "configs") = False Then
+		Return False
+	End If
+	
+	Dim cfgDir As String = File.Combine(File.DirApp, "configs")
+	
+	' Get all files in configs folder
+	Dim files As List = File.ListFiles(cfgDir)
+    
+	For Each f As String In files
+		If f.ToLowerCase.EndsWith(".map") Then
+			Try
+				Dim cfg As Map = File.ReadMap(cfgDir, f)
+				If cfg.ContainsKey("PicName") Then
+					Dim CheckName As String = cfg.Get("PicName")
+					If CheckName = SelectedPicName Then
+						txtLog.Text = ""
+						
+						intStartAddrFlash = cfg.Get("StartAddrFlash")		' Start Address of Flash. For Intel Hex Conversion
+						intEndAddrFlash = cfg.Get("EndAddrFlash")			' End Address of Flash
+						intEmptyFlashValue = cfg.Get("EmptyFlashValue")		' Empty Flash Value (eg. 3FFF = 3F)
+						intWordsPerPacket = cfg.Get("WordsPerPacket")		' Total Instruction Words Per Packet for Write Block
+						intPacketDelayMS = cfg.Get("PacketDelayMS")			' Write Block Packet Delay
+						intHandShakeDelayMS = cfg.Get("HandShakeDelayMS")	' Handshake Delay (0x55 and 0xAA in between delay)
+						intStopBit = cfg.Get("StopBit")						' 1 or 2 stop bits, older PIC need 2 so it buys time processing other instructions
+						strNotes = cfg.Get("Notes")							' Special Notes
+						intExpectedFirmwareBytes = cfg.Get("ExpectedBytes") ' Total Bytes need flash and erase
+						blnUseWriteBurst = cfg.Get("UseWriteBurst")			' No delays in between bytes if True!
+						blnUseWordScaling = cfg.Get("UseWordScaling")		' For Intel Hex Conversion
+						blnUse24BitScaling = cfg.Get("Use24BitScaling")		' For Intel Hex conversion
+							
+						' Set Proper Arrays to FirmwareVerfiy()
+						firmwareVerify = Array As Byte()
+						Dim temp(intExpectedFirmwareBytes) As Byte
+						firmwareVerify = temp
+		
+						' Make sure reload the Intel Hex file to new Firmware() array
+						If strLastFilePath <> "" Then
+							firmware = ConvertHexIntelToBinaryRange(strLastFilePath, intStartAddrFlash)
+						End If
+						
+						' If port already open update stop bit parameter!
+						If btnOpen.Text = "Close Port" Then
+							serial1.SetParams(serial1.BAUDRATE_57600, serial1.DATABITS_8, intStopBit, serial1.PARITY_NONE)  ' Set baud=57600, 8 data bits, config value, no parity
+						End If
+						
+						LogMessage("", "---------------------------------------------------------")
+						LogMessage("", "CONFIGURATION FOR " & CheckName)
+						LogMessage("", "---------------------------------------------------------")
+						LogMessage(":::", "Notes: " & strNotes)
+						LogMessage(":::", "Start Address = 0x" & Bit.ToHexString(intStartAddrFlash).ToUpperCase)
+						LogMessage(":::", "End Address = 0x" & Bit.ToHexString(intEndAddrFlash).ToUpperCase)
+						LogMessage(":::", "Empty Flash Value = 0x" & Bit.ToHexString(intEmptyFlashValue).ToUpperCase)
+						LogMessage(":::", "HandShake Delay = " & intHandShakeDelayMS & " ms")
+						LogMessage(":::", "Packet Delay = " & intPacketDelayMS & " ms")
+						LogMessage(":::", "Write Burst = " & blnUseWriteBurst)
+						LogMessage(":::", "Stop Bits = " & intStopBit)
+						If blnUse24BitScaling = True Then
+							LogMessage(":::", "Instruction Write Size = " & (intWordsPerPacket * 4) & " bytes w/padding (" &  intWordsPerPacket & " instruction words)" )
+						Else
+							LogMessage(":::", "Instruction Write Size = " & (intWordsPerPacket * 2) & " bytes w/padding (" &  intWordsPerPacket & " instruction words)" )
+						End If
+						LogMessage(":::", "Expected Firmware Size = " & NumberFormat2(intExpectedFirmwareBytes, 1, 0, 0, True) & " bytes")
+						LogMessage(":::", "Use Word Scaling = " & blnUseWordScaling)
+						LogMessage(":::", "Use 24 Bit Scaling = " & blnUse24BitScaling)
+						LogMessage("", "---------------------------------------------------------")
+  						Return True
+					End If			
+				End If
+			Catch
+				' skip files that fail to load
+				Log(LastException.Message)
+			End Try
+		End If
+	Next
+	
+	Return False
+    
+End Sub
+
+'--------------------------------------------------------
+' Log Message
+'--------------------------------------------------------
+Sub LogMessage(From As String, Msg As String)
+	' Clear if exceeded
+	'If txtLog.Text.Length > 15000 Then
+	'	txtLog.Text = ""
+	'End If
+	txtLog.Text = txtLog.Text & From & ": " & Msg & CRLF
+	txtLog.SetSelection(txtLog.Text.Length, txtLog.Text.Length)
+End Sub
+Sub BytesToHexString(b() As Byte) As String
+	Dim sb As StringBuilder
+	sb.Initialize
+	For Each bt As Byte In b
+		Dim byteString As String
+		byteString = Bit.ToHexString(Bit.And(bt, 0xFF))
+		If byteString.Length = 1 Then byteString = "0" & byteString
+		sb.Append(byteString).Append(" ")
+	Next
+	Return sb.ToString.Trim.ToUpperCase
+End Sub
+Sub BytesToHexString2(b As Byte) As String
+	Dim byteString As String
+
+	byteString = Bit.ToHexString(Bit.And(b, 0xFF))
+	If byteString.Length = 1 Then byteString = "0" & byteString
+	
+	Return byteString.ToUpperCase
+End Sub
+
