@@ -1,0 +1,14 @@
+#Fri Feb 06 21:58:55 PST 2026
+EndAddrFlash=44023
+HandShakeDelayMS=200
+EmptyFlashValue=0
+PacketDelayMS=1
+PicName=24FJ64GA102
+StartAddrFlash=2304
+UseWriteBurst=true
+WordsPerPacket=64
+StopBit=1
+Notes=24-bit Architecture
+ExpectedBytes=128768
+UseWordScaling=true
+Use24BitScaling=true

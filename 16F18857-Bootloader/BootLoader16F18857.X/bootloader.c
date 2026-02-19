@@ -1,0 +1,629 @@
+/*
+ * File:   bootloader.c
+ * Version: 2.01
+ * Author: Issac
+ *
+ * Created on January 19, 2026, 2:50 PM
+ */
+
+
+#include <xc.h>
+#include <stdint.h>                         // for standard integer types 
+#include <stdbool.h>                        // for bool, true, false
+#include "config.h"
+
+// Note: B4J Expected bytes = 0x7FFF - 0x600 = 0x79FF + 1 = 0x7A00(31,232) * 2 = 62,464 BYTES (Each address is 1 WORD!))
+
+#define FLASH_START 0x0600                  // Flash start address
+#define FLASH_END 0x7FFF                    // Flash end address for 4-word block
+#define FLASH_ERASE_BLOCK 32                // Runtime can only do 32 word block erase max!
+#define FLASH_WRITE_BLOCK 32                // Can only do 32 word block write max with PIC 16F18857!
+#define TIMER2_COUNT 93                     // 32ms(ISR Trigger) x 93(t2_counter) = 3000 ms or 3S Timout
+#define MSG_MS_DELAY 50                     // Delay for UART_TxString   
+
+#define LED_PIN4   LATBbits.LATB4           // Use LAT for Output / Bootloader Led Status 
+#define LED_TRIS4  TRISBbits.TRISB4         // Output PortB.4 pin
+#define LED_PIN3   LATBbits.LATB3           // Use LAT for Output
+#define LED_TRIS3  TRISBbits.TRISB3
+
+uint16_t flash_packet[FLASH_WRITE_BLOCK];   // 32 words, 64 bytes total
+bool Timer2_Timout = false;                 // For Timer 2 Timeout Detection
+uint8_t t2_counter = 0;                     // For Timer 2 ISR counter (32 ms trigger ISR function)
+
+//-------------------------------------------------------
+// INTERNAL OSCILLATOR CLK CONFIG
+//-------------------------------------------------------
+void INTOSC_Init(void)
+{
+  // Select HFINTOSC as system clock, NDIV = 1
+    OSCCON1 = 0b01100000;  // 6-4 = 110 ? HFINTOSC, 3-0 NDIV = 0000 ? divide by 1
+
+
+    // Set HFINTOSC frequency to 32 MHz
+    OSCFRQ = 0b00000110;  // HFFRQ=110 ? 32 MHz (redundant if RSTOSC=000)
+    
+    //Note 1: When RSTOSC=110 (HFINTOSC 1 MHz), the HFFRQ bits will default to ?010? upon Reset; 
+    //        When RSTOSC = 000 (HFINTOSC 32 MHz), the HFFRQ bits will default to ?110? upon Reset.
+    
+    /*RSTOSC<2:0>: Power-up Default Value for COSC bits This value is the Reset default value for COSC, 
+    and selects the oscillator first used by user software 
+    111 = EXT1X EXTOSC operating per FEXTOSC bits 
+    110 = HFINT1 
+    101 = LFINT 
+    100 = SOSC 
+    011 = Reserved 
+    010 = EXT4X HFINTOSC (1 MHz) LFINTOSC SOSC EXTOSC with 4x PLL, with EXTOSC operating per FEXTOSC bits 
+    001 = HFINTPLL HFINTOSC with 2x PLL, with OSCFRQ = 16 MHz and CDIV = 1:1(FOSC = 32 MHz) 
+    000 = HFINT32 HFINTOSC with OSCFRQ= 32 MHz and CDIV = 1:1
+
+    */
+    
+    //while(OSCCON3bits.ORDY == 0);
+}
+
+
+//-------------------------------------------------------
+// UART ROUTINE
+//-------------------------------------------------------
+void UART_Init(void)
+{
+    // 1. Set pin directions
+    TRISBbits.TRISB2 = 1; // RB2 as Input (RX)
+    TRISBbits.TRISB5 = 0; // RB5 as Output (TX)
+
+    // 2. PPS Unlock Sequence
+    PPSLOCK = 0x55;
+    PPSLOCK = 0xAA;
+    PPSLOCKbits.PPSLOCKED = 0; // Unlock PPS
+
+    // 3. Map RX to RB2
+    RXPPS = 0x0A; // RB2->EUSART:RX;
+
+    // 4. Map RB5 to TX
+    RB5PPS = 0x10; // RB5->EUSART:TX;
+
+    // 5. PPS Lock Sequence
+    PPSLOCK = 0x55;
+    PPSLOCK = 0xAA;
+    PPSLOCKbits.PPSLOCKED = 1; // Lock PPS
+
+    // ----- Baud rate (57600 @ 32MHz HFINTOSC) -----
+    SP1BRGL = 34;
+    SP1BRGH = 0;
+    BAUD1CONbits.BRG16 = 0; // 8-bit baud generator
+    TX1STAbits.BRGH = 1;    // High-speed
+
+    // ----- UART mode -----
+    TX1STAbits.SYNC = 0;    // Asynchronous
+    RC1STAbits.SPEN = 1;    // Enable UART pins
+
+    // ----- Enable TX and RX -----
+    TX1STAbits.TXEN = 1;
+    RC1STAbits.CREN = 1;
+
+    // ----- Clear pending RX bytes -----
+    uint8_t dummy;
+    while (PIR3bits.RCIF) {
+        dummy = RC1REG;      // discard
+    }
+}
+
+void UART_Tx(uint8_t d)
+{
+    while (!PIR3bits.TXIF);   // Wait until TX1 ready
+    TX1REG = d;               // Send data
+}
+
+void UART_TxString(const char *s)
+{        
+    for (uint16_t i = 0; s[i] != '\0'; i++)     // Loop using index
+    {
+        UART_Tx(s[i]);
+    }
+}
+
+uint8_t UART_Rx(void)
+{
+    // Check if a receive overrun occurred
+    if (RC1STAbits.OERR)
+    {
+        RC1STAbits.CREN = 0;   // Reset continuous receive
+        RC1STAbits.CREN = 1;   // Re-enable receive
+    }
+
+    return RC1REG;             // Return received byte
+}
+
+
+//-------------------------------------------------------
+// TIMER2 ROUTINE
+//-------------------------------------------------------
+void TIMER2_Init(void) {
+    // 1. Set Clock Source to Fosc/4
+    T2CLKCONbits.CS = 0b0001; 
+
+    // 2. Hardware Limit Timer - MUST be 0 for standard timer mode
+    T2HLT = 0x00; 
+
+    // 3. Configuration
+    // Prescaler 1:128 (111), Postscaler 1:8 (0111)
+    T2CONbits.CKPS = 0b111;
+    T2CONbits.OUTPS = 0b0111;
+    
+    T2PR = 249;   // Period match
+    T2TMR = 0;    // Reset count
+
+    // 4. Clear Flag and Enable Interrupts
+    PIR4bits.TMR2IF = 0;
+    PIE4bits.TMR2IE = 0;
+    INTCONbits.PEIE = 1;
+    INTCONbits.GIE = 1; 
+}
+
+void Timer2_Start(void)
+{
+    Timer2_Timout = false;     // Clear timeout flag
+    t2_counter = 0;            // Reset ISR counter
+    T2TMR = 0;                 // Clear timer                
+ 
+    PIR4bits.TMR2IF = 0;       // Clear pending interrupt first
+    PIE4bits.TMR2IE = 1;       // Enable Timer2 interrupt
+    T2CONbits.TMR2ON = 1;      // Start Timer2
+}
+
+void Timer2_Stop(void)
+{
+    Timer2_Timout = false;      // Clear flag boolean
+    t2_counter = 0;             // reset ISR counter
+    T2TMR = 0;                  // Clear timer  
+
+    PIE4bits.TMR2IE = 0;        // Disable Timer2 interrupt flag
+    T2CONbits.TMR2ON = 0;       // Stop Timer2             
+}
+
+void __interrupt() ISR(void)
+{
+    if (PIR4bits.TMR2IF)
+    {
+        PIR4bits.TMR2IF = 0;                        // Clear flag
+
+        t2_counter++;                               // counter to compare
+        // Example: If you wanted a 3-second timeout
+        // 32ms(ISR interrupt) * 93(TIMER2_COUNT_FOR_1S) = 2976 ms (Close enough for most tasks)
+        if (t2_counter >= TIMER2_COUNT)      
+        {
+            t2_counter = 0;                         // Reset it
+            Timer2_Timout = true;                   // Set true for looper to detect flag
+        }
+    }
+}
+
+
+//-------------------------------------------------------
+// READ AND WRITE PROGRAM CODE ROUTINE + READ EEPROM DATA
+//-------------------------------------------------------
+// READ FLASH DATA (1 Word)
+uint16_t Flash_ReadWord(uint16_t address)
+{
+    uint16_t word;
+
+    NVMADRL  = address & 0xFF;          // low byte of address
+    NVMADRH = (address >> 8) & 0xFF;    // high byte of address
+
+    NVMCON1bits.NVMREGS = 0;            // Select program memory type
+    NVMCON1bits.RD = 1;                 // initiate read
+
+    word  = NVMDATL;                    // Low 8 bits
+    word |= ((uint16_t)NVMDATH << 8);   // High 6 bits shifted to MSB 
+    word &= 0x3FFF;                     // Mask 14-bit instruction
+    
+    return word;                        // Full 14-bit instruction
+}
+
+void Flash_WriteBlock(uint16_t address, uint16_t *data)
+{
+    uint8_t i;
+
+    // -----------------------------
+    // Align address to start of row
+    // -----------------------------
+    // Each row is 32 words (64 bytes). We mask the lower 5 bits to ensure
+    // we start at the beginning of a 32-word row. This prevents the
+    // "row shift" issue where data could start at 0x0920 instead of 0x0900.
+    address &= 0xFFE0;
+
+    // -----------------------------
+    // Enable flash write mode
+    // -----------------------------
+    NVMCON1bits.NVMREGS = 0;  // Select Program Flash memory
+    NVMCON1bits.WREN    = 1;  // Enable writes
+    NVMCON1bits.LWLO    = 1;  // Load Latches Only (don't commit to flash yet)
+
+    // -----------------------------
+    // Load each word into its latch
+    // -----------------------------
+    for (i = 0; i < FLASH_WRITE_BLOCK; i++)
+    {
+        // Calculate the address for this specific word in the row
+        // This ensures each word goes to the correct latch, avoiding
+        // the problem with auto-increment that caused the row to start at 0x0920.
+        uint16_t currentWordAddr = address + i;
+        NVMADRL = currentWordAddr & 0xFF;           // Lower 8 bits of address
+        NVMADRH = (currentWordAddr >> 8) & 0x3F;    // Upper 6 bits of address
+
+        // Load the word into NVMDATL/NVMDATH (LSB/MSB)
+        // The 16F18857 uses 14-bit words, so upper 2 bits are masked
+        NVMDATL = data[i] & 0xFF;                   // Lower 8 bits
+        NVMDATH = (data[i] >> 8) & 0x3F;            // Upper 6 bits
+
+        // -----------------------------
+        // Unlock and write the word to the latch
+        // -----------------------------
+        // Each word requires the special unlock sequence:
+        // 1. Disable interrupts (GIE = 0)
+        // 2. Write 0x55 and 0xAA to NVMCON2
+        // 3. Set WR = 1 to load the latch
+        // 4. Wait for WR to complete
+        INTCONbits.GIE = 0;     // Disable interrupts to avoid write interruption
+        NVMCON2 = 0x55;         // Unlock sequence part 1
+        NVMCON2 = 0xAA;         // Unlock sequence part 2
+        NVMCON1bits.WR = 1;     // Start write to latch
+        while (NVMCON1bits.WR); // Wait until latch write completes
+        INTCONbits.GIE = 1;     // Re-enable interrupts
+    }
+
+    // -----------------------------
+    // Commit the entire row to flash
+    // -----------------------------
+    // After all words are loaded into their latches, clear LWLO = 0
+    // to indicate we want to write all latches to the actual flash row.
+    NVMCON1bits.LWLO = 0;
+
+    // Perform the unlock/write sequence for the final row commit
+    INTCONbits.GIE = 0;     // Disable interrupts
+    NVMCON2 = 0x55;         // Unlock part 1
+    NVMCON2 = 0xAA;         // Unlock part 2
+    NVMCON1bits.WR = 1;     // Start row write
+    while (NVMCON1bits.WR); // Wait for completion
+    INTCONbits.GIE = 1;     // Re-enable interrupts
+
+    // -----------------------------
+    // Cleanup: disable flash writes
+    // -----------------------------
+    NVMCON1bits.WREN = 0;   // Prevent accidental writes
+}
+
+
+//-------------------------------------------------------
+// VERIFY FLASH DATA
+//-------------------------------------------------------
+// Verify Flash is performed after Flash Write is completed
+void Verify_Flash(void)
+{
+    uint16_t addr;
+    
+    // Timer not needed.  B4J will receive continous Block of data with 1 ms delay
+    Timer2_Stop();                  
+
+    // Send to host
+    UART_TxString("<StartFlashVerify>");
+    __delay_ms(MSG_MS_DELAY);
+    
+    // Loop through all flash from start to end
+    for (addr = FLASH_START; addr + FLASH_WRITE_BLOCK - 1 <= FLASH_END; addr += FLASH_WRITE_BLOCK)
+    {
+        // Prepare 4-word packet
+        uint16_t packet[FLASH_WRITE_BLOCK];
+        for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
+        {
+            packet[i] = Flash_ReadWord(addr + i);  // Read word from flash
+        }
+
+        // Send packet to B4J 
+        for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
+        {
+            // eg. 0x3FFF = FF first then 3F second (B4J binary is backwards!)
+            UART_Tx(packet[i] & 0xFF);              // First Byte (LSB)
+            UART_Tx(packet[i] >> 8);                // Second Byte (MSB) Shift upper to lower
+        }
+
+        __delay_ms(1);                              // tested 1 ms ok!  as long below first delay is there!
+    }
+
+    // Send to host
+    __delay_ms(MSG_MS_DELAY);                       // Must do this delay first helps alot.  does not interfere with last packet sent! (tested with 1 ms delay above and works flawless!)
+    UART_TxString("<EndFlashVerify>");
+    __delay_ms(MSG_MS_DELAY);
+}
+
+
+//-------------------------------------------------------
+// ERASE FLASH PROGRAM CODE DATA
+//-------------------------------------------------------
+// ERASE FLASH BLOCK 32 word erase at each for 
+void Flash_EraseApplication(void)
+{
+    // Stop and clear timeout
+    Timer2_Stop(); 
+    
+    UART_TxString("<StartFlashErase>");
+    __delay_ms(MSG_MS_DELAY);
+
+    uint16_t addr;
+    
+    // Loop over all blocks in the application area
+    for (addr = FLASH_START; addr + FLASH_ERASE_BLOCK - 1 <= FLASH_END; addr += FLASH_ERASE_BLOCK)
+
+    {
+        // Load full flash address into NVM address registers
+        NVMADRL = addr & 0xFF;           // Low 8 bits
+        NVMADRH = (addr >> 8) & 0x7F;    // Upper 7 bits for full 0x0000?0x7FFF
+
+        // Program flash erase setup
+        NVMCON1bits.NVMREGS = 0; // PFM (Program Flash Memory)
+        NVMCON1bits.FREE    = 1; // Erase
+        NVMCON1bits.WREN    = 1; // Enable writes
+
+        // Disable interrupts during unlock sequence
+        INTCONbits.GIE = 0;
+
+        // Required unlock sequence
+        NVMCON2 = 0x55;
+        NVMCON2 = 0xAA;
+        NVMCON1bits.WR = 1; // Start erase
+
+        // Wait until erase completes
+        while(NVMCON1bits.WR);
+
+        // Re-enable interrupts
+        INTCONbits.GIE = 1;
+
+        // Disable writes
+        NVMCON1bits.WREN = 0;
+    }
+
+    UART_TxString("<EndFlashErase>");
+    __delay_ms(MSG_MS_DELAY);
+}
+
+
+//-------------------------------------------------------
+// WAIT HANDSHAKE AND FIRWARE UPDATE ROUTINE
+//-------------------------------------------------------
+bool ReceivePacket(void)
+{
+    // Buffer for raw bytes (e.g., 64 bytes if FLASH_WRITE_BLOCK is 32)
+    uint8_t temp[FLASH_WRITE_BLOCK * 2];        
+    uint8_t byteCount = 0;                      
+
+    // Signal B4J (Host) to send the next data packet
+    UART_TxString("<ACK>"); 
+        
+    while (byteCount < FLASH_WRITE_BLOCK * 2)   
+    {
+        // Check for communication timeout
+        if (Timer2_Timout)
+        {
+            UART_TxString("<ISR Timeout>");         
+            __delay_ms(MSG_MS_DELAY);               // Delay to ensure host processes message
+            return false;
+        }
+
+        // Check if UART receive flag is set
+        if (PIR3bits.RCIF)                          
+        {       
+            temp[byteCount] = UART_Rx();            // Capture incoming byte
+            byteCount++;                            
+            
+            // Restart timeout timer upon successful byte reception
+            Timer2_Stop();                          
+            Timer2_Start();
+        }
+    }
+
+    /* * Convert bytes into 16-bit words.
+     * Host sends LSB first, then MSB (Little Endian).
+     * Example: Host sends 0x3FFF as [0xFF, 0x3F].
+     */
+    for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++) 
+    {
+        // flash_packet[i] = (MSB << 8) | LSB
+        flash_packet[i] = ((uint16_t)temp[i*2 + 1] << 8) | temp[i*2];
+    }
+
+    return true;
+}
+
+// When ready will use this in future
+void DoFirmwareUpdate(void)
+{    
+    UART_TxString("<StartFlashWrite>");     // Start of Flash Write Block
+    __delay_ms(MSG_MS_DELAY);
+    
+    uint16_t flashAddr = FLASH_START;
+    uint8_t timeoutCount = 0;               // count consecutive timeouts
+        
+    while (1)
+    {
+        Timer2_Stop();                      // Reset timer2
+        Timer2_Start();
+        
+        if (ReceivePacket())                // Check packet 64 bytes total 32 word
+        {          
+            // Successfully received a packet, reset timeout counter
+            timeoutCount = 0;
+                        
+            // Write 4-word block to flash
+            Flash_WriteBlock(flashAddr, flash_packet);
+
+            // Move to next flash block
+            flashAddr += FLASH_WRITE_BLOCK;     // currently +32
+             
+            // stop if we reach end of flash memory
+            if (flashAddr + FLASH_WRITE_BLOCK - 1 > FLASH_END)
+            {
+                // this will trigger B4J to get in Verify Mode! Send to host
+                UART_TxString("<EndFlashWrite>");
+                __delay_ms(MSG_MS_DELAY);  
+                 
+                Verify_Flash();
+                
+                return;
+            }
+        }
+        else        // Packet returned false 
+        {
+            // Timeout occurred, increment counter and reset timeout
+            timeoutCount++;
+            
+            Timer2_Stop();
+                        
+            // Exit after 3 consecutive timeouts
+            if (timeoutCount >= 3)
+            {                   
+                // Send to host
+                UART_TxString("<ErrorTimeout>");    
+                __delay_ms(MSG_MS_DELAY);
+                
+                return;
+            } 
+            
+            // Otherwise, continue waiting for next packet
+        }
+    }
+}
+
+
+// 0x55 and 0XAA handshake expected from Host to start firmware update
+void WaitHandshake(void) {
+    uint8_t prev = 0;
+    uint8_t curr;
+    
+    Timer2_Start();                     // Start Timer2 Timeout
+    
+    while (!Timer2_Timout)
+    {
+        if(PIR3bits.RCIF)               // UART receive interrupt flag set (data received in RCREG)
+        {
+            curr = UART_Rx();
+                
+            // Expecting 0xAA and 0x55 from PC to enter Flash mode
+            if(prev == 0x55 && curr == 0xAA) 
+            {                           
+                // Send initialization acknowledgment before starting Erase and Flash update
+                UART_TxString("<InitReceived>");
+                __delay_ms(MSG_MS_DELAY);
+                
+                // Update the Firmware        
+                Flash_EraseApplication();               // Erase Flash
+                DoFirmwareUpdate();                     // Flash Write
+                return;
+            }
+            
+            // sliding window byte comparison
+            prev = curr;
+        }
+    }
+    
+    Timer2_Stop();
+    
+    // Send to host
+    UART_TxString("<HandShakeTimeout>");
+    __delay_ms(MSG_MS_DELAY);
+}
+
+
+//-------------------------------------------------
+// APPLICATION ROUTINE IN HERE
+//-------------------------------------------------
+// Each function must define address location.  If you do not specify location,
+// it will add codes below 0x600 into bootloader section!
+// YOU MUST adjust address location if more codes are added or compile error will result!
+void __at(0x650)EEPROM_WriteByte(uint8_t address, uint8_t data)
+{
+    // Make sure address is valid (0x00?0xFF)
+    uint16_t physAddr = 0xF000 | address;  // EEPROM address space is F000h?F0FFh
+
+    // Load address
+    NVMADRL = physAddr & 0xFF;
+    NVMADRH = (physAddr >> 8) & 0xFF;
+
+    // Load data into NVMDATL
+    NVMDATL = data;     // Write data byte
+    NVMDATH = 0;        // High byte unused for EEPROM
+
+    // Select EEPROM region and enable write
+    NVMCON1bits.NVMREGS = 1; // 1 = EEPROM access
+    NVMCON1bits.WREN    = 1; // Enable writes
+
+    // Unlock sequence (datasheet)
+    INTCONbits.GIE = 0;
+    NVMCON2 = 0x55;
+    NVMCON2 = 0xAA;
+    NVMCON1bits.WR = 1;      // Start write
+    while (NVMCON1bits.WR);  // Wait until done
+    INTCONbits.GIE = 1;
+
+    // Disable write
+    NVMCON1bits.WREN = 0;
+}
+
+void __at(0x600)Application(void) {
+    // Add application code here......
+    
+    uint8_t b;                          // Application monitor 0x55 for bootloading
+    LED_TRIS3 = 0;                       // Output
+    UART_Init();                        // Init UART
+        
+    
+    //EEPROM_WriteByte(0x00, 0x55);     // Write 0x55 to address 0x00
+    
+    while(1) 
+    {
+        
+        // Flash Led for application.  Use different pin then bootloader.
+        LED_PIN3 = 1;                    // LED ON
+        __delay_ms(500);                // Wait 500 ms
+        LED_PIN3 = 0;                    // LED OFF
+        __delay_ms(500);                // Wait 500 ms
+        
+        if (PIR3bits.RCIF)              // PIR1bits.RCIF = 1 ? at least one byte in RCREG
+        {
+            b = UART_Rx();
+            if (b == 0x55)              // This is Handshake byte. In application 0xAA is not needed.  It will reboot then 0x55 and 0xAA will be detected
+            {
+                UART_TxString("<InitFromApp>");
+                
+                asm ("goto 0x0000");    // Restart to bootloader in preparation for flash
+            } 
+        }
+         
+    }
+}
+
+
+
+//-------------------------------------------------------
+// MAIN ENTRY FOR BOOTLOADER
+//-------------------------------------------------------
+void main(void) {
+    ANSELA = 0x00;                  // Port A all digital
+    ANSELB = 0x00;                  // Port B all digital
+    ANSELC = 0x00;                  // Port C all digital
+
+    LED_TRIS4 = 0;                  // LED Output
+    LED_PIN4  = 1;                  // LED On (bootloader led))
+       
+    INTOSC_Init();                  // Must set internal Oscillator
+    TIMER2_Init();                  // Init Timer2
+    UART_Init();                    // Init Hardware UART   
+    
+    WaitHandshake();                // wait for 0x55 0xAA (3s timeout then goto app))
+    
+    LED_PIN4  = 0;                  // LED Off (bootloader led))
+    
+    Application();                  // If bootloader is not init from PC, then continue to application
+    
+    
+    // Good news is when bootloader goes to 0x0600 and is invalid, causes pic to reset and main repeated over and over till handshake and flash success!
+}
