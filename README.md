@@ -18,6 +18,6 @@ A **PC with the B4J uploader** is required to update application firmware on the
 
 ## Notes
 
-- Currently, ISRs cannot be shared with app. Bootloader can only access IRS! 
+- Currently, ISRs cannot be shared with app. Bootloader can only access ISR! 
 - Ordinary functions ccnnit be shared. 
 -Future project will combine both Bootloader and App project as one.  Therefore, sharing will work across both areas.
