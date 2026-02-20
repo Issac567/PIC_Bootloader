@@ -15,7 +15,7 @@ A **PC with the B4J uploader** is required to update application firmware on the
 2. Use the B4J uploader to flash or update firmware on the target device.
 
 ## Note
-- The application codes can change the program codes in bootloader startup memory, therefore making application useless for entry. I will find solution for this, hopefully? Seperate projects can resolve this issue, but ISR and function calls to bootloader is inaccessible.
+- Currently, ISR functions in MPLAB APP firmware will not work, only in bootloader it works.  Seeking solution for this. 
 
 ---
 
