@@ -5,7 +5,10 @@ Type=Class
 Version=9.85
 @EndOfDesignText@
 
-' VERSION 3.01
+' VERSION 4.01
+' Pre - v3.01 will not work with new MPLAB Projects
+' v3.01 used with new MPLAB Projects.  It will work with Old MPLAB projects.
+
 ' Using .Exe from Build Standalone Package you must include the .map files in 
 ' \BootloaderUploader\Objects\temp\build\bin\configs
 
@@ -348,86 +351,103 @@ Private Sub btnLoadFile_Click
 End Sub
 Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int) As Byte()
 	Try
-		
 		Dim lines As List = File.ReadList("", filepath)
-	    
+        
 		Dim startByte As Int
-		
 		If blnUseWordScaling = True Then
-			startByte = startAddr * 2		' eg. PIC 16F88, PIC 24F?
+			startByte = startAddr * 2       ' eg. PIC 16F88, PIC 24F
 		Else
-			startByte = startAddr			' eg. PIC 18F27K42
+			startByte = startAddr           ' eg. PIC 18F27K42
 		End If
-	    
+        
 		' Create binary array relative to startAddr
 		Dim firmwareData(intExpectedFirmwareBytes) As Byte
-	    
-		' Firmware() and FirmwareVerify() contains empty fields for comparison!	
+        
+		' --- FIRMWARE INITIALIZATION (Don't leave this out!) ---
 		If blnUse24BitScaling = True Then
 			'LSB, Mid, MSB, Phantom format for PIC24
 			For i = 0 To firmwareData.Length - 1 Step 4
-				firmwareData(i) = 0xFF   				' Low Byte
-				firmwareData(i+1) = 0xFF 				' Mid Byte
-				firmwareData(i+2) = 0xFF 				' High Byte
-				firmwareData(i+3) = intEmptyFlashValue 	' Phantom (Void) Byte
+				firmwareData(i) = 0xFF                  ' Low Byte
+				firmwareData(i+1) = 0xFF                ' Mid Byte
+				firmwareData(i+2) = 0xFF                ' High Byte
+				firmwareData(i+3) = intEmptyFlashValue  ' Phantom (Void) Byte
 			Next
 		Else
-			' eg. LSB(0xFF) Then MSB(0x3F) format in binary Firmware() for 16F and 18F
+			' LSB(0xFF) Then MSB(0xFF) format for 18F
 			For i = 0 To firmwareData.Length - 1 Step 2
 				firmwareData(i) = 0xFF
-				firmwareData(i+1) = intEmptyFlashValue	' eg. 0x3F MSB on PIC16F88, 0xFF MSB on PIC18F27K42
+				firmwareData(i+1) = intEmptyFlashValue
 			Next
 		End If
-		
-		' Detect if type of intel hex
+        
 		Dim blnDetectRecord As Boolean = False
-	    
-		firmware = Array As Byte() ' Resets to an empty array (length 0)
-		
+		Dim upperAddr As Long = 0 ' <--- Essential for addresses > 0xFFFF
+        
 		' Process each HEX line
 		For Each line As String In lines
+			line = line.Trim
 			If line.Length = 0 Or line.CharAt(0) <> ":" Then Continue
-	        
+            
 			Dim byteCount As Int = Bit.ParseInt(line.SubString2(1, 3), 16)
 			Dim wordAddr As Int = Bit.ParseInt(line.SubString2(3, 7), 16)
 			Dim recordType As Int = Bit.ParseInt(line.SubString2(7, 9), 16)
-	        
-			' Only data records
+            
+			' --- HANDLE EXTENDED ADDRESSING (Record Type 04) ---
+			If recordType = 4 Then
+				' This tells us we are moving to a new 64KB block
+				Dim highBits As Int = Bit.ParseInt(line.SubString2(9, 13), 16)
+				upperAddr = Bit.ShiftLeft(highBits, 16)
+				Continue
+			End If
+            			
+			' Only process Data Records (Type 00)
 			If recordType <> 0 Then Continue
-	        If wordAddr < startAddr Then Continue		' do not add other codes from bootloader section!
+            
+			' The TRUE address on the chip
+			Dim absoluteAddr As Long = upperAddr + wordAddr
+            
+			' Filter out bootloader/low code
+			If absoluteAddr < startAddr Then Continue
+
+			' Eliminate
+			If absoluteAddr >= 0x56000 Then
+				Log("High Memory Data Detected at: " & Bit.ToHexString(absoluteAddr))
+				Continue
+			End If
 			
-			Dim byteAddr As Int = wordAddr
-	        
+			'Log(absoluteAddr)
+            
+			' Map to our array index
+			Dim arrayIndex As Long = absoluteAddr - startByte
+            
 			For i = 0 To byteCount - 1
 				Dim b As Int = Bit.ParseInt(line.SubString2(9 + i * 2, 11 + i * 2), 16)
-				Dim arrayIndex As Int = byteAddr - startByte + i
-	            
-				' Only write if within requested range
-				If arrayIndex >= 0 And arrayIndex < firmwareData.Length Then
-					firmwareData(arrayIndex) = b
+                
+				Dim currentIndex As Long = arrayIndex + i
+                
+				If currentIndex >= 0 And currentIndex < firmwareData.Length Then
+					firmwareData(currentIndex) = b
 					blnDetectRecord = True
 				End If
 			Next
 		Next
-	    
-		' Status logging
+        
 		If blnDetectRecord Then
 			btnFlash.Enabled = True
-			LogMessage("Status", "Firmware conversion completed, binary arrays: " & NumberFormat2(firmwareData.Length, 1, 0, 0, True) & " bytes")
+			LogMessage("Status", "Conversion success. ISR detected in high memory.")
 		Else
 			btnFlash.Enabled = False
-			LogMessage("Status", "Did not detect valid Intel HEX Record")
+			LogMessage("Status", "Error: No valid data found above start address.")
 		End If
-	    
+        
 		Return firmwareData
-	
+        
 	Catch
+		Log(LastException)
 		Dim EmptyArr() As Byte = Array As Byte()
-		xui.Msgbox2Async("Error occurred! " & LastException, "Error", "Ok", "", "", Null)
 		Return EmptyArr
 	End Try
 End Sub
-
 '--------------------------------------------------------
 ' Start Handshake and Flash Upload
 '--------------------------------------------------------
