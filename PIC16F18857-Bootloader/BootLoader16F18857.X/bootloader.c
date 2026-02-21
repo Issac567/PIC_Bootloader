@@ -332,10 +332,7 @@ bool ReceivePacket(void)
     uint8_t byteCount = 0; 
     uint32_t timeout_counter = 0;
 
-    const uint32_t THREE_SECONDS = 1000000; 
-    
-    // Send Acknowledge: Host sends next 8-byte packet after seeing this
-    UART_TxString("<ACK>");  
+    const uint32_t THREE_SECONDS = 1000000;   
 
     while (byteCount < FLASH_WRITE_BLOCK * 2)   
     {
@@ -382,7 +379,10 @@ void DoFirmwareUpdate(void)
     uint8_t timeoutCount = 0;               // count consecutive timeouts
         
     while (1)
-    {            
+    {      
+        // Send Acknowledge: Host sends next 8-byte packet after seeing this
+        UART_TxString("<ACK>");
+      
         if (ReceivePacket())                // Check packet 64 bytes total 32 word
         {          
             // Successfully received a packet, reset timeout counter
@@ -497,3 +497,4 @@ void main(void) {
     
     // Good news is when bootloader goes to 0x0600 and is invalid, causes pic to reset and main repeated over and over till handshake and flash success!
 }
+
