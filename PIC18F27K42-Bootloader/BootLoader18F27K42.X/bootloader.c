@@ -347,7 +347,7 @@ bool ReceivePacket(void)
     // 48,000,000 cycles total / ~24 cycles per loop iteration 
     // This constant will give you approximately 3 seconds at 64MHz.
     uint32_t timeoutCounter = 0;
-    const uint32_t TIMEOUT_3SEC = 2000000; 
+    const uint32_t TIMEOUT_3SEC = 2400000; 
 
     UART_TxString("<ACK>"); 
 
@@ -452,7 +452,7 @@ void WaitHandshake(void)
     // 32-bit counter for the 3-second window
     // 48,000,000 instruction cycles / ~24 cycles per loop = 2,000,000
     uint32_t handshakeCounter = 0;
-    const uint32_t TIMEOUT_3SEC = 2000000; 
+    const uint32_t TIMEOUT_3SEC = 2400000; 
 
     // --- LISTENING LOOP ---
     // Instead of checking Timer2_Timeout, we check our software counter
