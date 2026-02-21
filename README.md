@@ -14,8 +14,5 @@ A **PC with the B4J uploader** is required to update application firmware on the
 1. Build the desired MPLAB project to produce a `.hex` file.  
 2. Use the B4J uploader to flash or update firmware on the target device.
 
-## Note
-- Currently, ISR functions in MPLAB bootloader.c firmware will not work in bootloader. Not needed.
-
 ---
 
