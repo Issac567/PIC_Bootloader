@@ -5,7 +5,7 @@ Type=Class
 Version=9.85
 @EndOfDesignText@
 
-' VERSION 4.01
+' VERSION 5.01
 
 ' Using .Exe from Build Standalone Package you must include the .map files in 
 ' \BootloaderUploader\Objects\temp\build\bin\configs
@@ -341,21 +341,23 @@ Private Sub btnLoadFile_Click
 	If filepath <> "" Then
 		strLastFilePath = filepath
 		LogMessage("Status", "File Path: " & filepath)	
-		firmware = ConvertHexIntelToBinaryRange(filepath, intStartAddrFlash)
+		firmware = ConvertHexIntelToBinaryRange(filepath, intStartAddrFlash, intEndAddrFlash)
 	Else
 		strLastFilePath = ""
 		LogMessage("Status", "No file selected.")
 	End If
 End Sub
-Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int) As Byte()
+Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr As Int) As Byte()
 	Try
 		Dim lines As List = File.ReadList("", filepath)
         
-		Dim startByte As Int
+		Dim startByte, EndByte As Int
 		If blnUseWordScaling = True Then
 			startByte = startAddr * 2       ' eg. PIC 16F88, PIC 24F
+			EndByte = endAddr * 2
 		Else
 			startByte = startAddr           ' eg. PIC 18F27K42
+			EndByte =endAddr
 		End If
         
 		' Create binary array relative to startAddr
@@ -408,12 +410,12 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int) As Byte()
 			If absoluteAddr < startAddr Then Continue
 
 			' Eliminate
-			If absoluteAddr >= 0x56000 Then
-				Log("High Memory Data Detected at: " & Bit.ToHexString(absoluteAddr))
+			If absoluteAddr >= EndByte Then
+				Log("High Memory Data Detected at: " & Bit.ToHexString(absoluteAddr).ToUpperCase)
 				Continue
 			End If
 			
-			'Log(absoluteAddr)
+			Log(Bit.ToHexString(absoluteAddr).ToUpperCase)
             
 			' Map to our array index
 			Dim arrayIndex As Long = absoluteAddr - startByte
@@ -432,7 +434,7 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int) As Byte()
         
 		If blnDetectRecord Then
 			btnFlash.Enabled = True
-			LogMessage("Status", "Conversion success. ISR detected in high memory.")
+			LogMessage("Status", "Conversion success.")
 		Else
 			btnFlash.Enabled = False
 			LogMessage("Status", "Error: No valid data found above start address.")
@@ -446,6 +448,8 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int) As Byte()
 		Return EmptyArr
 	End Try
 End Sub
+
+
 '--------------------------------------------------------
 ' Start Handshake and Flash Upload
 '--------------------------------------------------------
@@ -741,7 +745,7 @@ Sub LoadConfiguration(SelectedPicName As String) As Boolean
 		
 						' Make sure reload the Intel Hex file to new Firmware() array
 						If strLastFilePath <> "" Then
-							firmware = ConvertHexIntelToBinaryRange(strLastFilePath, intStartAddrFlash)
+							firmware = ConvertHexIntelToBinaryRange(strLastFilePath, intStartAddrFlash, intEndAddrFlash)
 						End If
 						
 						' If port already open update stop bit parameter!
@@ -813,5 +817,4 @@ Sub BytesToHexString2(b As Byte) As String
 	
 	Return byteString.ToUpperCase
 End Sub
-
 
