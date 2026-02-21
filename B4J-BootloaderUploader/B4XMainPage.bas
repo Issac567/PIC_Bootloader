@@ -6,8 +6,6 @@ Version=9.85
 @EndOfDesignText@
 
 ' VERSION 4.01
-' Pre - v3.01 will not work with new MPLAB Projects
-' v3.01 used with new MPLAB Projects.  It will work with Old MPLAB projects.
 
 ' Using .Exe from Build Standalone Package you must include the .map files in 
 ' \BootloaderUploader\Objects\temp\build\bin\configs
@@ -815,4 +813,5 @@ Sub BytesToHexString2(b As Byte) As String
 	
 	Return byteString.ToUpperCase
 End Sub
+
 
