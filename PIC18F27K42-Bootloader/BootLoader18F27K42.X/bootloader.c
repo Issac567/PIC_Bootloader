@@ -349,8 +349,6 @@ bool ReceivePacket(void)
     uint32_t timeoutCounter = 0;
     const uint32_t TIMEOUT_3SEC = 2400000; 
 
-    UART_TxString("<ACK>"); 
-
     while (byteCount < FLASH_WRITE_BLOCK * 2)
     {
         // Check for Data
@@ -397,6 +395,9 @@ void DoFirmwareUpdate(void)
     // This loop runs until the entire memory is filled or a fatal error occurs
     while (1)
     {
+        // Send Acknowledge: Host sends next 8-byte packet after seeing this
+        UART_TxString("<ACK>");
+        
         // 1. DATA ACQUISITION
         // ReceivePacket waits for exactly 128 bytes (64 words) to fill the RAM buffer
         if (ReceivePacket())  
@@ -518,3 +519,4 @@ void main(void)
     
     // Good news is when bootloader goes to 0x0900 and is invalid, causes pic to reset and main repeated over and over till handshake and flash success!
 }
+
