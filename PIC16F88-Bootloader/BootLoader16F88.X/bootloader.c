@@ -1,6 +1,6 @@
 /*
  * File:   bootloader.c
- * Version: 1.23
+ * Version: 2.01
  * Author: Issac
  *
  * Created on January 19, 2026, 2:50 PM
@@ -18,15 +18,17 @@
 #define FLASH_END 0x0FFF                    // Flash end address
 #define FLASH_ERASE_BLOCK 32                // Runtime can only do 32 word block erase max!
 #define FLASH_WRITE_BLOCK 4                 // Can only do 4 word block write max with PIC 16F88!              
-#define TIMER2_COUNT 93                     // 32ms(ISR Trigger) x 93(t2_counter) = 3000 ms Timout
 #define MSG_MS_DELAY 50                     // Delay for UART_TxString 
 
 #define LED_PIN PORTBbits.RB4               // Bootloader Led Status    
 #define LED_TRIS TRISBbits.TRISB4           // Output PortB.4 pin
 
 uint16_t flash_packet[FLASH_WRITE_BLOCK];   // 4 words, 8 bytes total
-bool Timer2_Timeout = false;                // For Timer 2 Timeout Detection
-uint8_t t2_counter = 0;                     // For Timer 2 ISR counter (32 ms trigger ISR function)
+
+
+//#define APP_ISR_ADDRESS 0x604
+//void (*app_isr)(void) = (void (*)(void))APP_ISR_ADDRESS;
+
 
 
 //-------------------------------------------------------
@@ -53,6 +55,7 @@ void INTOSC_Init(void)
     OSCCONbits.SCS1  = 1;           // Select Internal Oscillator
     OSCCONbits.SCS0  = 0;   
 }
+
 
 //-------------------------------------------------------
 // UART ROUTINE
@@ -120,77 +123,11 @@ uint8_t UART_Rx(void)
 }
 
 
-//-------------------------------------------------------
-// TIMER2 ROUTINE
-//-------------------------------------------------------
-void TIMER2_Init(void)
+void __interrupt() boot_ISR(void)
+//void __at(0x0004) v_isr(void) 
 {
-    /**
-    * @brief Initializes Timer2 for a 32ms periodic interrupt.
-    * Settings: Fosc = 8MHz, Prescaler 1:16, Postscaler 1:16, PR2 = 249.
-    */
-    
-    T2CONbits.TMR2ON = 0;         // Ensure timer is OFF during configuration
-    
-    // Interrupt Configuration
-    PIR1bits.TMR2IF = 0;          // Clear the interrupt flag to avoid immediate firing
-    PIE1bits.TMR2IE = 1;          // Enable Timer2 interrupts (usually 1 if you want 32ms ISR)
-    TMR2 = 0;                     // Reset counter to 0
-
-    // Period Register
-    // Formula: (PR2 + 1) * Tcy * Prescaler * Postscaler
-    PR2 = 249;                    // Sets period to 32ms at 8MHz Fosc
-
-    // Clock Control
-    T2CONbits.T2CKPS = 0b10;      // Prescaler = 1:16 (Sets T2CKPS1=1, T2CKPS0=0)
-    
-    // Postscaler Configuration
-    // 0b1111 = 1:16 Postscaler
-    T2CONbits.TOUTPS3 = 1;
-    T2CONbits.TOUTPS2 = 1;
-    T2CONbits.TOUTPS1 = 1;
-    T2CONbits.TOUTPS0 = 1;
-
-    // Global Interrupt Enables
-    INTCONbits.PEIE = 1;          // Enable Peripheral Interrupts
-    INTCONbits.GIE  = 1;          // Enable Global Interrupts
-}
-
-void Timer2_Start(void)
-{
-   PIR1bits.TMR2IF = 0;        // clear pending interrupt FIRST
-   t2_counter = 0;             // reset ISR counter
-   TMR2 = 0;                   // reset File Register counter
-   Timer2_Timeout = false;     // Clear flag boolean
-   
-   PIE1bits.TMR2IE = 1;        // enable Timer2 interrupt flag
-   T2CONbits.TMR2ON = 1;       // start Timer2
-}
-
-void Timer2_Stop(void)
-{
-    t2_counter = 0;             // reset ISR counter
-    TMR2 = 0;                   // reset counter
-    Timer2_Timeout = false;     // Clear flag boolean
-    
-    PIE1bits.TMR2IE = 0;        // Disable Timer2 interrupt flag
-    T2CONbits.TMR2ON = 0;       // Stop Timer2
-
-}
-
-void __interrupt() ISR(void)
-{
-    if (PIR1bits.TMR2IF)
-    {
-        PIR1bits.TMR2IF = 0;                        // Clear flag
-
-        t2_counter++;                               // counter to compare
-        if (t2_counter >= TIMER2_COUNT)      
-        {
-            t2_counter = 0;                         // Reset it
-            Timer2_Timeout = true;                   // Set true for looper to detect flag
-        }
-    }
+    asm("PAGESEL 0xF00");
+    asm("CALL 0xF00");
 }
 
 
@@ -265,9 +202,6 @@ void Verify_Flash(void)
 {
     uint16_t addr;
     
-    // Timer Interrupt not needed.  B4J will receive continous data from Program Memory
-    Timer2_Stop();                  
-
     // Send to host
     UART_TxString("<StartFlashVerify>");
     __delay_ms(MSG_MS_DELAY);
@@ -305,10 +239,7 @@ void Verify_Flash(void)
 //-------------------------------------------------------
 // ERASE FLASH BLOCK 32 word erase at each for 
 void Flash_EraseApplication(void)
-{
-    // Timer Interrupt not needed.  
-    Timer2_Stop();   
-                
+{     
     // Send to host
     UART_TxString("<StartFlashErase>");    
     __delay_ms(MSG_MS_DELAY);
@@ -352,116 +283,102 @@ void Flash_EraseApplication(void)
 //-------------------------------------------------------
 bool ReceivePacket(void)
 {
-    /**
-    * @brief Receives a block of data via UART and assembles it into 16-bit words.
-    * @return true if a full packet was received, false if a Timer2 timeout occurred.
-    * * Note: Expected data size is FLASH_WRITE_BLOCK * 2 (e.g., 8 bytes for 4 words).
-    */
-    
     // Buffer for raw incoming bytes (e.g., 8 bytes)
     uint8_t temp[FLASH_WRITE_BLOCK * 2]; 
     uint8_t byteCount = 0;      
-     
-    // --- Data Acquisition Phase ---
+    uint32_t timeout_counter = 0;
+    
+    // Adjust this value based on your Fosc (Clock Speed)
+    // For 8MHz, 3 seconds is roughly 600,000 to 1,000,000 iterations
+    const uint32_t THREE_SECONDS = 380000; 
+    
     while (byteCount < (FLASH_WRITE_BLOCK * 2)) 
     {    
-        // Exit if the global Timer2_Timeout flag is set by the ISR
-        if (Timer2_Timeout)
-        {
-            return false;
-        }
-
-        // Check if UART Receive Interrupt Flag is set (byte waiting in RCREG)
+        // 1. Check for UART Data
         if (PIR1bits.RCIF) 
         {
-            temp[byteCount] = UART_Rx(); // Read byte and clear RCIF
-            byteCount++;                 
+            temp[byteCount] = RCREG; 
+            byteCount++;      
+            timeout_counter = 0; // Reset timeout every time a byte arrives
         }
+        else 
+        {
+            // 2. Increment Software Timeout if no data
+            timeout_counter++;
+            
+            // 3. Exit if we hit 3 seconds
+            if (timeout_counter >= THREE_SECONDS)
+            {
+                return false; // Timeout reached
+            }
+        }
+
     }
 
-    // --- Byte-to-Word Reassembly Phase ---
-    // Converts Little-Endian stream (LSB first) into 16-bit words
-    // Example: Host sends [0xAA, 0xBB] -> flash_packet[i] becomes 0xBBAA
+    // --- Byte-to-Word Reassembly ---
     for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++) 
     {
-        /* * Assembly Logic:
-         * 1. Take the second byte (MSB), shift it left by 8 bits
-         * 2. OR it with the first byte (LSB)
-         * 3. Result: A 16-bit Word ready for Flash writing
-         */
         flash_packet[i] = ((uint16_t)temp[i*2 + 1] << 8) | temp[i*2];
     }
 
-    return true; // Packet successfully reconstructed
+    return true; 
 }
 
 void DoFirmwareUpdate(void)
 {   
     /**
-    * @brief Main execution loop for the over-the-air/serial firmware update.
-    * Manages the handshake, flash writing, and timeout-based error recovery.
+    * @brief Main execution loop for the PIC16F88 firmware update.
+    * Uses software-polled timeouts instead of Timer2 ISR.
     */
     
-    // Notify Host (B4J) that the MCU is ready to receive flash data
+    // Notify Host (B4J) that the MCU is ready
     UART_TxString("<StartFlashWrite>");     
     __delay_ms(MSG_MS_DELAY);
     
-    uint16_t flashAddr = FLASH_START;       // Start pointer for program memory
-    uint8_t timeoutCount = 0;               // Counter for consecutive failed attempts
-        
+    uint16_t flashAddr = FLASH_START;       
+    uint8_t timeoutCount = 0;               
+
+    // Send Acknowledge: Host sends next 8-byte packet after seeing this
+    UART_TxString("<ACK>");  
+    
     while (1)
     {
-        // Preparation: Reset and start the watchdog timer (Timer2)
-        Timer2_Stop();                      
-        Timer2_Start();
-
-        // Send Acknowledge: Host waits for this before sending the next 8-byte packet
-        UART_TxString("<ACK>");    
-    
-        // Attempt to capture a full packet from the UART buffer
+        // Attempt to capture a packet. 
+        // NOTE: ReceivePacket now handles the 3-second software timeout internally.
         if (ReceivePacket())                
         {
-            // SUCCESS: Reset failure counter
-            timeoutCount = 0;
+            timeoutCount = 0; // Success, reset the "hate" counter
                         
-            // Commit the 4-word (8-byte) packet to the physical Flash memory
+            // PIC16F88 writes are typically done in blocks
             Flash_WriteBlock(flashAddr, flash_packet);
 
-            // Increment address pointer (PIC16F88 writes in 4-word blocks)
+            // Increment address (Note: PIC16 addresses words, not bytes)
             flashAddr += FLASH_WRITE_BLOCK;     
              
-            // Boundary Check: Have we filled the designated flash area?
+            // Boundary Check
             if (flashAddr + FLASH_WRITE_BLOCK - 1 > FLASH_END)
             {
-                // Notify Host to switch from "Send Mode" to "Verify Mode"
                 UART_TxString("<EndFlashWrite>");
                 __delay_ms(MSG_MS_DELAY);  
                  
-                // Read back flash and stream it to Host
-                Verify_Flash();
-                
-                return; // Firmware update successful
+                Verify_Flash(); // Final read-back
+                return; 
             }
         }
-        else // FAILURE: ReceivePacket returned false (Timer2 timed out)
+        else 
         {
+            // If ReceivePacket returns false, it means 3 seconds passed with no UART data
             timeoutCount++;
-            Timer2_Stop();
             
-            // Inform Host of the specific communication lapse
-            UART_TxString("<ISR Timeout>");        
+            UART_TxString("<ISR Timeout>");  // Simplified message for smaller flash
             __delay_ms(MSG_MS_DELAY);              
             
-            // Critical Failure: Exit if we lose connection 3 times in a row
             if (timeoutCount >= 3)
             {
                 UART_TxString("<ErrorTimeout>");    
                 __delay_ms(MSG_MS_DELAY);
-                
-                return; // Abort update and return to main/bootloader menu
+                return; // Abort
             } 
-            
-            // If < 3 timeouts, the loop continues and sends another <ACK>
         }
     }
 }
@@ -469,71 +386,70 @@ void DoFirmwareUpdate(void)
 
 void WaitHandshake(void) 
 { 
-    /**
-    * @brief Waits for a specific 16-bit sequence (0x55, 0xAA) via UART.
-    * If detected within the Timer2 timeout period, it triggers the firmware update process.
-    */
+    uint8_t prev = 0; 
+    uint8_t curr; 
     
-    uint8_t prev = 0; // Stores the previous byte for sequence matching
-    uint8_t curr;     // Stores the current byte being read
+    // SOFTWARE TIMEOUT CALCULATION:
+    // At 8MHz, this loop takes a few microseconds per iteration.
+    // 1,000,000 is a good starting point for ~3 seconds.
+    uint32_t timeout_counter = 0;
+    const uint32_t THREE_SECONDS = 380000; 
     
-    Timer2_Start();   // Initialize the watchdog timeout
+    // No Timer2_Start() needed anymore!
     
-    // Continue polling until Timer2_Timeout is set by the ISR
-    while (!Timer2_Timeout)
+    while (timeout_counter < THREE_SECONDS)
     {
-        // Check if UART has received data (Receive Interrupt Flag)
+        // 1. Check for UART data
         if(PIR1bits.RCIF) 
         {
-            curr = UART_Rx(); // Fetch byte from RCREG
+            curr = RCREG; // Read directly for speed
                 
-            // Security Check: Look for the specific "Magic Sequence"
-            // The Host must send 0x55 followed immediately by 0xAA
             if(prev == 0x55 && curr == 0xAA) 
             {                         
-                // Step 1: Confirm handshake to Host (B4J)
                 UART_TxString("<InitReceived>");
                 __delay_ms(MSG_MS_DELAY);
                 
-                // Step 2: Clear old application code to make room for new firmware
                 Flash_EraseApplication(); 
-                
-                // Step 3: Enter the main writing loop
                 DoFirmwareUpdate();       
                 
-                return; // Exit after successful update
+                return; 
             }
             
-            // Sliding Window: Move current byte to previous to check next pair
             prev = curr;
+            // Optional: Reset timeout_counter = 0; if you want the 3s 
+            // to restart every time a character is typed.
+        }
+        else 
+        {
+            // 2. No data received? Increment the timer
+            timeout_counter++;
         }
     }
-    
-    // If the loop exits, it means Timer2 timed out without seeing 0x55 0xAA
-    Timer2_Stop();
-    
-    // Notify the host that the connection window has closed
+        
+    // If loop finishes, it means timeout_counter hit THREE_SECONDS
     UART_TxString("<HandShakeTimeout>");
     __delay_ms(MSG_MS_DELAY);
 }
 
+
 //-------------------------------------------------------
 // MAIN ENTRY FOR BOOTLOADER
 //-------------------------------------------------------
-void main(void) {
+void main(void) 
+{
     ANSEL  = 0x00;                  // Disable analog (VERY IMPORTANT)
     
     LED_TRIS = 0;                   // Output
     LED_PIN  = 1;                   // LED On (bootloader led))
        
     INTOSC_Init();                  // Must set internal Oscillator
-    TIMER2_Init();                  // Init Timer2
     UART_Init();                    // Init Hardware UART   
     
     WaitHandshake();                // wait for 0x55 0xAA (3s timeout then goto app))
     
     LED_PIN  = 0;                   // LED Off (bootloader led))
-    
+  
+    asm("PAGESEL 0x600");           // Ensure PCLATH is correct for the jump
     asm("goto 0x600");              // If bootloader is not init from PC, then continue to application
     
     
