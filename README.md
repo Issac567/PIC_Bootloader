@@ -15,7 +15,7 @@ A **PC with the B4J uploader** is required to update application firmware on the
 2. Use the B4J uploader to flash or update firmware on the target device.
 
 ## Note
-- Currently, ISR functions in MPLAB application.c firmware will not work for 16F family!!! Only in bootloader it works.  Seeking solution for this. However, 18F will work in application.c Firmware, but not needed in bootloader.
+- Currently, ISR functions in MPLAB bootloader.c firmware will not work in bootloader. Not needed.
 
 ---
 
