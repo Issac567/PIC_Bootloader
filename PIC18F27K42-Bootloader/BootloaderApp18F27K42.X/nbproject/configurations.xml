@@ -17,8 +17,8 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>newmain.c</itemPath>
       <itemPath>config.h</itemPath>
+      <itemPath>Application.c</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
@@ -34,7 +34,7 @@
         <targetDevice>PIC18F27K42</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>PICkit3PlatformTool</platformTool>
+        <platformTool>noID</platformTool>
         <languageToolchain>XC8</languageToolchain>
         <languageToolchainVersion>3.10</languageToolchainVersion>
         <platform>3</platform>
@@ -106,7 +106,8 @@
       <HI-TECH-LINK>
         <property key="additional-options-checksum" value=""/>
         <property key="additional-options-code-offset" value="900"/>
-        <property key="additional-options-command-line" value=""/>
+        <property key="additional-options-command-line"
+                  value="-Wl,-Pmy_isr_code=0x1F000"/>
         <property key="additional-options-errata" value=""/>
         <property key="additional-options-extend-address" value="false"/>
         <property key="additional-options-trace-type" value=""/>
