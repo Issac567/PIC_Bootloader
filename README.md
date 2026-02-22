@@ -13,9 +13,17 @@ This repository contains a collection of firmware projects for various **PIC mic
 
 | Requirement | Purpose |
 | :--- | :--- |
-| **MPLAB X IDE** [MPLAB Ecosystem – Microchip](https://www.microchip.com/en-us/tools-resources/archives/mplab-ecosystem)| Compiling and building the firmware projects. |
-| **XC Compilers** [MPLAB Compiler – Microchip]([https://www.microchip.com/en-us/tools-resources/archives/mplab-ecosystem](https://www.microchip.com/en-us/tools-resources/develop/mplab-xc-compilers)| Required for the build process (XC8, XC16, or XC32). |
-| **B4J Runtime** [B4J – B4X](https://www.b4x.com/b4j.html)| Necessary to run the uploader utilities on your PC. |
+| **MPLAB X IDE** | Compiling and building the firmware projects. |
+| **XC Compilers** | Required for the build process (XC8, XC16, or XC32). |
+| **B4J Runtime** | Necessary to run the uploader utilities on your PC. |
+
+---
+
+## 🛠 Setup & Installation
+
+* [MPLAB Ecosystem – Microchip](https://www.microchip.com/en-us/tools-resources/archives/mplab-ecosystem)
+* [MPLAB Compiler – Microchip]([https://www.microchip.com/en-us/tools-resources/archives/mplab-ecosystem](https://www.microchip.com/en-us/tools-resources/develop/mplab-xc-compilers)
+* [B4J – B4X](https://www.b4x.com/b4j.html)
 
 ---
 
