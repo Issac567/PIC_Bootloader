@@ -48,8 +48,10 @@ Follow these steps to correctly link the Application and Bootloader projects:
 Updating the device firmware requires the B4J uploader tool:
 1. Connect your target PIC device to your PC.
 2. Open the **B4J Uploader** utility.
-3. Load the `BootLoaderApp16F88.X.production.hex` file generated in the previous step.
-4. Execute the update command to flash the device.
+3. Select `com port` and click `open`
+4. Select configuration type eg. `16F88` in the combobox
+5. Click `Load Firmware` the `BootLoaderApp16F88.X.production.hex` file generated in the previous step.
+6. Execute the `flash` command to flash the device.  It will Erase, Flash and Verify in that order
 
 ---
 
