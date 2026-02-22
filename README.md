@@ -19,6 +19,21 @@ This repository contains a collection of firmware projects for various **PIC mic
 
 ---
 
+## 🛠 Setup & Installation
+
+Follow these steps to correctly link the Application and Bootloader projects:
+
+1. **Download the Repository**: Click the green **Code** button and select **Download ZIP**, then extract it to your local machine.
+2. **Open MPLAB X**: Launch the IDE and open both the **Bootloader** project and its corresponding **App** project (e.g., `PIC24F` and `PIC24F_app`).
+3. **Import Loadables**:
+   * In the Projects pane, locate your **Bootloader** project.
+   * Right-click on the **Loadables** folder.
+   * Select **Add Loadable Project...**
+   * Select the corresponding project folder that has the **"_app"** suffix.
+4. **Build**: Build the Bootloader project. This will automatically compile the application and merge them into a single `.hex` file.
+
+---
+
 ## 🚀 Usage Instructions
 
 ### 1. Build the Project
