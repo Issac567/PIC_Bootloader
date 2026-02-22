@@ -1,7 +1,7 @@
 /*
  * File:   newmain.c
  * Author: issac
- * Version: 2.01
+ * Version: 2.02
  * Created on January 18, 2026, 12:13 PM
  */
 
@@ -142,6 +142,8 @@ void __at(0xF00) AppISR(void)
         if (t2_counter >= TIMER2_COUNT)      
         {
             t2_counter = 0;                         // Reset it
+            
+            //UART_TxString("<From ISR Demo>");         // Enable Demo to test timer2          
         }
     }
     
@@ -174,8 +176,6 @@ void EEPROM_WriteByte(uint8_t address, uint8_t data)
 void  main(void) {
     // Add application code here......
     
-    //ISRApp();
-    
     AppISR();                           //Without that "dummy" call, the XC8 compiler looks at your code, sees that nothing is technically calling AppISR
     
     uint8_t b;                          // Application monitor 0x55 for bootloading
@@ -183,7 +183,7 @@ void  main(void) {
             
     UART_Init();                        // Init UART
     
-    // Demo
+    // Enable Demo to test timer2
     //TIMER2_Init();
     //Timer2_Start();
        
@@ -203,7 +203,7 @@ void  main(void) {
             b = UART_Rx();
             if (b == 0x55)              // This is Handshake byte. In application 0xAA is not needed.  It will reboot then 0x55 and 0xAA will be detected
             {
-                //Timer2_Stop;            // Demo
+                //Timer2_Stop;            // Enable Demo to test timer2
                 // Send to Host Handshake received at app location
                 UART_TxString("<InitFromApp>");
                 
