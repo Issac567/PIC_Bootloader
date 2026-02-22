@@ -30,7 +30,7 @@ Follow these steps to correctly link the Application and Bootloader projects:
    * Right-click on the **Loadables** folder.
    * Select **Add Loadable Project...**
    * Select the corresponding project folder that has the **BootLoaderApp16F88.X** suffix.
-   * Right click **BootLoader16F88.X** folder and **Set as Main Project**
+   * Right click **BootLoader16F88** folder and **Set as Main Project**
 4. **Clean and Build**: Build the Bootloader project. This will automatically compile the application and merge them into a single `.hex` file.  Bootloader has **BootLoader16F88.X.production.hex**, Application has **BootLoaderApp16F88.X.production.hex** and Bootloader also has **BootLoader16F88.X.production.unified.hex**.
 5. **B4J Uploader** is what you use to upload the Intex Hex file to your 16F88 eg.  File location **..\BootloaderApp16F88.X\dist\default\production\BootLoaderApp16F88.X.production.hex**
 
