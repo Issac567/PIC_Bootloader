@@ -1,6 +1,6 @@
 /*
  * File:   bootloader.c
- * Version: 2.01
+ * Version: 2.02
  * Author: Issac
  *
  * Created on January 19, 2026, 2:50 PM
@@ -343,9 +343,6 @@ bool ReceivePacket(void)
 {
     uint8_t temp[FLASH_WRITE_BLOCK * 2];  
     uint16_t byteCount = 0;
-    
-    // 48,000,000 cycles total / ~24 cycles per loop iteration 
-    // This constant will give you approximately 3 seconds at 64MHz.
     uint32_t timeoutCounter = 0;
     const uint32_t TIMEOUT_3SEC = 2400000; 
 
@@ -395,9 +392,8 @@ void DoFirmwareUpdate(void)
     // This loop runs until the entire memory is filled or a fatal error occurs
     while (1)
     {
-        // Send Acknowledge: Host sends next 8-byte packet after seeing this
-        UART_TxString("<ACK>");
-        
+        UART_TxString("<ACK>"); 
+            
         // 1. DATA ACQUISITION
         // ReceivePacket waits for exactly 128 bytes (64 words) to fill the RAM buffer
         if (ReceivePacket())  
@@ -449,9 +445,6 @@ void WaitHandshake(void)
 {
     uint8_t prev = 0;
     uint8_t curr = 0;
-    
-    // 32-bit counter for the 3-second window
-    // 48,000,000 instruction cycles / ~24 cycles per loop = 2,000,000
     uint32_t handshakeCounter = 0;
     const uint32_t TIMEOUT_3SEC = 2400000; 
 
@@ -519,4 +512,3 @@ void main(void)
     
     // Good news is when bootloader goes to 0x0900 and is invalid, causes pic to reset and main repeated over and over till handshake and flash success!
 }
-
