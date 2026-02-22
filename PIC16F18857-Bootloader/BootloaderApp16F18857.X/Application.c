@@ -1,7 +1,7 @@
 /*
  * File:   newmain.c
  * Author: issac
- * Version: 2.01
+ * Version: 2.02
  * Created on January 18, 2026, 12:13 PM
  */
 
@@ -67,9 +67,6 @@ uint8_t UART_Rx(void)
         RC1STAbits.CREN = 1;   // Re-enable receive
     }
 
-    // Wait for a byte to be available (optional, polling)
-    //while (!PIR3bits.RCIF);
-
     return RC1REG;             // Return received byte
 }
 
@@ -131,6 +128,8 @@ void  __at(0x7000)AppISR(void)
         if (t2_counter >= TIMER2_COUNT)      
         {
             t2_counter = 0;                         // Reset it
+            
+            //UART_TxString("<From ISR DEMO>");     // Enable Demo For ISR Test
         }
     }
 }
@@ -146,19 +145,19 @@ void EEPROM_WriteByte(uint8_t address, uint8_t data)
     NVMADRH = (physAddr >> 8) & 0xFF;
 
     // Load data into NVMDATL
-    NVMDATL = data;     // Write data byte
-    NVMDATH = 0;        // High byte unused for EEPROM
+    NVMDATL = data;                         // Write data byte
+    NVMDATH = 0;                            // High byte unused for EEPROM
 
     // Select EEPROM region and enable write
-    NVMCON1bits.NVMREGS = 1; // 1 = EEPROM access
-    NVMCON1bits.WREN    = 1; // Enable writes
+    NVMCON1bits.NVMREGS = 1;                // 1 = EEPROM access
+    NVMCON1bits.WREN    = 1;                // Enable writes
 
     // Unlock sequence (datasheet)
     INTCONbits.GIE = 0;
     NVMCON2 = 0x55;
     NVMCON2 = 0xAA;
-    NVMCON1bits.WR = 1;      // Start write
-    while (NVMCON1bits.WR);  // Wait until done
+    NVMCON1bits.WR = 1;                     // Start write
+    while (NVMCON1bits.WR);                 // Wait until done
     INTCONbits.GIE = 1;
 
     // Disable write
@@ -175,7 +174,7 @@ void main(void) {
     UART_Init();                        // Init UART
         
     
-    // Demo
+    // Enable Demo For ISR Test
     //TIMER2_Init();
     //Timer2_Start();
     
@@ -195,7 +194,8 @@ void main(void) {
             b = UART_Rx();
             if (b == 0x55)              // This is Handshake byte. In application 0xAA is not needed.  It will reboot then 0x55 and 0xAA will be detected
             {
-                //Timer2_Stop();        // Demo
+                //Timer2_Stop();        // Enable Demo For ISR Test
+                
                 UART_TxString("<InitFromApp>");
                 
                 asm ("goto 0x0000");    // Restart to bootloader in preparation for flash
