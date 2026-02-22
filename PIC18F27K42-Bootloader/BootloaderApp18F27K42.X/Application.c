@@ -1,7 +1,7 @@
 /*
  * File:   newmain.c
  * Author: issac
- * Version: 2.01
+ * Version: 2.02
  * Created on January 18, 2026, 12:13 PM
  */
 
@@ -197,7 +197,7 @@ void __interrupt(high_priority) my_high_isr(void)
         if (t2_counter >= TIMER2_COUNT)      
         {
             t2_counter = 0;                         // Reset it
-            //UART_TxString("<Application Timer 2S>"); // Demo 
+            //UART_TxString("<From ISR Demo>");     // Enable Demo to Test Timer2
         }
     }
 }
@@ -241,9 +241,9 @@ void __at(0xA00) main(void)
     // Ensure LED_TRIS is mapped to a different pin than the bootloader's status LED.
     LED_TRIS = 0;                       
 
-    UART_Init();                        // Initialize UART1 with the 64 MHz parameters (Baud, PPS, and Digital mode).                  
-    //TIMER2_Init();                      // Demo Init Timer
-    //Timer2_Start();                     // Demo working in Application area
+    UART_Init();                          // Initialize UART1 with the 64 MHz parameters (Baud, PPS, and Digital mode).                  
+    //TIMER2_Init();                      // Enable Demo to Test Timer2
+    //Timer2_Start();                     // Enable Demo to Test Timer2
     
     //EEPROM_WriteByte(0x01, 0x55);
     
@@ -267,7 +267,7 @@ void __at(0xA00) main(void)
             // If the handshake byte (0x55) is detected:
             if (b == 0x55)              
             {
-                // Demo Stop timer2 we dont want msg corruption
+                // Enable Demo to Test Timer2
                 //Timer2_Stop();
                 
                 // Acknowledge the request so the PC knows the app has "heard" the command.
