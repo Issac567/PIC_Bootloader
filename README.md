@@ -22,7 +22,7 @@ This repository contains a collection of firmware projects for various **PIC mic
 ## 🛠 Setup & Installation
 
 * [MPLAB Ecosystem – Microchip](https://www.microchip.com/en-us/tools-resources/archives/mplab-ecosystem)
-* [MPLAB Compiler – Microchip][https://www.microchip.com/en-us/tools-resources/archives/mplab-ecosystem](https://www.microchip.com/en-us/tools-resources/develop/mplab-xc-compilers)
+* [MPLAB Compiler – Microchip](https://www.microchip.com/en-us/tools-resources/archives/mplab-ecosystem](https://www.microchip.com/en-us/tools-resources/develop/mplab-xc-compilers)
 * [B4J – B4X](https://www.b4x.com/b4j.html)
 
 ---
