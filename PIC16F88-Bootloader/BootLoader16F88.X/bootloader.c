@@ -1,6 +1,6 @@
 /*
  * File:   bootloader.c
- * Version: 2.01
+ * Version: 2.02
  * Author: Issac
  *
  * Created on January 19, 2026, 2:50 PM
@@ -24,12 +24,6 @@
 #define LED_TRIS TRISBbits.TRISB4           // Output PortB.4 pin
 
 uint16_t flash_packet[FLASH_WRITE_BLOCK];   // 4 words, 8 bytes total
-
-
-//#define APP_ISR_ADDRESS 0x604
-//void (*app_isr)(void) = (void (*)(void))APP_ISR_ADDRESS;
-
-
 
 //-------------------------------------------------------
 // INTERNAL OSCILLATOR CLK CONFIG
@@ -124,7 +118,6 @@ uint8_t UART_Rx(void)
 
 
 void __interrupt() boot_ISR(void)
-//void __at(0x0004) v_isr(void) 
 {
     asm("PAGESEL 0xF00");
     asm("CALL 0xF00");
@@ -267,9 +260,9 @@ void Flash_EraseApplication(void)
         NOP();                      // Sequence Required
         NOP();
         
-        EECON1bits.FREE = 0;       // Stop erase
-        EECON1bits.WREN = 0;       // Stop write
-        INTCONbits.GIE = 1;        // Enable interrupts
+        EECON1bits.FREE = 0;        // Stop erase
+        EECON1bits.WREN = 0;        // Stop write
+        INTCONbits.GIE = 1;         // Enable interrupts
     }
     
     // Send to host
@@ -290,7 +283,7 @@ bool ReceivePacket(void)
     
     // Adjust this value based on your Fosc (Clock Speed)
     // For 8MHz, 3 seconds is roughly 600,000 to 1,000,000 iterations
-    const uint32_t THREE_SECONDS = 380000; 
+    const uint32_t THREE_SECONDS = 200000; 
     
     while (byteCount < (FLASH_WRITE_BLOCK * 2)) 
     {    
@@ -388,15 +381,9 @@ void WaitHandshake(void)
 { 
     uint8_t prev = 0; 
     uint8_t curr; 
-    
-    // SOFTWARE TIMEOUT CALCULATION:
-    // At 8MHz, this loop takes a few microseconds per iteration.
-    // 1,000,000 is a good starting point for ~3 seconds.
     uint32_t timeout_counter = 0;
-    const uint32_t THREE_SECONDS = 380000; 
-    
-    // No Timer2_Start() needed anymore!
-    
+    const uint32_t THREE_SECONDS = 200000; 
+        
     while (timeout_counter < THREE_SECONDS)
     {
         // 1. Check for UART data
