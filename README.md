@@ -24,13 +24,15 @@ This repository contains a collection of firmware projects for various **PIC mic
 Follow these steps to correctly link the Application and Bootloader projects:
 
 1. **Download the Repository**: Click the green **Code** button and select **Download ZIP**, then extract it to your local machine.
-2. **Open MPLAB X**: Launch the IDE and open both the **Bootloader** project and its corresponding **App** project (e.g., `PIC24F` and `PIC24F_app`).
+2. **Open MPLAB X**: Launch the IDE and open both the **Bootloader** project and its corresponding **App** project (e.g., `BootLoader16F88.X` and `BootLoaderApp16F88.X`).
 3. **Import Loadables**:
-   * In the Projects pane, locate your **Bootloader** project.
+   * In the Projects pane, locate your **BootLoader16F88.X** project.
    * Right-click on the **Loadables** folder.
    * Select **Add Loadable Project...**
-   * Select the corresponding project folder that has the **"_app"** suffix.
-4. **Build**: Build the Bootloader project. This will automatically compile the application and merge them into a single `.hex` file.
+   * Select the corresponding project folder that has the **BootLoaderApp16F88.X** suffix.
+   * Right click BootLoader16F88.X and **Set as Main Project**
+4. **Clean and Build**: Build the Bootloader project. This will automatically compile the application and merge them into a single `.hex` file.  Bootloader has **BootLoader16F88.X.production.hex**, Application has **BootLoaderApp16F88.X.production.hex** and Bootloader also has **BootLoader16F88.X.production.unified.hex**.
+5. **BootLoaderApp16F88.X.production.hex** is the hex you use with **B4J Uploader**.  File location **..\BootloaderApp16F88.X\dist\default\production\BootLoaderApp16F88.X.production.hex**
 
 ---
 
