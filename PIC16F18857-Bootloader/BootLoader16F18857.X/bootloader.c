@@ -1,6 +1,6 @@
 /*
  * File:   bootloader.c
- * Version: 2.01...............
+ * Version: 2.02
  * Author: Issac
  *
  * Created on January 19, 2026, 2:50 PM
@@ -64,34 +64,34 @@ void INTOSC_Init(void)
 void UART_Init(void)
 {
     // 1. Set pin directions
-    TRISBbits.TRISB2 = 1; // RB2 as Input (RX)
-    TRISBbits.TRISB5 = 0; // RB5 as Output (TX)
+    TRISBbits.TRISB2 = 1;       // RB2 as Input (RX)
+    TRISBbits.TRISB5 = 0;       // RB5 as Output (TX)
 
     // 2. PPS Unlock Sequence
     PPSLOCK = 0x55;
     PPSLOCK = 0xAA;
-    PPSLOCKbits.PPSLOCKED = 0; // Unlock PPS
+    PPSLOCKbits.PPSLOCKED = 0;  // Unlock PPS
 
     // 3. Map RX to RB2
-    RXPPS = 0x0A; // RB2->EUSART:RX;
+    RXPPS = 0x0A;               // RB2->EUSART:RX;
 
     // 4. Map RB5 to TX
-    RB5PPS = 0x10; // RB5->EUSART:TX;
+    RB5PPS = 0x10;              // RB5->EUSART:TX;
 
     // 5. PPS Lock Sequence
     PPSLOCK = 0x55;
     PPSLOCK = 0xAA;
-    PPSLOCKbits.PPSLOCKED = 1; // Lock PPS
+    PPSLOCKbits.PPSLOCKED = 1;  // Lock PPS
 
     // ----- Baud rate (57600 @ 32MHz HFINTOSC) -----
     SP1BRGL = 34;
     SP1BRGH = 0;
-    BAUD1CONbits.BRG16 = 0; // 8-bit baud generator
-    TX1STAbits.BRGH = 1;    // High-speed
+    BAUD1CONbits.BRG16 = 0;     // 8-bit baud generator
+    TX1STAbits.BRGH = 1;        // High-speed
 
     // ----- UART mode -----
-    TX1STAbits.SYNC = 0;    // Asynchronous
-    RC1STAbits.SPEN = 1;    // Enable UART pins
+    TX1STAbits.SYNC = 0;        // Asynchronous
+    RC1STAbits.SPEN = 1;        // Enable UART pins
 
     // ----- Enable TX and RX -----
     TX1STAbits.TXEN = 1;
@@ -100,7 +100,7 @@ void UART_Init(void)
     // ----- Clear pending RX bytes -----
     uint8_t dummy;
     while (PIR3bits.RCIF) {
-        dummy = RC1REG;      // discard
+        dummy = RC1REG;         // discard
     }
 }
 
@@ -132,7 +132,6 @@ uint8_t UART_Rx(void)
 
 
 void __interrupt() boot_ISR(void)
-//void __at(0x0004) v_isr(void) 
 {
     asm("PAGESEL 0x7000");
     asm("CALL 0x7000");
@@ -221,12 +220,12 @@ void Flash_WriteBlock(uint16_t address, uint16_t *data)
     NVMCON1bits.LWLO = 0;
 
     // Perform the unlock/write sequence for the final row commit
-    INTCONbits.GIE = 0;     // Disable interrupts
-    NVMCON2 = 0x55;         // Unlock part 1
-    NVMCON2 = 0xAA;         // Unlock part 2
-    NVMCON1bits.WR = 1;     // Start row write
-    while (NVMCON1bits.WR); // Wait for completion
-    INTCONbits.GIE = 1;     // Re-enable interrupts
+    INTCONbits.GIE = 0;         // Disable interrupts
+    NVMCON2 = 0x55;             // Unlock part 1
+    NVMCON2 = 0xAA;             // Unlock part 2
+    NVMCON1bits.WR = 1;         // Start row write
+    while (NVMCON1bits.WR);     // Wait for completion
+    INTCONbits.GIE = 1;         // Re-enable interrupts
 
     // -----------------------------
     // Cleanup: disable flash writes
@@ -250,7 +249,7 @@ void Verify_Flash(void)
     // Loop through all flash from start to end
     for (addr = FLASH_START; addr + FLASH_WRITE_BLOCK - 1 <= FLASH_END; addr += FLASH_WRITE_BLOCK)
     {
-        // Prepare 4-word packet
+        // Prepare 32-word packet
         uint16_t packet[FLASH_WRITE_BLOCK];
         for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
         {
@@ -291,13 +290,13 @@ void Flash_EraseApplication(void)
 
     {
         // Load full flash address into NVM address registers
-        NVMADRL = addr & 0xFF;           // Low 8 bits
-        NVMADRH = (addr >> 8) & 0x7F;    // Upper 7 bits for full 0x0000?0x7FFF
+        NVMADRL = addr & 0xFF;              // Low 8 bits
+        NVMADRH = (addr >> 8) & 0x7F;       // Upper 7 bits for full 0x0000?0x7FFF
 
         // Program flash erase setup
-        NVMCON1bits.NVMREGS = 0; // PFM (Program Flash Memory)
-        NVMCON1bits.FREE    = 1; // Erase
-        NVMCON1bits.WREN    = 1; // Enable writes
+        NVMCON1bits.NVMREGS = 0;            // PFM (Program Flash Memory)
+        NVMCON1bits.FREE    = 1;            // Erase
+        NVMCON1bits.WREN    = 1;            // Enable writes
 
         // Disable interrupts during unlock sequence
         INTCONbits.GIE = 0;
@@ -305,7 +304,7 @@ void Flash_EraseApplication(void)
         // Required unlock sequence
         NVMCON2 = 0x55;
         NVMCON2 = 0xAA;
-        NVMCON1bits.WR = 1; // Start erase
+        NVMCON1bits.WR = 1;                 // Start erase
 
         // Wait until erase completes
         while(NVMCON1bits.WR);
@@ -332,23 +331,23 @@ bool ReceivePacket(void)
     uint8_t byteCount = 0; 
     uint32_t timeout_counter = 0;
 
-    const uint32_t THREE_SECONDS = 1000000;   
-
+    const uint32_t THREE_SECONDS = 1000000; 
+    
     while (byteCount < FLASH_WRITE_BLOCK * 2)   
     {
         // Check if UART receive flag is set
         if (PIR3bits.RCIF)                          
         {       
-            temp[byteCount] = UART_Rx();            // Capture incoming byte
+            temp[byteCount] = UART_Rx();        // Capture incoming byte
             byteCount++;                                
-            timeout_counter = 0; // Reset timeout every time a byte arrives
+            timeout_counter = 0;                // Reset timeout every time a byte arrives
                 }
         else 
         {
-            // 2. Increment Software Timeout if no data
+            // Increment Software Timeout if no data
             timeout_counter++;
             
-            // 3. Exit if we hit 3 seconds
+            // Exit if we hit 3 seconds
             if (timeout_counter >= THREE_SECONDS)
             {
                 return false; // Timeout reached
@@ -380,9 +379,9 @@ void DoFirmwareUpdate(void)
         
     while (1)
     {      
-        // Send Acknowledge: Host sends next 8-byte packet after seeing this
-        UART_TxString("<ACK>");
-      
+        // Send Acknowledge: Host sends next 64-byte packet after seeing this
+        UART_TxString("<ACK>");  
+    
         if (ReceivePacket())                // Check packet 64 bytes total 32 word
         {          
             // Successfully received a packet, reset timeout counter
@@ -497,4 +496,3 @@ void main(void) {
     
     // Good news is when bootloader goes to 0x0600 and is invalid, causes pic to reset and main repeated over and over till handshake and flash success!
 }
-
