@@ -22,8 +22,6 @@
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
-    <Elem>.</Elem>
-    <Elem>../Shared 16F88</Elem>
     <Elem>../Shared16F88</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
@@ -1222,3 +1220,4 @@
     </conf>
   </confs>
 </configurationDescriptor>
+
