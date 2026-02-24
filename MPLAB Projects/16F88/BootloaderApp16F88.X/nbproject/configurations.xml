@@ -17,7 +17,6 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>config.h</itemPath>
       <itemPath>Application.c</itemPath>
       <itemPath>../Shared16F88/uart.c</itemPath>
     </logicalFolder>
