@@ -1,7 +1,7 @@
 /*
  * File:   application.c
  * Author: issac
- * Version: 3.01
+ * Version: 3.03
  * Created on January 18, 2026, 12:13 PM
  * Family: 16F88
  */
