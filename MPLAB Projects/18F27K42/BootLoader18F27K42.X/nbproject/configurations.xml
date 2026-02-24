@@ -18,7 +18,6 @@
                    displayName="Source Files"
                    projectFiles="true">
       <itemPath>bootloader.c</itemPath>
-      <itemPath>config.h</itemPath>
       <itemPath>../Shared18F27K42/uart.c</itemPath>
     </logicalFolder>
   </logicalFolder>
