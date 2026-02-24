@@ -9,9 +9,6 @@
             <sourceEncoding>ISO-8859-1</sourceEncoding>
             <make-dep-projects/>
             <sourceRootList>
-                <sourceRootElem>../BootLoader16F88.X</sourceRootElem>
-                <sourceRootElem>.</sourceRootElem>
-                <sourceRootElem>../Shared 16F88</sourceRootElem>
                 <sourceRootElem>../BootLoader16F18857.X</sourceRootElem>
                 <sourceRootElem>../Shared16F18857</sourceRootElem>
             </sourceRootList>

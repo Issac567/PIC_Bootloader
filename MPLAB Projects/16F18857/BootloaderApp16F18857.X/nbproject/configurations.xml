@@ -19,12 +19,11 @@
                    projectFiles="true">
       <itemPath>Application.c</itemPath>
       <itemPath>../Shared16F18857/uart.c</itemPath>
+      <itemPath>../Shared16F18857/config.h</itemPath>
+      <itemPath>../Shared16F18857/uart.h</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
-    <Elem>../BootLoader16F88.X</Elem>
-    <Elem>.</Elem>
-    <Elem>../Shared 16F88</Elem>
     <Elem>../BootLoader16F18857.X</Elem>
     <Elem>../Shared16F18857</Elem>
   </sourceRootList>
