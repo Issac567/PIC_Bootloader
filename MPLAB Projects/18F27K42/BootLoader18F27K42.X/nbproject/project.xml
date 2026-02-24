@@ -11,8 +11,6 @@
                 <make-dep-project>../BootloaderApp18F27K42.X</make-dep-project>
             </make-dep-projects>
             <sourceRootList>
-                <sourceRootElem>.</sourceRootElem>
-                <sourceRootElem>../Shared 16F88</sourceRootElem>
                 <sourceRootElem>../Shared18F27K42</sourceRootElem>
             </sourceRootList>
             <confList>
