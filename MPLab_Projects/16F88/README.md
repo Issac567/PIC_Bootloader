@@ -112,8 +112,8 @@ I use **MPLAB X IDE 6.05** (supports Pickit 3/3.5 if using this!)
 | PIC16F88 Pin | Connection                      | Notes                    |
 |-------------|---------------------------------|--------------------------|
 | VSS (pin 5) | GND                             | Ground                   |
-| VDD (pin 14)| +5V                             | Power supply             |
-| MCLR (pin 4)| +5V through 10 kΩ resistor       | Reset pull-up            |
+| VDD (pin 14)| +3.3V                             | Power supply             |
+| MCLR (pin 4)| +3.3V through 10 kΩ resistor       | Reset pull-up            |
 | RB4 (pin 10)| Bootloader LED + series resistor | LED for bootloader status|
 | RB3 (pin 9) | Application LED + series resistor| LED for application      |
 | RB5 (pin 11)| UART TX → RX on USB‑TTL         | Bootloader communication |
@@ -130,7 +130,7 @@ I use **MPLAB X IDE 6.05** (supports Pickit 3/3.5 if using this!)
 | **RX**  | TX(RB5)       |
 | **GND** | VSS      |
 
-> ⚠️ Ensure logic levels are **5V compatible**
+> ⚠️ Ensure logic levels are **3.3V compatible**
 
 ---
 
