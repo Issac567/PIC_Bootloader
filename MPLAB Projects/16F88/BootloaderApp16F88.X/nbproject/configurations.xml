@@ -22,9 +22,6 @@
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
-    <Elem>../BootLoader16F88.X</Elem>
-    <Elem>.</Elem>
-    <Elem>../Shared 16F88</Elem>
     <Elem>../Shared16F88</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
@@ -1207,3 +1204,4 @@
     </conf>
   </confs>
 </configurationDescriptor>
+
