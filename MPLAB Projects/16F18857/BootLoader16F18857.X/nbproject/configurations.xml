@@ -19,9 +19,12 @@
                    projectFiles="true">
       <itemPath>bootloader.c</itemPath>
       <itemPath>../Shared16F18857/uart.c</itemPath>
+      <itemPath>../Shared16F18857/uart.h</itemPath>
+      <itemPath>../Shared16F18857/config.h</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
+    <Elem>.</Elem>
     <Elem>../Shared16F18857</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
@@ -32,7 +35,7 @@
         <targetDevice>PIC16LF18857</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>Simulator</platformTool>
+        <platformTool>PICkit3PlatformTool</platformTool>
         <languageToolchain>XC8</languageToolchain>
         <languageToolchainVersion>3.10</languageToolchainVersion>
         <platform>3</platform>
@@ -1222,4 +1225,3 @@
     </conf>
   </confs>
 </configurationDescriptor>
-

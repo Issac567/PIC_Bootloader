@@ -12,7 +12,6 @@
             </make-dep-projects>
             <sourceRootList>
                 <sourceRootElem>.</sourceRootElem>
-                <sourceRootElem>../Shared 16F88</sourceRootElem>
                 <sourceRootElem>../Shared16F18857</sourceRootElem>
             </sourceRootList>
             <confList>
