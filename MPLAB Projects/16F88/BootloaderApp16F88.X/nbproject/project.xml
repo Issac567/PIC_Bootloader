@@ -10,8 +10,6 @@
             <make-dep-projects/>
             <sourceRootList>
                 <sourceRootElem>../BootLoader16F88.X</sourceRootElem>
-                <sourceRootElem>.</sourceRootElem>
-                <sourceRootElem>../Shared 16F88</sourceRootElem>
                 <sourceRootElem>../Shared16F88</sourceRootElem>
             </sourceRootList>
             <confList>

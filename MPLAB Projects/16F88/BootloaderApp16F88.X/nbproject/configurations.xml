@@ -19,9 +19,12 @@
                    projectFiles="true">
       <itemPath>Application.c</itemPath>
       <itemPath>../Shared16F88/uart.c</itemPath>
+      <itemPath>../Shared16F88/uart.h</itemPath>
+      <itemPath>../Shared16F88/config.h</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
+    <Elem>../BootLoader16F88.X</Elem>
     <Elem>../Shared16F88</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
@@ -1204,4 +1207,3 @@
     </conf>
   </confs>
 </configurationDescriptor>
-
