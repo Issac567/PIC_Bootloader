@@ -1,6 +1,6 @@
 /*
  * File:   bootloader.c
- * Version: 3.01
+ * Version: 3.03
  * Author: Issac
  * Created on January 19, 2026, 2:50 PM
  * Family: 18F27K42
