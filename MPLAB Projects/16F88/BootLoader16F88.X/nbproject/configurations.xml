@@ -19,6 +19,8 @@
                    projectFiles="true">
       <itemPath>bootloader.c</itemPath>
       <itemPath>../Shared16F88/uart.c</itemPath>
+      <itemPath>../Shared16F88/uart.h</itemPath>
+      <itemPath>../Shared16F88/config.h</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
@@ -1220,4 +1222,3 @@
     </conf>
   </confs>
 </configurationDescriptor>
-
