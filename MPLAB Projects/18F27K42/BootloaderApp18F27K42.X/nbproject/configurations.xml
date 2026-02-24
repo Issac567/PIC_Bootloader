@@ -19,6 +19,8 @@
                    projectFiles="true">
       <itemPath>Application.c</itemPath>
       <itemPath>../Shared18F27K42/uart.c</itemPath>
+      <itemPath>../Shared18F27K42/config.h</itemPath>
+      <itemPath>../Shared18F27K42/uart.h</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
@@ -1207,4 +1209,3 @@
     </conf>
   </confs>
 </configurationDescriptor>
-
