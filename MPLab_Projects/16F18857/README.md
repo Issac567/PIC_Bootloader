@@ -24,8 +24,8 @@ The goal of this project is to provide a clean, understandable reference impleme
 
 * **Microcontroller:** PIC16F18857
 * **Programming Interface:** UART (via USB-to-TTL adapter)
-* **Target Voltage:** 5V
-* **TTL USB Voltage:** 5V Dip Switch
+* **Target Voltage:** 3.3V
+* **TTL USB Voltage:** 3.3V Dip Switch
 
 ### LED Indicators
 
