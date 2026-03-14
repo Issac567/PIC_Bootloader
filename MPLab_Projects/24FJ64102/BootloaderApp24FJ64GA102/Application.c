@@ -15,7 +15,7 @@
  * * [APPLICATION RANGE]
  * Start Address (ORIGIN): 0x900
  * End Address:           0xA2F4
- * Length:                0xA2F4
+ * Length:                0x99F5
  * * NOTE: The Reset Vector (.reset) has been disabled in this script to allow
  * the Unified Hex generator to merge this App with the Bootloader.
  * ----------------------------------------------------------------------------
