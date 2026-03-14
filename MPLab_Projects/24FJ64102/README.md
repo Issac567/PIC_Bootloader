@@ -23,7 +23,7 @@ The goal of this project is to provide a clean, understandable reference impleme
 
 * **Microcontroller:** PIC24FJ64GA102
 * **Programming Interface:** UART (via USB-to-TTL adapter)
-* **Target Voltage:** 5V
+* **Target Voltage:** 3.3V
 
 ### LED Indicators
 
