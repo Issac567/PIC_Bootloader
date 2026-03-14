@@ -9,6 +9,6 @@ UseWriteBurst=true
 WordsPerPacket=64
 StopBit=1
 Notes=24-bit Architecture
-ExpectedBytes=83436
+ExpectedBytes=83440
 UseWordScaling=true
 Use24BitScaling=true
