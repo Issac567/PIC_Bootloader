@@ -5,7 +5,7 @@ Type=Class
 Version=9.85
 @EndOfDesignText@
 
-' VERSION 5.01
+' VERSION 5.03
 
 ' Using .Exe from Build Standalone Package you must include the .map files in 
 ' \BootloaderUploader\Objects\temp\build\bin\configs
@@ -18,7 +18,7 @@ Sub Class_Globals
 	' Map Config Variables
 	'---------------------------------------
 	Private intStartAddrFlash As Int 						' Used with Intel Conversion
-	Private intEndAddrFlash   As Int						' Not used just for display in logmessage
+	Private intEndAddrFlash   As Int						' Used with Intel Conversion
 	Private intEmptyFlashValue As Int						' 16F = 0x3F, 18F = 0xFF, 24F = 0x00 Phantom 24bit
 	Private intWordsPerPacket As Int						' Number of Instruction Words per block
 	Private intPacketDelayMS As Int							' Delay for Tx Write Packets
@@ -161,6 +161,20 @@ Sub AStream_NewData (Buffer() As Byte)
 	End If
 	
 End Sub
+Sub AStream_Error
+	LogMessage("Status", "Error: " & LastException)
+	AStream_Terminated
+End Sub
+Sub AStream_Terminated
+	blnAppExitAstreamError = True
+	
+	If astream.IsInitialized Then
+		astream.Close
+		serial1.Close
+	End If
+	EnableFunction
+	LogMessage("Status", "Connection is broken.")
+End Sub
 Sub AppendBytes(OldBuffer() As Byte, NewBuffer() As Byte) As Byte()
 	' Total length = old + new
 	Dim totalLength As Int = OldBuffer.Length + NewBuffer.Length
@@ -201,37 +215,37 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 		Case "<InitFromApp>"
 			LogMessage("Status", "App responded. Entering bootloader...")
 			
-		' Timeout 3 times = error by PIC
+			' Timeout 3 times = error by PIC
 		Case "<ErrorTimeout>"
 			blnExitTimeoutError = True
 			EnableFunction
 			LogMessage("Status", "PIC reported timeout error, try again")
 			
-		' 3 seconds timeout.  if no handshake it will enter application
+			' 3 seconds timeout.  if no handshake it will enter application
 		Case "<HandShakeTimeout>"
 			LogMessage("Status", "Timeout exiting bootloader --> entering application.")
 			
-		' Start of verify flash program code
+			' Start of verify flash program code
 		Case "<StartFlashVerify>"
 			cntVerify = 0
 			blnVerifyRequest = True
 			LogMessage("Status", "Waiting for verification...")
 			
-		' End of verify flash program code
+			' End of verify flash program code
 		Case "<EndFlashVerify>"
 			EnableFunction
 			VerifyStatus
 			
-		' End of Erase Flash. When Pic send this delay a bit and start the flash upload
+			' End of Erase Flash. When Pic send this delay a bit and start the flash upload
 		Case "<EndFlashErase>"
 			Sleep(200)
 			SendFirmware
 		
-		' B4J expects <ACK> from PIC so it sends next packets in Firmware Upload routine
+			' B4J expects <ACK> from PIC so it sends next packets in Firmware Upload routine
 		Case "<ACK>"
 			blnACK = True
 		
-		' Timeout occurred with Flash Write.  This will attempt a redo
+			' Timeout occurred with Flash Write.  This will attempt a redo
 		Case "<ISR Timeout>"
 			blnTimeOut = True
 				
@@ -259,20 +273,6 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 			End If
 	End Select
 			
-End Sub
-Sub AStream_Error
-	LogMessage("Status", "Error: " & LastException)
-	AStream_Terminated
-End Sub
-Sub AStream_Terminated
-	blnAppExitAstreamError = True
-	
-	If astream.IsInitialized Then
-		astream.Close
-		serial1.Close
-	End If
-	EnableFunction
-	LogMessage("Status", "Connection is broken.")
 End Sub
 
 '--------------------------------------------------------
@@ -373,7 +373,7 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
 				firmwareData(i+3) = intEmptyFlashValue  ' Phantom (Void) Byte
 			Next
 		Else
-			' LSB(0xFF) Then MSB(0xFF) format for 18F
+			' LSB(0xFF) Then MSB(0xFF) format for 18F, 16F
 			For i = 0 To firmwareData.Length - 1 Step 2
 				firmwareData(i) = 0xFF
 				firmwareData(i+1) = intEmptyFlashValue
@@ -449,7 +449,6 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
 	End Try
 End Sub
 
-
 '--------------------------------------------------------
 ' Start Handshake and Flash Upload
 '--------------------------------------------------------
@@ -464,7 +463,7 @@ Private Sub btnFlash_Click
 	' Flashing Logic
 	Else If btnFlash.Text = "Flash" Then
 		Dim sf2 As Object = xui.Msgbox2Async("If the PIC application is running, it will enter bootloader mode automatically. " & _
-  											 "If not, please click OK and then power cycle (turn off and on) your microchip to enter bootloader mode.", _
+  											 "If not, please click OK and then power cycle.", _
                                       		 "Attention!", "Ok", "Cancel", "", Null)
 		Wait For (sf2) Msgbox_Result(ret As Int)
 		If ret = xui.DialogResponse_Positive Then
@@ -491,7 +490,7 @@ Sub SendHandshakeLoop
 	
 	Dim b() As Byte = Array As Byte(0x55)
 	Dim b2() As Byte = Array As Byte(0xAA)
-	Dim xTract As Int = 0
+	Dim blnToggle As Boolean
 	
 	DisableFunction
 	
@@ -503,7 +502,7 @@ Sub SendHandshakeLoop
 		If blnHandShakeSuccess = True Then
 			Return
 		Else
-			If xTract = 0 Then
+			If blnToggle = False Then
 				astream.Write(b)
 				LogMessage("Handshake", "Sending byte: 0x55")
 			Else
@@ -515,8 +514,7 @@ Sub SendHandshakeLoop
 		' Avoid flooding UART
 		Sleep(intHandShakeDelayMS)
 		
-		xTract = xTract + 1
-		If xTract >= 2 Then xTract = 0
+		blnToggle = Not(blnToggle)
 	Loop
 End Sub
 Sub SendFirmware
@@ -628,8 +626,8 @@ Sub VerifyFirmware() As Boolean
 	For i = 0 To firmware.Length - 1
 		If firmware(i) <> firmwareVerify(i) Then
 			LogMessage("Status", "Mismatch at byte " & i & _
-                       ": firmware = " & BytesToHexString2(firmware(i)) & _
-                       " vs verify = " & BytesToHexString2(firmwareVerify(i)))
+                       ": firmware file = " & BytesToHexString2(firmware(i)) & _
+                       " vs firmware verify = " & BytesToHexString2(firmwareVerify(i)))
 			Return False
 		End If
 	Next
