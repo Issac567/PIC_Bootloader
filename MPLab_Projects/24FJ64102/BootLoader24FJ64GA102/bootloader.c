@@ -14,7 +14,7 @@
  * 1. This modified .gld MUST be included in the 'Linker Files' project tab.
  * 2. This defines the dedicated footprint for the Bootloader firmware.
  * * [BOOTLOADER RANGE]
- * Start Address (ORIGIN): 0x100  (Offset for Vector Tables)
+ * Start Address (ORIGIN): 0x200  (Offset for Vector Tables)
  * End Address:           0x8FF
  * Length:                0x800  (2048 Bytes)
  * * COORDINATION: The Application range begins at 0x900.
