@@ -69,7 +69,7 @@ Updating the device firmware requires the B4J uploader tool:
 | :--- | :--- | :--- |
 | `PIC16_Project` | PIC16 | 8-bit |
 | `PIC18_Project` | PIC18 | 8-bit |
-| `PIC24_Project` coming soon | PIC24 | 16-bit |
+| `PIC24_Project` | PIC24 | 16-bit |
 
 ---
 
