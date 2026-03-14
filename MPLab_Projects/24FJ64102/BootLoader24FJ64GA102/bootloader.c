@@ -1,6 +1,6 @@
 /*
  * File:   bootloader.c
- * Version: 3.04
+ * Version: 3.05
  * Author: Issac
  * Family: 24F64GA102
  * Created on January 19, 2026, 2:50 PM
@@ -14,9 +14,9 @@
  * 1. This modified .gld MUST be included in the 'Linker Files' project tab.
  * 2. This defines the dedicated footprint for the Bootloader firmware.
  * * [BOOTLOADER RANGE]
- * Start Address (ORIGIN): 0x200  (Offset for Vector Tables)
+ * Start Address (ORIGIN): 0x100  (Offset for Vector Tables)
  * End Address:           0x8FF
- * Length:                0x700  (1792 Bytes)
+ * Length:                0x800  (2048 Bytes)
  * * COORDINATION: The Application range begins at 0x900.
  * ----------------------------------------------------------------------------
  */
@@ -156,7 +156,7 @@ void Verify_Flash(void)
     __delay_ms(MSG_MS_DELAY);
 
     // Each PIC24 instruction = 24-bit (2 words, 4 bytes including phantom)
-    for (addr = FLASH_START; addr + 2 <= FLASH_END; addr += 2)
+	for (addr = FLASH_START; addr <= FLASH_END; addr += 2)
     {
         int32_t instr = Flash_ReadInstruction(addr);
 
