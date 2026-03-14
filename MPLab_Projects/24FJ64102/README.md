@@ -1,6 +1,6 @@
 # PIC24FJ64GA102 UART Bootloader Project
 
-![PIC24FJ64GA102 Bootloader Diagram](24FJ64GA102Image.png)
+![PIC24FJ64GA102 Bootloader Diagram](24FJ64GA102Image.jpg)
 
 This repository contains a **complete UART bootloader solution** for the **PIC24FJ64GA102**, including:
 
