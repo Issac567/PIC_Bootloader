@@ -14,9 +14,8 @@
  * 3. This prevents memory collisions between the Bootloader and Application.
  * * [APPLICATION RANGE]
  * Start Address (ORIGIN): 0x900
- * End Address:           0xA2F4
- * Length:                0x99F5
- * * NOTE: The Reset Vector (.reset) has been disabled in this script to allow
+ * End Address:           0xABF6
+ * Length:                0xA2F4
  * the Unified Hex generator to merge this App with the Bootloader.
  * ----------------------------------------------------------------------------
  */
