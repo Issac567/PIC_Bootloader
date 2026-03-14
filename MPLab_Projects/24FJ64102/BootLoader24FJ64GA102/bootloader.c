@@ -16,7 +16,7 @@
  * * [BOOTLOADER RANGE]
  * Start Address (ORIGIN): 0x200  (Offset for Vector Tables)
  * End Address:           0x8FF
- * Length:                0x800  (2048 Bytes)
+ * Length:                0x700  (1792 Bytes)
  * * COORDINATION: The Application range begins at 0x900.
  * ----------------------------------------------------------------------------
  */
