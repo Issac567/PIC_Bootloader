@@ -185,7 +185,7 @@ void Flash_EraseApplication(void)
     UART_TxString("<StartFlashErase>");
     __delay_ms(MSG_MS_DELAY);
     
-    // PIC24 Logic: A Page is 512 words. 
+    // PIC24 Logic: A Page is 448 words. 
     // Since each word is 2 address units, we increment by 896.
     for (addr = FLASH_START; addr < FLASH_END; addr += 896)
     {
