@@ -186,8 +186,8 @@ void Flash_EraseApplication(void)
     __delay_ms(MSG_MS_DELAY);
     
     // PIC24 Logic: A Page is 512 words. 
-    // Since each word is 2 address units, we increment by 1024.
-    for (addr = FLASH_START; addr < FLASH_END; addr += 1024)
+    // Since each word is 2 address units, we increment by 896.
+    for (addr = FLASH_START; addr < FLASH_END; addr += 896)
     {
         // 1. Load the target address into TBLPAG and a dummy offset
         uint16_t addr_offset = (uint16_t)(addr & 0xFFFF);
