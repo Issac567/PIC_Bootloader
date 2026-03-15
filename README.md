@@ -65,7 +65,7 @@ Updating the device firmware requires the B4J uploader tool:
 
 ## 📱 Supported Families
 
-| Folder Name | PIC Family | Target Architecture |
+| Project | PIC Family | Target Architecture |
 | :--- | :--- | :--- |
 | `PIC16_Project` | PIC16 | 8-bit |
 | `PIC18_Project` | PIC18 | 8-bit |
