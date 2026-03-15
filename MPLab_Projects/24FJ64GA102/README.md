@@ -48,7 +48,7 @@ I use **MPLAB X IDE 6.05** (supports Pickit 3/3.5 if using this!)
 * Waits for commands from the PC uploader
 * Supports:
   * Flash erase (1024 bytes max)
-  * Application programming (64 Instructions (256 bytes with phantom)
+  * Application programming 64 Instructions (256 bytes with phantom)
   * Flash verification
 * Provides visual status using **PORTB.4 LED**
 * Jumps to application if no bootloader request is detected
