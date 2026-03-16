@@ -91,7 +91,7 @@ void __interrupt(high_priority) App_ISR(void)
          * Fosc = 64MHz -> Fcy = 16MHz (Tcy = 62.5ns)
          * Timer2 Settings: Prescaler 1:128, Postscaler 1:10, PR2 = 124
          * Interrupt Time = Tcy * Prescale * (PR2 + 1) * Postscale
-         * 62.5ns * 128 * 125 * 16 = 0.016s (10ms per interrupt)
+         * 62.5ns * 128 * 125 * 16 = 0.016s (16ms per interrupt)
          * To get 2.0s: 2.0s / 0.016s = 124 counts
          * Set TIMER2_COUNT to 124
          */
