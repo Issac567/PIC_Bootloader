@@ -5,7 +5,7 @@ Type=Class
 Version=9.85
 @EndOfDesignText@
 
-' VERSION 6.01
+' VERSION 6.02
 
 ' Using .Exe from Build Standalone Package you must include the .map files in 
 ' \BootloaderUploader\Objects\temp\build\bin\configs
@@ -17,18 +17,18 @@ Sub Class_Globals
 	'---------------------------------------
 	' Map Config Variables
 	'---------------------------------------
-	Private intStartAddrFlash As Int 						' Used with Intel Conversion
-	Private intEndAddrFlash   As Int						' Used with Intel Conversion
+	Private intStartAddrFlash As Int 						' Used with Intel Hex Conversion
+	Private intEndAddrFlash   As Int						' Used with Intel Hex Conversion
 	Private intEmptyFlashValue As Int						' 16F = 0x3F, 18F = 0xFF, 24F = 0x00 Phantom 24bit
-	Private intWordsPerPacket As Int						' Number of Instruction Words per block
+	Private intWordsPerPacket As Int						' Number of Instruction per block
 	Private intPacketDelayMS As Int							' Delay for Tx Write Packets
 	Private intHandShakeDelayMS As Int						' Delay for 0x55 and 0xAA in between	
 	Private intStopBit As Int = 1							' Default
 	Private strNotes As String 
 	Private intExpectedFirmwareBytes As Int					' Total Firmware bytes
 	Private blnUseWriteBurst  As Boolean					' True = Tx Write Packet as whole, no delays in between!
-	Private blnWordAddressed As Boolean						' 16F, 24F = Increment 2 Hex Address, 18F = Increment 1 Hex Address. Used with Intel Conversion
-	Private blnUse4Padding As Boolean						' 24 Bit need step 4, others step 2. Used with Intel Conversion
+	Private blnWordAddressed As Boolean						' 16F, 24F = Increment 2 Hex Address, 18F = Increment 1 Hex Address. Used with Intel Hex Conversion
+	Private blnUse4Padding As Boolean						' 24 Bit need step 4, others step 2. Used with Intel Hex Conversion
 	
 	'---------------------------------------
 	' jSerial Library + Astream
@@ -351,10 +351,12 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
 	Try
 		Dim lines As List = File.ReadList("", filepath)
         
+		' Intel Hex Word Addressed
 		Dim startByte, EndByte As Int
 		If blnWordAddressed = True Then
 			startByte = startAddr * 2       ' eg. PIC 16F88, PIC 24F
 			EndByte = endAddr * 2
+		' Non Intel Hex Word Addressed
 		Else
 			startByte = startAddr           ' eg. PIC 18F27K42
 			EndByte =endAddr
@@ -373,7 +375,7 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
 				firmwareData(i+3) = intEmptyFlashValue  ' Phantom (Void) Byte
 			Next
 		Else
-			' LSB(0xFF) Then MSB(0xFF) format for 18F, 16F
+			' LSB(0xFF) Then MSB(0x3F) format for 18F, 16F
 			For i = 0 To firmwareData.Length - 1 Step 2
 				firmwareData(i) = 0xFF
 				firmwareData(i+1) = intEmptyFlashValue
