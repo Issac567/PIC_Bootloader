@@ -27,8 +27,6 @@
 #include "config.h"
 #include "uart.h"
 
-// Note: B4J Expected bytes = 0x1FFFF - 0x00900 = 0x1F700 = 128,768 BYTES! (Each Address is 1 BYTE!)
-
 // Adjusted for PIC24FJ64GA102 based on your .gld configuration
 #define FLASH_START          0x00900         // Matches your Application ORIGIN
 //#define FLASH_START          0x0A000         // Matches your Application ORIGIN
