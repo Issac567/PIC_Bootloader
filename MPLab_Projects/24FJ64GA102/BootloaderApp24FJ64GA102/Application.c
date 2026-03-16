@@ -149,7 +149,7 @@ int main(void)
                 //Timer2_Stop(); // Enable Demo
                 
                 // Acknowledge the request
-                //UART_TxString("<InitFromApp>");
+                UART_TxString("<InitFromApp>");
                 
                 // 3. SOFTWARE RESET
                 asm("goto 0x0000");
