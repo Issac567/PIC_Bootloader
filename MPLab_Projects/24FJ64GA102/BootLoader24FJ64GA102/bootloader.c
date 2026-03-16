@@ -6,8 +6,6 @@
  * Created on January 19, 2026, 2:50 PM
  */
 
-//NOTE!  DID NOT TEST WITH ACTUAL HARDWARE!!!!!!
-
 /**
  * BOOTLOADER MEMORY CONFIGURATION:
  * ----------------------------------------------------------------------------
