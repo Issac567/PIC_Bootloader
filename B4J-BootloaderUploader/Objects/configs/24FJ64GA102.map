@@ -10,5 +10,5 @@ WordsPerPacket=64
 StopBit=1
 Notes=24-bit Architecture
 ExpectedBytes=83440
-UseWordScaling=true
-Use24BitScaling=true
+UseWordAddressed=true
+Use4Padding=true
