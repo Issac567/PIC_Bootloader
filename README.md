@@ -7,7 +7,7 @@ This repository contains a collection of firmware projects for various **PIC mic
 ## 📂 Repository Structure
 
 * **`MPLAB Projects/`**: Organized by PIC family. Each directory contains the complete source code, headers, and build files.
-* **`B4JTools/`**: Contains the **B4J uploader** utility used to flash compiled `.hex` files to the target hardware via a PC.
+* **`B4J-BootloaderUploader/`**: Contains the **B4J uploader** utility used to flash compiled `.hex` files to the target hardware via a PC.
 
 ## 🛠 Requirements
 
