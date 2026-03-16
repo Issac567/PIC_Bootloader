@@ -5,7 +5,7 @@ Type=Class
 Version=9.85
 @EndOfDesignText@
 
-' VERSION 5.03
+' VERSION 6.01
 
 ' Using .Exe from Build Standalone Package you must include the .map files in 
 ' \BootloaderUploader\Objects\temp\build\bin\configs
@@ -27,8 +27,8 @@ Sub Class_Globals
 	Private strNotes As String 
 	Private intExpectedFirmwareBytes As Int					' Total Firmware bytes
 	Private blnUseWriteBurst  As Boolean					' True = Tx Write Packet as whole, no delays in between!
-	Private blnUseWordScaling As Boolean					' 16F = 2 Bytes(14bit), 18F = 1 Byte(8bit), 24F = 2 Bytes(16bit). Used with Intel Conversion
-	Private blnUse24BitScaling As Boolean					' 24 Bit need step 4, others step 2. Used with Intel Conversion
+	Private blnWordAddressed As Boolean						' 16F, 24F = Increment 2 Hex Address, 18F = Increment 1 Hex Address. Used with Intel Conversion
+	Private blnUse4Padding As Boolean						' 24 Bit need step 4, others step 2. Used with Intel Conversion
 	
 	'---------------------------------------
 	' jSerial Library + Astream
@@ -352,7 +352,7 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
 		Dim lines As List = File.ReadList("", filepath)
         
 		Dim startByte, EndByte As Int
-		If blnUseWordScaling = True Then
+		If blnWordAddressed = True Then
 			startByte = startAddr * 2       ' eg. PIC 16F88, PIC 24F
 			EndByte = endAddr * 2
 		Else
@@ -364,7 +364,7 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
 		Dim firmwareData(intExpectedFirmwareBytes) As Byte
         
 		' --- FIRMWARE INITIALIZATION (Don't leave this out!) ---
-		If blnUse24BitScaling = True Then
+		If blnUse4Padding = True Then
 			'LSB, Mid, MSB, Phantom format for PIC24
 			For i = 0 To firmwareData.Length - 1 Step 4
 				firmwareData(i) = 0xFF                  ' Low Byte
@@ -521,7 +521,7 @@ Sub SendFirmware
 	' Firmware Binary file must include all flash data including empty addresses!
 	Dim intBlockSize As Int
 
-	If blnUse24BitScaling = True Then
+	If blnUse4Padding = True Then
 		intBlockSize = intWordsPerPacket * 4 ' eg. 64 words = 256 intBlockSize 24FJ64BA102
 	Else
 		intBlockSize = intWordsPerPacket * 2 ' eg. 4 words = 8 intBlockSize 16F88
@@ -733,8 +733,8 @@ Sub LoadConfiguration(SelectedPicName As String) As Boolean
 						strNotes = cfg.Get("Notes")							' Special Notes
 						intExpectedFirmwareBytes = cfg.Get("ExpectedBytes") ' Total Bytes need flash and erase
 						blnUseWriteBurst = cfg.Get("UseWriteBurst")			' No delays in between bytes if True!
-						blnUseWordScaling = cfg.Get("UseWordScaling")		' For Intel Hex Conversion
-						blnUse24BitScaling = cfg.Get("Use24BitScaling")		' For Intel Hex conversion
+						blnWordAddressed = cfg.Get("UseWordAddressed") 		' For Intel Hex Conversion
+						blnUse4Padding = cfg.Get("Use4Padding")				' For Intel Hex conversion
 							
 						' Set Proper Arrays to FirmwareVerfiy()
 						firmwareVerify = Array As Byte()
@@ -762,14 +762,14 @@ Sub LoadConfiguration(SelectedPicName As String) As Boolean
 						LogMessage(":::", "Packet Delay = " & intPacketDelayMS & " ms")
 						LogMessage(":::", "Write Burst = " & blnUseWriteBurst)
 						LogMessage(":::", "Stop Bits = " & intStopBit)
-						If blnUse24BitScaling = True Then
+						If blnUse4Padding = True Then
 							LogMessage(":::", "Instruction Write Size = " & (intWordsPerPacket * 4) & " bytes w/padding (" &  intWordsPerPacket & " instruction words)" )
 						Else
 							LogMessage(":::", "Instruction Write Size = " & (intWordsPerPacket * 2) & " bytes w/padding (" &  intWordsPerPacket & " instruction words)" )
 						End If
 						LogMessage(":::", "Expected Firmware Size = " & NumberFormat2(intExpectedFirmwareBytes, 1, 0, 0, True) & " bytes")
-						LogMessage(":::", "Use Word Scaling = " & blnUseWordScaling)
-						LogMessage(":::", "Use 24 Bit Scaling = " & blnUse24BitScaling)
+						LogMessage(":::", "Use Word Addressed = " & blnWordAddressed)
+						LogMessage(":::", "Use 4 Padding = " & blnUse4Padding)
 						LogMessage("", "---------------------------------------------------------")
   						Return True
 					End If			
