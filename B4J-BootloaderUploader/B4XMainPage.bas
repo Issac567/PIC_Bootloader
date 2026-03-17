@@ -5,7 +5,7 @@ Type=Class
 Version=9.85
 @EndOfDesignText@
 
-' VERSION 6.03
+' VERSION 6.04
 
 ' Using .Exe from Build Standalone Package you must include the .map files in 
 ' \BootloaderUploader\Objects\temp\build\bin\configs
@@ -27,7 +27,7 @@ Sub Class_Globals
 	Private strNotes As String 
 	Private intExpectedFirmwareBytes As Int					' Total Firmware bytes
 	Private blnUseWriteBurst  As Boolean					' True = Tx Write Packet as whole, no delays in between!
-	Private blnWordAddressed As Boolean						' 16F, 24F = Increment 2 Hex Address, 18F = Increment 1 Hex Address. Used with Intel Hex Conversion
+	Private blnUseWordAddressed As Boolean					' 16F, 24F = Increment 2 Hex Address, 18F = Increment 1 Hex Address. Used with Intel Hex Conversion
 	Private blnUse4Padding As Boolean						' 24 Bit need step 4, others step 2. Used with Intel Hex Conversion
 	
 	'---------------------------------------
@@ -52,7 +52,7 @@ Sub Class_Globals
 	
 	Private firmware() As Byte								' firmware binary from FILE
 	Private firmwareVerify() As Byte						' firmware binary from PIC
-	Private cntVerify As Int								' Counter detection of incoming bytes from PIC
+	Private cntVerify As Int								' Counter detection of incoming verify bytes from PIC
 	Private blnProgrammingInProgress As Boolean				' For exit app msgbox while flashing
 	Private blnVerifyRequest As Boolean						' <StartFlashVerify> from PIC
 	Private blnHandShakeSuccess As Boolean					' <InitReceived> from PIC
@@ -353,7 +353,7 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
         
 		' Intel Hex Word Addressed
 		Dim startByte, EndByte As Int
-		If blnWordAddressed = True Then
+		If blnUseWordAddressed = True Then
 			startByte = startAddr * 2       ' eg. PIC 16F88, PIC 24F
 			EndByte = endAddr * 2
 		' Non Intel Hex Word Addressed
@@ -735,7 +735,7 @@ Sub LoadConfiguration(SelectedPicName As String) As Boolean
 						strNotes = cfg.Get("Notes")							' Special Notes
 						intExpectedFirmwareBytes = cfg.Get("ExpectedBytes") ' Total Bytes need flash and erase
 						blnUseWriteBurst = cfg.Get("UseWriteBurst")			' No delays in between bytes if True!
-						blnWordAddressed = cfg.Get("UseWordAddressed") 		' For Intel Hex Conversion
+						blnUseWordAddressed = cfg.Get("UseWordAddressed") 	' For Intel Hex Conversion
 						blnUse4Padding = cfg.Get("Use4Padding")				' For Intel Hex conversion
 							
 						' Set Proper Arrays to FirmwareVerfiy()
@@ -762,15 +762,15 @@ Sub LoadConfiguration(SelectedPicName As String) As Boolean
 						LogMessage(":::", "Empty Flash Value = 0x" & Bit.ToHexString(intEmptyFlashValue).ToUpperCase)
 						LogMessage(":::", "HandShake Delay = " & intHandShakeDelayMS & " ms")
 						LogMessage(":::", "Packet Delay = " & intPacketDelayMS & " ms")
-						LogMessage(":::", "Write Burst = " & blnUseWriteBurst)
-						LogMessage(":::", "Stop Bits = " & intStopBit)
+						LogMessage(":::", "Stop Bit = " & intStopBit)
 						If blnUse4Padding = True Then
 							LogMessage(":::", "Instruction Write Size = " & (intWordsPerPacket * 4) & " bytes w/padding (" &  intWordsPerPacket & " instructions)" )
 						Else
 							LogMessage(":::", "Instruction Write Size = " & (intWordsPerPacket * 2) & " bytes w/padding (" &  intWordsPerPacket & " instructions)" )
 						End If
 						LogMessage(":::", "Expected Firmware Size = " & NumberFormat2(intExpectedFirmwareBytes, 1, 0, 0, True) & " bytes")
-						LogMessage(":::", "Use Word Addressed = " & blnWordAddressed)
+						LogMessage(":::", "Use Write Burst = " & blnUseWriteBurst)
+						LogMessage(":::", "Use Word Addressed = " & blnUseWordAddressed)
 						LogMessage(":::", "Use 4 Padding = " & blnUse4Padding)
 						LogMessage("", "---------------------------------------------------------")
   						Return True
