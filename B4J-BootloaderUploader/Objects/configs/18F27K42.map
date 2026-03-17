@@ -10,5 +10,5 @@ WordsPerPacket=64
 StopBit=1
 Notes=None
 ExpectedBytes=128768
-UseWordAddressed=false
+UseDoubleHexAddr=false
 Use4Padding=false

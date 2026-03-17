@@ -10,5 +10,5 @@ WordsPerPacket=4
 StopBit=2
 Notes=Requires 2 stop bits at high baud rates to provide a critical timing buffer
 ExpectedBytes=5120
-UseWordAddressed=true
+UseDoubleHexAddr=true
 Use4Padding=false
