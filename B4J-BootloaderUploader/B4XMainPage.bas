@@ -5,7 +5,7 @@ Type=Class
 Version=9.85
 @EndOfDesignText@
 
-' VERSION 6.02
+' VERSION 6.03
 
 ' Using .Exe from Build Standalone Package you must include the .map files in 
 ' \BootloaderUploader\Objects\temp\build\bin\configs
@@ -765,9 +765,9 @@ Sub LoadConfiguration(SelectedPicName As String) As Boolean
 						LogMessage(":::", "Write Burst = " & blnUseWriteBurst)
 						LogMessage(":::", "Stop Bits = " & intStopBit)
 						If blnUse4Padding = True Then
-							LogMessage(":::", "Instruction Write Size = " & (intWordsPerPacket * 4) & " bytes w/padding (" &  intWordsPerPacket & " instruction words)" )
+							LogMessage(":::", "Instruction Write Size = " & (intWordsPerPacket * 4) & " bytes w/padding (" &  intWordsPerPacket & " instructions)" )
 						Else
-							LogMessage(":::", "Instruction Write Size = " & (intWordsPerPacket * 2) & " bytes w/padding (" &  intWordsPerPacket & " instruction words)" )
+							LogMessage(":::", "Instruction Write Size = " & (intWordsPerPacket * 2) & " bytes w/padding (" &  intWordsPerPacket & " instructions)" )
 						End If
 						LogMessage(":::", "Expected Firmware Size = " & NumberFormat2(intExpectedFirmwareBytes, 1, 0, 0, True) & " bytes")
 						LogMessage(":::", "Use Word Addressed = " & blnWordAddressed)
