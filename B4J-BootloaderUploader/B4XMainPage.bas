@@ -27,7 +27,7 @@ Sub Class_Globals
 	Private strNotes As String 
 	Private intExpectedFirmwareBytes As Int					' Total Firmware bytes
 	Private blnUseWriteBurst  As Boolean					' True = Tx Write Packet as whole, no delays in between!
-	Private blnUseWordAddressed As Boolean					' 16F, 24F = Increment 2 Hex Address, 18F = Increment 1 Hex Address. Used with Intel Hex Conversion
+	Private blnUseDoubleHexAddr As Boolean					' 16F, 24F = Increment 2 Hex Address, 18F = Increment 1 Hex Address. Used with Intel Hex Conversion
 	Private blnUse4Padding As Boolean						' 24 Bit need step 4, others step 2. Used with Intel Hex Conversion
 	
 	'---------------------------------------
@@ -353,7 +353,7 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
         
 		' Intel Hex Word Addressed
 		Dim startByte, EndByte As Int
-		If blnUseWordAddressed = True Then
+		If blnUseDoubleHexAddr = True Then
 			startByte = startAddr * 2       ' eg. PIC 16F88, PIC 24F
 			EndByte = endAddr * 2
 		' Non Intel Hex Word Addressed
@@ -735,7 +735,7 @@ Sub LoadConfiguration(SelectedPicName As String) As Boolean
 						strNotes = cfg.Get("Notes")							' Special Notes
 						intExpectedFirmwareBytes = cfg.Get("ExpectedBytes") ' Total Bytes need flash and erase
 						blnUseWriteBurst = cfg.Get("UseWriteBurst")			' No delays in between bytes if True!
-						blnUseWordAddressed = cfg.Get("UseWordAddressed") 	' For Intel Hex Conversion
+						blnUseDoubleHexAddr = cfg.Get("UseDoubleHexAddr") 	' For Intel Hex Conversion
 						blnUse4Padding = cfg.Get("Use4Padding")				' For Intel Hex conversion
 							
 						' Set Proper Arrays to FirmwareVerfiy()
@@ -770,7 +770,7 @@ Sub LoadConfiguration(SelectedPicName As String) As Boolean
 						End If
 						LogMessage(":::", "Expected Firmware Size = " & NumberFormat2(intExpectedFirmwareBytes, 1, 0, 0, True) & " bytes")
 						LogMessage(":::", "Use Write Burst = " & blnUseWriteBurst)
-						LogMessage(":::", "Use Word Addressed = " & blnUseWordAddressed)
+						LogMessage(":::", "Use Double Hex Addressed = " & blnUseDoubleHexAddr)
 						LogMessage(":::", "Use 4 Padding = " & blnUse4Padding)
 						LogMessage("", "---------------------------------------------------------")
   						Return True
