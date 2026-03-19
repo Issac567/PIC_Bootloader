@@ -1,6 +1,6 @@
 /*
  * File:   bootloader.c
- * Version: 3.03
+ * Version: 3.04
  * Author: Issac
  * Created on January 19, 2026, 2:50 PM
  * Family: 18F27K42
@@ -53,7 +53,7 @@ void INTOSC_Init(void)
 // READ AND WRITE PROGRAM CODE ROUTINE + READ EEPROM DATA
 //-------------------------------------------------------
 // READ FLASH DATA (1 Word)
-uint16_t Flash_ReadWord(uint32_t address)
+uint16_t Flash_ReadInstruction(uint32_t address)
 {
     uint16_t word;
     uint8_t lowByte, highByte;
@@ -151,7 +151,7 @@ void Verify_Flash(void)
         for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
         {
             // Each word occupies two byte addresses
-            packet[i] = Flash_ReadWord(addr + (uint32_t)(i * 2));
+            packet[i] = Flash_ReadInstruction(addr + (uint32_t)(i * 2));
         }
 
         // Transmit block to host: LSB first, then MSB
