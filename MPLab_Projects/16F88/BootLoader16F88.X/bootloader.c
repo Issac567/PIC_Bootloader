@@ -1,6 +1,6 @@
 /*
  * File:   bootloader.c
- * Version: 3.03
+ * Version: 3.04
  * Author: Issac
  * Created on January 19, 2026, 2:50 PM
  * Family: 16F88
@@ -62,7 +62,7 @@ void __interrupt() boot_ISR(void)
 // READ AND WRITE PROGRAM CODE ROUTINE
 //-------------------------------------------------------
 // READ FLASH DATA (1 Word)
-uint16_t Flash_ReadWord(uint16_t address)
+uint16_t Flash_ReadInstruction(uint16_t address)
 {
     uint16_t word;
 
@@ -140,7 +140,7 @@ void Verify_Flash(void)
         uint16_t packet[FLASH_WRITE_BLOCK];
         for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
         {
-            packet[i] = Flash_ReadWord(addr + i);  // Read word from flash
+            packet[i] = Flash_ReadInstruction(addr + i);  // Read word from flash
         }
 
         // Send packet to B4J 
