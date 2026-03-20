@@ -174,6 +174,7 @@ void __at(0xA00) main(void)
                 
                 // Acknowledge the request so the PC knows the app has "heard" the command.
                 UART_TxString("<InitFromApp>");
+                __delay_ms(50);
                 
                 // 3. SOFTWARE RESET
                 // Force a jump to address 0x0000. 
