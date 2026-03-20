@@ -144,6 +144,7 @@ void main(void) {
                 //Timer2_Stop();        // Enable Demo For ISR Test
                 
                 UART_TxString("<InitFromApp>");
+                __delay_ms(50);
                 
                 asm ("goto 0x0000");    // Restart to bootloader in preparation for flash
             } 
