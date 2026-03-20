@@ -150,6 +150,7 @@ int main(void)
                 
                 // Acknowledge the request
                 UART_TxString("<InitFromApp>");
+                __delay_ms(50);
                 
                 // 3. SOFTWARE RESET
                 asm("goto 0x0000");
