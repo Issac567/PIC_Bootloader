@@ -101,7 +101,7 @@ I use **MPLAB X IDE 6.05** (supports Pickit 3/3.5 if using this!)
 
 ## 🔌 MPLAB Snap Diagram
 
-![PIC16F88 Pickit Diagram](Pickit3b.png)
+![PIC16F88 Pickit Diagram](MPLabSnap.png)
 
 ---
 
