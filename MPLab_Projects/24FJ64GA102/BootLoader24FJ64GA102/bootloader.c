@@ -1,10 +1,12 @@
 /*
  * File:   bootloader.c
- * Version: 3.05
+ * Version: 3.06
  * Author: Issac
  * Family: 24F64GA102
  * Created on January 19, 2026, 2:50 PM
  */
+
+//NOTE!  DID NOT TEST WITH ACTUAL HARDWARE!!!!!!
 
 /**
  * BOOTLOADER MEMORY CONFIGURATION:
@@ -12,9 +14,9 @@
  * 1. This modified .gld MUST be included in the 'Linker Files' project tab.
  * 2. This defines the dedicated footprint for the Bootloader firmware.
  * * [BOOTLOADER RANGE]
- * Start Address (ORIGIN): 0x200  (Offset for Vector Tables)
+ * Start Address (ORIGIN): 0x100  (Offset for Vector Tables)
  * End Address:           0x8FF
- * Length:                0x700
+ * Length:                0x700 
  * * COORDINATION: The Application range begins at 0x900.
  * ----------------------------------------------------------------------------
  */
@@ -25,9 +27,10 @@
 #include "config.h"
 #include "uart.h"
 
+// Note: B4J Expected bytes = 0xABF6 - 0x0900 = 83,440 BYTES!
+
 // Adjusted for PIC24FJ64GA102 based on your .gld configuration
 #define FLASH_START          0x00900         // Matches your Application ORIGIN
-//#define FLASH_START          0x0A000         // Matches your Application ORIGIN
 #define FLASH_END            0x0ABF6         // Matches your Application END (Last address)
 
 // PIC24FJ64GA102 Specific Flash geometry
@@ -148,28 +151,36 @@ void Flash_WriteBlock(uint32_t address, uint16_t *data)
 void Verify_Flash(void)
 {
     uint32_t addr;
+
     UART_TxString("<StartFlashVerify>");
     __delay_ms(MSG_MS_DELAY);
 
-    // Each PIC24 instruction = 24-bit (2 words, 4 bytes including phantom)
-	for (addr = FLASH_START; addr <= FLASH_END; addr += 2)
+    for (addr = FLASH_START; addr <= FLASH_END; addr += (FLASH_WRITE_BLOCK * 2))
     {
-        int32_t instr = Flash_ReadInstruction(addr);
+        uint32_t packet[FLASH_WRITE_BLOCK];
 
-        // Transmit in LSB ? MID ? MSB ? Phantom order for verification
-        UART_Tx((instr     ) & 0xFF); // LSB
-        UART_Tx((instr >>  8) & 0xFF); // MID
-        UART_Tx((instr >> 16) & 0xFF); // MSB
-        UART_Tx((instr >> 24) & 0xFF); // Phantom / padding
+        // Read block (24-bit instructions)
+        for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
+        {
+            packet[i] = Flash_ReadInstruction(addr + (uint32_t)(i * 2));
+        }
 
-        __delay_ms(1);  // Proven safe pacing for UART/host
+        // Send block
+        for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
+        {
+            UART_Tx((packet[i] >>  0) & 0xFF);
+            UART_Tx((packet[i] >>  8) & 0xFF);
+            UART_Tx((packet[i] >> 16) & 0xFF);
+            UART_Tx((packet[i] >> 24) & 0xFF);
+        }
+
+        __delay_ms(1);
     }
 
     __delay_ms(MSG_MS_DELAY);
     UART_TxString("<EndFlashVerify>");
     __delay_ms(MSG_MS_DELAY);
 }
-
 
 //-------------------------------------------------------
 // ERASE FLASH PROGRAM CODE DATA
@@ -181,37 +192,36 @@ void Flash_EraseApplication(void)
     UART_TxString("<StartFlashErase>");
     __delay_ms(MSG_MS_DELAY);
     
-    // PIC24 Logic: A Page is 512 Instruction words. 
-    // Since each Instruction word is 2 address units, we increment by 1024.
-    for (addr = FLASH_START; addr < FLASH_END; addr += FLASH_ERASE_BLOCK * 2)
+    // 1. FORCE ALIGNMENT
+    // Your 0x900 start must be treated as 0x800 for the hardware 
+    // to avoid the "Byte 108" skipping issue.
+    uint32_t aligned_start = FLASH_START & 0xFFFFFC00; 
+
+    for (addr = aligned_start; addr < FLASH_END; addr += FLASH_ERASE_BLOCK * 2)
     {
-        // 1. Load the target address into TBLPAG and a dummy offset
-        uint16_t addr_offset = (uint16_t)(addr & 0xFFFF);
+        // 2. Set up pointer (Matches your PDF example)
         TBLPAG = (uint16_t)((addr >> 16) & 0x007F);
+        uint16_t offset = (uint16_t)(addr & 0xFFFF);
 
-        // 2. Configure NVMCON for Page Erase (0x4042)
-        // 0x4000 (WREN) + 0x0042 (Page Erase Op)
-        NVMCON = 0x4042;
+        // 3. Dummy Write to set base address
+        __builtin_tblwtl(offset, 0xFFFF); 
 
-        // 3. Point to the page to be erased
-        // A dummy table write tells the NVM engine which page to target
-        __builtin_tblwtl(addr_offset, 0xFFFF);
+        // 4. Initialize NVMCON (Matches your 0x4042)
+        NVMCON = 0x4042; 
 
-        // 4. CRITICAL SECTION - Unlock and Execute
-        __builtin_disi(5);              // Disable interrupts for 5 cycles
-        NVMKEY = 0x55;
-        NVMKEY = 0xAA;
+        // 5. THE UNLOCK SEQUENCE
+        // Using the built-in function is the "Correct" way to 
+        // match the PDF's assembly requirements exactly.
+        __builtin_disi(5);      
+        __builtin_write_NVM();  
 
-        NVMCONbits.WR = 1;              // Start Erase
-
-        // 5. Wait for hardware to clear the WR bit
+        // 6. Wait for completion
         while(NVMCONbits.WR);        
     }
 
     UART_TxString("<EndFlashErase>");
     __delay_ms(MSG_MS_DELAY);
 }
-
 
 //-------------------------------------------------------
 // WAIT HANDSHAKE AND FIRWARE UPDATE ROUTINE
