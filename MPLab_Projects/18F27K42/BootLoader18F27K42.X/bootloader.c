@@ -13,7 +13,7 @@
 #include "config.h"
 #include "uart.h"
 
-// Note: B4J Expected bytes = 0x1FFFF - 0x00800 = 0x1F800 = 129,024 BYTES! (Each Address is 1 BYTE!)
+// Note: B4J Expected bytes = 0x1FFFF - 0x00800 = 0x1F800 = 129,024 BYTES!
 
 #define FLASH_START 0x00800                 // Flash start address
 #define FLASH_END 0x1FFFF                   // Flash end address
