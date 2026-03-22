@@ -14,7 +14,7 @@
  * 2. This defines the dedicated footprint for the Bootloader firmware.
  * * [BOOTLOADER RANGE]
  * Start Address (ORIGIN): 0x100  (Offset for Vector Tables)
- * End Address:           0x8FF
+ * End Address:           0x7FF
  * Length:                0x700 
  * * COORDINATION: The Application range begins at 0x800.
  * ----------------------------------------------------------------------------
