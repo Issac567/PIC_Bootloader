@@ -1,6 +1,6 @@
 /*
  * File:   bootloader.c
- * Version: 3.04
+ * Version: 3.06
  * Author: Issac
  * Created on January 19, 2026, 2:50 PM
  * Family: 18F27K42
@@ -13,9 +13,9 @@
 #include "config.h"
 #include "uart.h"
 
-// Note: B4J Expected bytes = 0x1FFFF - 0x00900 = 0x1F700 = 128,768 BYTES! (Each Address is 1 BYTE!)
+// Note: B4J Expected bytes = 0x1FFFF - 0x00800 = 0x1F800 = 129,024 BYTES! (Each Address is 1 BYTE!)
 
-#define FLASH_START 0x00900                 // Flash start address
+#define FLASH_START 0x00800                 // Flash start address
 #define FLASH_END 0x1FFFF                   // Flash end address
 #define FLASH_ERASE_BLOCK 64                // Runtime can only do 64 Word erase max!
 #define FLASH_WRITE_BLOCK 64                // Can only do 64 Word block write max with PIC 18F24K47! 
@@ -413,8 +413,8 @@ void main(void)
 
     LED_PIN  = 0;                   // LED Off (bootloader led))
     
-    asm("goto 0x900");              // If bootloader is not init from PC, then continue to application
+    asm("goto 0x800");              // If bootloader is not init from PC, then continue to application
     
     
-    // Good news is when bootloader goes to 0x0900 and is invalid, causes pic to reset and main repeated over and over till handshake and flash success!
+    // Good news is when bootloader goes to 0x0800 and is invalid, causes pic to reset and main repeated over and over till handshake and flash success!
 }
