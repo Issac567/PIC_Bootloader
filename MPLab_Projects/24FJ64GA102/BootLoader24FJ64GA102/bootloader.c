@@ -6,7 +6,6 @@
  * Created on January 19, 2026, 2:50 PM
  */
 
-//NOTE!  DID NOT TEST WITH ACTUAL HARDWARE!!!!!!
 
 /**
  * BOOTLOADER MEMORY CONFIGURATION:
@@ -17,7 +16,7 @@
  * Start Address (ORIGIN): 0x100  (Offset for Vector Tables)
  * End Address:           0x8FF
  * Length:                0x700 
- * * COORDINATION: The Application range begins at 0x900.
+ * * COORDINATION: The Application range begins at 0x800.
  * ----------------------------------------------------------------------------
  */
 
@@ -27,10 +26,10 @@
 #include "config.h"
 #include "uart.h"
 
-// Note: B4J Expected bytes = 0xABF6 - 0x0900 = 83,440 BYTES!
+// Note: B4J Expected bytes = 0xABF6 - 0x0800 = 83,696 BYTES!
 
 // Adjusted for PIC24FJ64GA102 based on your .gld configuration
-#define FLASH_START          0x00900         // Matches your Application ORIGIN
+#define FLASH_START          0x00800         // Matches your Application ORIGIN
 #define FLASH_END            0x0ABF6         // Matches your Application END (Last address)
 
 // PIC24FJ64GA102 Specific Flash geometry
@@ -182,6 +181,7 @@ void Verify_Flash(void)
     __delay_ms(MSG_MS_DELAY);
 }
 
+
 //-------------------------------------------------------
 // ERASE FLASH PROGRAM CODE DATA
 //-------------------------------------------------------
@@ -192,12 +192,7 @@ void Flash_EraseApplication(void)
     UART_TxString("<StartFlashErase>");
     __delay_ms(MSG_MS_DELAY);
     
-    // 1. FORCE ALIGNMENT
-    // Your 0x900 start must be treated as 0x800 for the hardware 
-    // to avoid the "Byte 108" skipping issue.
-    uint32_t aligned_start = FLASH_START & 0xFFFFFC00; 
-
-    for (addr = aligned_start; addr < FLASH_END; addr += FLASH_ERASE_BLOCK * 2)
+    for (addr = FLASH_START; addr < FLASH_END; addr += FLASH_ERASE_BLOCK * 2)
     {
         // 2. Set up pointer (Matches your PDF example)
         TBLPAG = (uint16_t)((addr >> 16) & 0x007F);
@@ -222,6 +217,7 @@ void Flash_EraseApplication(void)
     UART_TxString("<EndFlashErase>");
     __delay_ms(MSG_MS_DELAY);
 }
+
 
 //-------------------------------------------------------
 // WAIT HANDSHAKE AND FIRWARE UPDATE ROUTINE
@@ -381,8 +377,8 @@ int main(void) {
     
     LED_PIN  = 0;                   // LED Off (bootloader led))
     
-    asm("goto 0x900");             // Note the '#' symbol for a literal address in PIC24 assembly
+    asm("goto 0x800");             // Note the '#' symbol for a literal address in PIC24 assembly
     
-    // Good news is when bootloader goes to 0x0900 and is invalid, causes pic to reset and main repeated over and over till handshake and flash success!
+    // Good news is when bootloader goes to 0x0800 and is invalid, causes pic to reset and main repeated over and over till handshake and flash success!
 }
 
