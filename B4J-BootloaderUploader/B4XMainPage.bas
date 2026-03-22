@@ -5,7 +5,7 @@ Type=Class
 Version=9.85
 @EndOfDesignText@
 
-' VERSION 6.04
+' VERSION 6.06
 
 ' Using .Exe from Build Standalone Package you must include the .map files in 
 ' \BootloaderUploader\Objects\temp\build\bin\configs
@@ -409,15 +409,19 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
 			Dim absoluteAddr As Long = upperAddr + wordAddr
             
 			' Filter out bootloader/low code
-			If absoluteAddr < startAddr Then Continue
+			If absoluteAddr < startAddr Then 
+				Log("Low Memory Data Detected at: " & Bit.ToHexString(absoluteAddr).ToUpperCase)
+				Continue
+			End If
 
-			' Eliminate
+			' Filter out config/higher code
 			If absoluteAddr >= EndByte Then
 				Log("High Memory Data Detected at: " & Bit.ToHexString(absoluteAddr).ToUpperCase)
 				Continue
 			End If
 			
-			Log(Bit.ToHexString(absoluteAddr).ToUpperCase)
+			' Correct range code
+			Log("Valid Memory: " & Bit.ToHexString(absoluteAddr).ToUpperCase)
             
 			' Map to our array index
 			Dim arrayIndex As Long = absoluteAddr - startByte
@@ -446,6 +450,7 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
         
 	Catch
 		Log(LastException)
+		LogMessage("Status", "Error:  " & LastException & " in ConvertHexIntelToBinaryRange")
 		Dim EmptyArr() As Byte = Array As Byte()
 		Return EmptyArr
 	End Try
