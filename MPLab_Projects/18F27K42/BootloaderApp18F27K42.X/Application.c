@@ -1,7 +1,7 @@
 /*
  * File:   application.c
  * Author: issac
- * Version: 3.03
+ * Version: 3.05
  * Created on January 18, 2026, 12:13 PM
  * Family: 18F27K42
  */
@@ -92,7 +92,7 @@ void __interrupt(high_priority) App_ISR(void)
          * Timer2 Settings: Prescaler 1:128, Postscaler 1:16, PR2 = 124
          * Interrupt Time = Tcy * Prescale * (PR2 + 1) * Postscale
          * 62.5ns * 128 * 125 * 16 = 0.016s (16ms per interrupt)
-         * To get 2.0s: 2.0s / 0.016s = 124 counts
+         * To get 2.0s: 2.0s / 0.01s = 124 counts
          * Set TIMER2_COUNT to 124
          */
         
