@@ -13,9 +13,9 @@
  * 2. The default p24FJ64GA102.gld was modified to define fixed memory ranges.
  * 3. This prevents memory collisions between the Bootloader and Application.
  * * [APPLICATION RANGE]
- * Start Address (ORIGIN): 0x900
+ * Start Address (ORIGIN): 0x800
  * End Address:           0xABF6
- * Length:                0xA2F4
+ * Length:                0xA3F4
  * the Unified Hex generator to merge this App with the Bootloader.
  * ----------------------------------------------------------------------------
  */
