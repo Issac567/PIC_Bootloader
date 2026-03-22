@@ -1,83 +1,69 @@
 /*
  * File:   bootloader.c
- * Version: 3.06
+ * Version: 3.05
  * Author: Issac
- * Family: 24F64GA102
  * Created on January 19, 2026, 2:50 PM
+ * Family: 16F18857
  */
 
-
-/**
- * BOOTLOADER MEMORY CONFIGURATION:
- * ----------------------------------------------------------------------------
- * 1. This modified .gld MUST be included in the 'Linker Files' project tab.
- * 2. This defines the dedicated footprint for the Bootloader firmware.
- * * [BOOTLOADER RANGE]
- * Start Address (ORIGIN): 0x100  (Offset for Vector Tables)
- * End Address:           0x8FF
- * Length:                0x700 
- * * COORDINATION: The Application range begins at 0x800.
- * ----------------------------------------------------------------------------
- */
 
 #include <xc.h>
 #include <stdint.h>                         // for standard integer types 
 #include <stdbool.h>                        // for bool, true, false
 #include "config.h"
-#include "uart.h"
+#include "uart.h" 
 
-// Note: B4J Expected bytes = 0xABF6 - 0x0800 = 83,696 BYTES!
+// Note: B4J Expected bytes = 0x7FFF - 0x600 = 0x79FF + 1 = 0x7A00(31,232) * 2 = 62,464 BYTES (Each address is 1 WORD!))
 
-// Adjusted for PIC24FJ64GA102 based on your .gld configuration
-#define FLASH_START          0x00800         // Matches your Application ORIGIN
-#define FLASH_END            0x0ABF6         // Matches your Application END (Last address)
-
-// PIC24FJ64GA102 Specific Flash geometry
-#define FLASH_ERASE_BLOCK    512             // Erase page size is 512 instructions (standard for GA102)
-#define FLASH_WRITE_BLOCK    64              // Write row size is 64 instructions (standard for GA102)
-
-#define TIMER2_COUNT        186             // 3s 
-#define MSG_MS_DELAY        50              // Standard pacing delay 
+#define FLASH_START 0x0600                  // Flash start address
+#define FLASH_END 0x7FFF                    // Flash end address for 4-word block
+#define FLASH_ERASE_BLOCK 32                // Runtime can only do 32 word block erase max!
+#define FLASH_WRITE_BLOCK 32                // Can only do 32 word block write max with PIC 16F18857!
+#define MSG_MS_DELAY 50                     // Delay for UART_TxString   
 
 #define LED_PIN   LATBbits.LATB4            // Use LAT for Output / Bootloader Led Status 
 #define LED_TRIS  TRISBbits.TRISB4          // Output PortB.4 pin
 
-uint16_t flash_packet[FLASH_WRITE_BLOCK * 2];   // Array of 128 words
+uint16_t flash_packet[FLASH_WRITE_BLOCK];   // 32 words, 64 bytes total
+
 
 //-------------------------------------------------------
 // INTERNAL OSCILLATOR CLK CONFIG
 //-------------------------------------------------------
 void INTOSC_Init(void)
 {
-    // 1. Configure the Oscillator (FRC with PLL)
-    // The PIC24F internal FRC is ~8 MHz. 
-    // To get 32 MHz (Max), we use the 4x PLL.
-    // CLKDIV: RCDIV = 000 (8MHz), DOZE = 0 (1:1)
-    CLKDIVbits.RCDIV = 0; 
+  // Select HFINTOSC as system clock, NDIV = 1
+    OSCCON1 = 0b01100000;  // 6-4 = 110 ? HFINTOSC, 3-0 NDIV = 0000 ? divide by 1
 
-    // 2. Initiate Clock Switch to FRC with PLL (NOSC = 0b001)
-    // OSCCONL/H are protected by an unlock sequence in some compilers, 
-    // but __builtin_write_OSCCONH is the safest method.
-    __builtin_write_OSCCONH(0x01); // NOSC = 001 (Fast RC Oscillator with PLL)
-    __builtin_write_OSCCONL(OSCCON | 0x01); // OSWEN = 1 (Request switch)
 
+    // Set HFINTOSC frequency to 32 MHz
+    OSCFRQ = 0b00000110;  // HFFRQ=110 ? 32 MHz (redundant if RSTOSC=000)
+    
+    //Note 1: When RSTOSC=110 (HFINTOSC 1 MHz), the HFFRQ bits will default to ?010? upon Reset; 
+    //        When RSTOSC = 000 (HFINTOSC 32 MHz), the HFFRQ bits will default to ?110? upon Reset.
+    
+    /*RSTOSC<2:0>: Power-up Default Value for COSC bits This value is the Reset default value for COSC, 
+    and selects the oscillator first used by user software 
+    111 = EXT1X EXTOSC operating per FEXTOSC bits 
+    110 = HFINT1 
+    101 = LFINT 
+    100 = SOSC 
+    011 = Reserved 
+    010 = EXT4X HFINTOSC (1 MHz) LFINTOSC SOSC EXTOSC with 4x PLL, with EXTOSC operating per FEXTOSC bits 
+    001 = HFINTPLL HFINTOSC with 2x PLL, with OSCFRQ = 16 MHz and CDIV = 1:1(FOSC = 32 MHz) 
+    000 = HFINT32 HFINTOSC with OSCFRQ= 32 MHz and CDIV = 1:1
+
+    */
+    
     #ifndef __DEBUG
-        // 3. Wait for Clock Switch to complete
-        // COSC (Current Oscillator) should match NOSC (New Oscillator)
-        while (OSCCONbits.COSC != 0b001); 
-
-        // 4. Wait for the PLL to lock
-        // Unlike Q43's HFOR, PIC24 uses the LOCK bit for PLL stability
-        while (OSCCONbits.LOCK != 1); 
+        //while(OSCCON3bits.ORDY == 0);
     #endif
 }
 
-
-/* In Bootloader.c */
-void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
+void __interrupt() boot_ISR(void)
 {
-    // High-speed assembly jump to the Application's entry point
-    __asm__("goto 0x908"); 
+    asm("PAGESEL 0x7000");
+    asm("CALL 0x7000");
 }
 
 
@@ -85,98 +71,133 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
 // READ AND WRITE PROGRAM CODE ROUTINE + READ EEPROM DATA
 //-------------------------------------------------------
 // READ FLASH DATA (1 Word)
-int32_t Flash_ReadInstruction(uint32_t addr)
+uint16_t Flash_ReadInstruction(uint16_t address)
 {
-    uint16_t low16, high16;
-    int32_t instr32 = 0;
+    uint16_t word;
 
-    // Set table page
-    TBLPAG = (uint16_t)((addr >> 16) & 0xFF);
+    NVMADRL  = address & 0xFF;          // low byte of address
+    NVMADRH = (address >> 8) & 0xFF;    // high byte of address
 
-    // Read low (MID+LSB)
-    low16  = __builtin_tblrdl((uint16_t)(addr & 0xFFFF));
+    NVMCON1bits.NVMREGS = 0;            // Select program memory type
+    NVMCON1bits.RD = 1;                 // initiate read
 
-    // Read high (MSB+phantom)
-    high16 = __builtin_tblrdh((uint16_t)(addr & 0xFFFF));
-
-    // Assemble [Phantom][MSB][MID][LSB]
-    instr32  = ((int32_t)((high16 >> 8) & 0xFF)) << 24; // Phantom (high byte of high16)
-    instr32 |= ((int32_t)(high16 & 0xFF)) << 16;        // MSB (low byte of high16)
-    instr32 |= ((int32_t)((low16 >> 8) & 0xFF)) << 8;   // MID
-    instr32 |= (low16 & 0xFF);                           // LSB
-
-    return instr32;
+    word  = NVMDATL;                    // Low 8 bits
+    word |= ((uint16_t)NVMDATH << 8);   // High 6 bits shifted to MSB 
+    word &= 0x3FFF;                     // Mask 14-bit instruction
+    
+    return word;                        // Full 14-bit instruction
 }
 
-void Flash_WriteBlock(uint32_t address, uint16_t *data)
+void Flash_WriteBlock(uint16_t address, uint16_t *data)
 {
-    uint16_t addr_offset = (uint16_t)(address & 0xFFFF);
-    uint16_t addr_page = (uint16_t)((address >> 16) & 0x007F);
+    uint8_t i;
 
-    // 1. Setup NVMCON for row programming FIRST
-    NVMCON = 0x4001; 
+    // -----------------------------
+    // Align address to start of row
+    // -----------------------------
+    // Each row is 32 words (64 bytes). We mask the lower 5 bits to ensure
+    // we start at the beginning of a 32-word row. This prevents the
+    // "row shift" issue where data could start at 0x0920 instead of 0x0900.
+    address &= 0xFFE0;
 
-    // 2. Set TBLPAG to the ACTUAL destination page (not 0xFA)
-    TBLPAG = addr_page;
-    
-    // 3. Load ALL 64 instructions
-    // Using explicit offsets ensures we don't drift past the row boundary
-    for (uint16_t i = 0; i < FLASH_WRITE_BLOCK; i++)
+    // -----------------------------
+    // Enable flash write mode
+    // -----------------------------
+    NVMCON1bits.NVMREGS = 0;  // Select Program Flash memory
+    NVMCON1bits.WREN    = 1;  // Enable writes
+    NVMCON1bits.LWLO    = 1;  // Load Latches Only (don't commit to flash yet)
+
+    // -----------------------------
+    // Load each word into its latch
+    // -----------------------------
+    for (i = 0; i < FLASH_WRITE_BLOCK; i++)
     {
-        uint16_t target = addr_offset + (i * 2);
-        
-        __builtin_tblwtl(target, data[i * 2]);     
-        __builtin_tblwth(target, data[i * 2 + 1]); 
+        // Calculate the address for this specific word in the row
+        // This ensures each word goes to the correct latch, avoiding
+        //NVMADRH = 0x0000 - 0x7FFF	Set 0x7F
+        //NVMADRH =	0x8000 - 0xFFFF	Set to 0xFF (or none)
+        uint16_t currentWordAddr = address + i;
+        NVMADRL = currentWordAddr & 0xFF;           // Lower 8 bits of address
+        NVMADRH = (currentWordAddr >> 8) & 0x7F;    // Upper 7 bits of address (32KW range)
+
+        // Load the word into NVMDATL/NVMDATH (LSB/MSB)
+        // The 16F18857 uses 14-bit words, so upper 2 bits are masked
+        NVMDATL = data[i] & 0xFF;                   // Lower 8 bits
+        NVMDATH = (data[i] >> 8) & 0x3F;            // Upper 6 bits
+
+        // -----------------------------
+        // Unlock and write the word to the latch
+        // -----------------------------
+        // Each word requires the special unlock sequence:
+        // 1. Disable interrupts (GIE = 0)
+        // 2. Write 0x55 and 0xAA to NVMCON2
+        // 3. Set WR = 1 to load the latch
+        // 4. Wait for WR to complete
+        INTCONbits.GIE = 0;     // Disable interrupts to avoid write interruption
+        NVMCON2 = 0x55;         // Unlock sequence part 1
+        NVMCON2 = 0xAA;         // Unlock sequence part 2
+        NVMCON1bits.WR = 1;     // Start write to latch
+        while (NVMCON1bits.WR); // Wait until latch write completes
+        INTCONbits.GIE = 1;     // Re-enable interrupts
     }
 
-    // 4. Unlock and Trigger
-    __builtin_disi(5);
-    NVMKEY = 0x55;
-    NVMKEY = 0xAA;
-    NVMCONbits.WR = 1;
+    // -----------------------------
+    // Commit the entire row to flash
+    // -----------------------------
+    // After all words are loaded into their latches, clear LWLO = 0
+    // to indicate we want to write all latches to the actual flash row.
+    NVMCON1bits.LWLO = 0;
 
-    // 5. Mandatory NOPs from your assembly example
-    __builtin_nop();
-    __builtin_nop();
+    // Perform the unlock/write sequence for the final row commit
+    INTCONbits.GIE = 0;         // Disable interrupts
+    NVMCON2 = 0x55;             // Unlock part 1
+    NVMCON2 = 0xAA;             // Unlock part 2
+    NVMCON1bits.WR = 1;         // Start row write
+    while (NVMCON1bits.WR);     // Wait for completion
+    INTCONbits.GIE = 1;         // Re-enable interrupts
 
-    // 6. Wait for hardware to clear the WR bit
-    while (NVMCONbits.WR);
+    // -----------------------------
+    // Cleanup: disable flash writes
+    // -----------------------------
+    NVMCON1bits.WREN = 0;   // Prevent accidental writes
 }
 
 
 //-------------------------------------------------------
 // VERIFY FLASH DATA
 //-------------------------------------------------------
+// Verify Flash is performed after Flash Write is completed
 void Verify_Flash(void)
 {
-    uint32_t addr;
-
+    uint16_t addr;
+    
+    // Send to host
     UART_TxString("<StartFlashVerify>");
     __delay_ms(MSG_MS_DELAY);
-
-    for (addr = FLASH_START; addr <= FLASH_END; addr += (FLASH_WRITE_BLOCK * 2))
+    
+    // Loop through all flash from start to end
+    for (addr = FLASH_START; addr + FLASH_WRITE_BLOCK - 1 <= FLASH_END; addr += FLASH_WRITE_BLOCK)
     {
-        uint32_t packet[FLASH_WRITE_BLOCK];
-
-        // Read block (24-bit instructions)
+        // Prepare 32-word packet
+        uint16_t packet[FLASH_WRITE_BLOCK];
         for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
         {
-            packet[i] = Flash_ReadInstruction(addr + (uint32_t)(i * 2));
+            packet[i] = Flash_ReadInstruction(addr + i);  // Read word from flash
         }
 
-        // Send block
+        // Send packet to B4J 
         for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
         {
-            UART_Tx((packet[i] >>  0) & 0xFF);
-            UART_Tx((packet[i] >>  8) & 0xFF);
-            UART_Tx((packet[i] >> 16) & 0xFF);
-            UART_Tx((packet[i] >> 24) & 0xFF);
+            // eg. 0x3FFF = FF first then 3F second (B4J binary is backwards!)
+            UART_Tx(packet[i] & 0xFF);              // First Byte (LSB)
+            UART_Tx(packet[i] >> 8);                // Second Byte (MSB) Shift upper to lower
         }
 
-        __delay_ms(1);
+        __delay_ms(1);                              // tested 1 ms ok!  as long below first delay is there!
     }
 
-    __delay_ms(MSG_MS_DELAY);
+    // Send to host
+    __delay_ms(MSG_MS_DELAY);                       // Must do this delay first helps alot.  does not interfere with last packet sent! (tested with 1 ms delay above and works flawless!)
     UART_TxString("<EndFlashVerify>");
     __delay_ms(MSG_MS_DELAY);
 }
@@ -185,33 +206,43 @@ void Verify_Flash(void)
 //-------------------------------------------------------
 // ERASE FLASH PROGRAM CODE DATA
 //-------------------------------------------------------
+// ERASE FLASH BLOCK 32 word erase at each for 
 void Flash_EraseApplication(void)
 {
-    uint32_t addr;
-
     UART_TxString("<StartFlashErase>");
     __delay_ms(MSG_MS_DELAY);
+
+    uint16_t addr;
     
-    for (addr = FLASH_START; addr < FLASH_END; addr += FLASH_ERASE_BLOCK * 2)
+    // Loop over all blocks in the application area
+    for (addr = FLASH_START; addr + FLASH_ERASE_BLOCK - 1 <= FLASH_END; addr += FLASH_ERASE_BLOCK)
+
     {
-        // 2. Set up pointer (Matches your PDF example)
-        TBLPAG = (uint16_t)((addr >> 16) & 0x007F);
-        uint16_t offset = (uint16_t)(addr & 0xFFFF);
+        // Load full flash address into NVM address registers
+        NVMADRL = addr & 0xFF;              // Low 8 bits
+        NVMADRH = (addr >> 8) & 0x7F;       // Upper 7 bits for full 0x0000?0x7FFF
 
-        // 3. Dummy Write to set base address
-        __builtin_tblwtl(offset, 0xFFFF); 
+        // Program flash erase setup
+        NVMCON1bits.NVMREGS = 0;            // PFM (Program Flash Memory)
+        NVMCON1bits.FREE    = 1;            // Erase
+        NVMCON1bits.WREN    = 1;            // Enable writes
 
-        // 4. Initialize NVMCON (Matches your 0x4042)
-        NVMCON = 0x4042; 
+        // Disable interrupts during unlock sequence
+        INTCONbits.GIE = 0;
 
-        // 5. THE UNLOCK SEQUENCE
-        // Using the built-in function is the "Correct" way to 
-        // match the PDF's assembly requirements exactly.
-        __builtin_disi(5);      
-        __builtin_write_NVM();  
+        // Required unlock sequence
+        NVMCON2 = 0x55;
+        NVMCON2 = 0xAA;
+        NVMCON1bits.WR = 1;                 // Start erase
 
-        // 6. Wait for completion
-        while(NVMCONbits.WR);        
+        // Wait until erase completes
+        while(NVMCON1bits.WR);
+
+        // Re-enable interrupts
+        INTCONbits.GIE = 1;
+
+        // Disable writes
+        NVMCON1bits.WREN = 0;
     }
 
     UART_TxString("<EndFlashErase>");
@@ -220,137 +251,154 @@ void Flash_EraseApplication(void)
 
 
 //-------------------------------------------------------
-// WAIT HANDSHAKE AND FIRWARE UPDATE ROUTINE
+// FIRMWARE UPDATE ROUTINE
 //-------------------------------------------------------
 bool ReceivePacket(void)
 {
-    // 64 instructions * 4 bytes/instruction = 256 bytes
-    uint8_t temp[FLASH_WRITE_BLOCK * 4];  
-    uint16_t byteCount = 0;
-    uint32_t timeoutCounter = 0;
-    const uint32_t TIMEOUT_3SEC = 6000000;
+    // Buffer for raw bytes (e.g., 64 bytes if FLASH_WRITE_BLOCK is 32)
+    uint8_t temp[FLASH_WRITE_BLOCK * 2];        
+    uint8_t byteCount = 0; 
+    uint32_t timeout_counter = 0;
+
+    const uint32_t THREE_SECONDS = 1000000; 
     
-    // 1. Collect exactly 256 bytes (matches B4J intBlockSize)
-    while (byteCount < (FLASH_WRITE_BLOCK * 4))
+    while (byteCount < FLASH_WRITE_BLOCK * 2)   
     {
-        if (U1STAbits.URXDA) 
+        // Check if UART receive flag is set
+        if (PIR3bits.RCIF)                          
+        {       
+            temp[byteCount] = UART_Rx();        // Capture incoming byte
+            byteCount++;                                
+            timeout_counter = 0;                // Reset timeout every time a byte arrives
+                }
+        else 
         {
-            temp[byteCount] = UART_Rx();  
-            byteCount++;
-            timeoutCounter = 0; // Reset 3s window on every byte
-        }
-        else
-        {
-            timeoutCounter++;
+            // Increment Software Timeout if no data
+            timeout_counter++;
             
-            if (timeoutCounter > TIMEOUT_3SEC)
+            // Exit if we hit 3 seconds
+            if (timeout_counter >= THREE_SECONDS)
             {
-                UART_TxString("<ISR Timeout>");
-                __delay_ms(MSG_MS_DELAY);
-                return false;
+                return false; // Timeout reached
             }
         }
     }
 
-    // 2. Combine bytes into 128 16-bit words (64 Low words + 64 High words)
-    // Loop runs 128 times (FLASH_WRITE_BLOCK * 2)
-    for (uint16_t i = 0; i < (FLASH_WRITE_BLOCK * 2); i++)
+    /* * Convert bytes into 16-bit words.
+     * Host sends LSB first, then MSB (Little Endian).
+     * Example: Host sends 0x3FFF as [0xFF, 0x3F].
+     */
+    for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++) 
     {
+        // flash_packet[i] = (MSB << 8) | LSB
         flash_packet[i] = ((uint16_t)temp[i*2 + 1] << 8) | temp[i*2];
     }
 
-    return true; 
+    return true;
 }
 
 // When ready will use this in future
 void DoFirmwareUpdate(void)
-{   
-    UART_TxString("<StartFlashWrite>");
+{    
+    UART_TxString("<StartFlashWrite>");     // Start of Flash Write Block
     __delay_ms(MSG_MS_DELAY);
-
-    uint32_t flashAddr = FLASH_START;
-    uint8_t timeoutCount = 0;
-
-    while (1)
-    {
-        UART_TxString("<ACK>"); 
+    
+    uint16_t flashAddr = FLASH_START;
+    uint8_t timeoutCount = 0;               // count consecutive timeouts
         
-        // 1. DATA ACQUISITION
-        // ReceivePacket handles the 256-byte (FLASH_WRITE_BLOCK * 4) collection
-        if (ReceivePacket())  
-        {
-            timeoutCount = 0; 
-
-            // 2. FLASH PROGRAMMING
-            // Commits 128 words (64 Low, 64 High) to the PIC24 Row
+    while (1)
+    {      
+        // Send Acknowledge: Host sends next 64-byte packet after seeing this
+        UART_TxString("<ACK>");  
+    
+        if (ReceivePacket())                // Check packet 64 bytes total 32 word
+        {          
+            // Successfully received a packet, reset timeout counter
+            timeoutCount = 0;
+                        
+            // Write 4-word block to flash
             Flash_WriteBlock(flashAddr, flash_packet);
 
-            // 3. ADDRESS POINTER ADVANCEMENT
-            // PIC24: 64 instructions = 128 address units (0x80)
-            flashAddr += (FLASH_WRITE_BLOCK * 2);  
-
-            // 4. BOUNDARY CHECK
-            // Stop if the next write would exceed the App limit
-            if (flashAddr + (FLASH_WRITE_BLOCK * 2) - 1 > FLASH_END)
+            // Move to next flash block
+            flashAddr += FLASH_WRITE_BLOCK;     // currently +32
+             
+            // stop if we reach end of flash memory
+            if (flashAddr + FLASH_WRITE_BLOCK - 1 > FLASH_END)
             {
+                // this will trigger B4J to get in Verify Mode! Send to host
                 UART_TxString("<EndFlashWrite>");
-                __delay_ms(MSG_MS_DELAY);
+                __delay_ms(MSG_MS_DELAY);  
+                 
+                Verify_Flash();
                 
-                Verify_Flash(); // This will also need to walk in 256-byte steps
                 return;
             }
         }
-        // 5. ERROR / RETRY HANDLING
-        else 
+        else        // Packet returned false 
         {
+            // If ReceivePacket returns false, it means 3 seconds passed with no UART data
             timeoutCount++;
 
+            UART_TxString("<ISR Timeout>");  // Simplified message for smaller flash
+            __delay_ms(MSG_MS_DELAY);   
+            
+            // Exit after 3 consecutive timeouts
             if (timeoutCount >= 3)
-            {
-                UART_TxString("<ErrorTimeout>");
+            {                   
+                // Send to host
+                UART_TxString("<ErrorTimeout>");    
                 __delay_ms(MSG_MS_DELAY);
+                
                 return;
-            }
-            // Optional: Request resend from B4J here
+            } 
+            
+            // Otherwise, continue waiting for next packet
         }
     }
 }
 
+
+//-------------------------------------------------------
+// WAIT HANDSHAKE
+//-------------------------------------------------------
 // 0x55 and 0XAA handshake expected from Host to start firmware update
-void WaitHandshake(void) 
-{
+void WaitHandshake(void) {
     uint8_t prev = 0;
-    uint8_t curr = 0;
-    uint32_t handshakeCounter = 0;
-    const uint32_t TIMEOUT_3SEC = 6000000;
+    uint8_t curr;
+    uint32_t timeout_counter = 0;
     
-     while (handshakeCounter < TIMEOUT_3SEC)
+    const uint32_t THREE_SECONDS = 1000000; 
+    
+     while (timeout_counter < THREE_SECONDS)
     {
-        // PIC24 uses U1STAbits.URXDA to check for data in the FIFO
-        if (U1STAbits.URXDA) 
+        if(PIR3bits.RCIF)               // UART receive interrupt flag set (data received in RCREG)
         {
-            // UART_Rx() should return U1RXREG on this chip
-            curr = UART_Rx();     
-            
-            if (prev == 0x55 && curr == 0xAA) 
-            {                                               
+            curr = UART_Rx();
+                
+            // Expecting 0xAA and 0x55 from PC to enter Flash mode
+            if(prev == 0x55 && curr == 0xAA) 
+            {                           
+                // Send initialization acknowledgment before starting Erase and Flash update
                 UART_TxString("<InitReceived>");
                 __delay_ms(MSG_MS_DELAY);
                 
-                Flash_EraseApplication();  
-                DoFirmwareUpdate();        
-                
-                return; 
+                // Update the Firmware        
+                Flash_EraseApplication();               // Erase Flash
+                DoFirmwareUpdate();                     // Flash Write
+                return;
             }
             
+            // sliding window byte comparison
             prev = curr;
         }
         else 
         {
-            handshakeCounter++;
+            // 2. No data received? Increment the timer
+            timeout_counter++;
         }
     }
         
+    // Send to host
     UART_TxString("<HandShakeTimeout>");
     __delay_ms(MSG_MS_DELAY);
 }
@@ -359,26 +407,24 @@ void WaitHandshake(void)
 //-------------------------------------------------------
 // MAIN ENTRY FOR BOOTLOADER
 //-------------------------------------------------------
-int main(void) {    
-     // 1. Digital/Analog Configuration
-    // The GA102 uses AD1PCFG. Setting a bit to 1 makes the pin DIGITAL.
-    AD1PCFG = 0xFFFF;               // Set all pins to Digital mode
+void main(void) {
+    ANSELA = 0x00;                  // Port A all digital
+    ANSELB = 0x00;                  // Port B all digital
+    ANSELC = 0x00;                  // Port C all digital
 
-    // 2. I/O Setup
     LED_TRIS = 0;                   // LED Output
-    LED_PIN  = 1;                   // LED On (bootloader led)
+    LED_PIN  = 1;                   // LED On (bootloader led))
        
-    // 3. Peripheral Init
-    // Ensure your INTOSC_Init sets the clock to 32MHz (Fcy = 16MHz)
-    INTOSC_Init();                  
-    UART_Init();                    // Init Hardware UART (PPS happens inside here) 
-     
+    INTOSC_Init();                  // Must set internal Oscillator
+    UART_Init();                    // Init Hardware UART   
+    
     WaitHandshake();                // wait for 0x55 0xAA (3s timeout then goto app))
     
     LED_PIN  = 0;                   // LED Off (bootloader led))
     
-    asm("goto 0x800");             // Note the '#' symbol for a literal address in PIC24 assembly
+    asm("PAGESEL 0x600");           // Ensure PCLATH is correct for the jump
+    asm("goto 0x600");              // If bootloader is not init from PC, then continue to application
     
-    // Good news is when bootloader goes to 0x0800 and is invalid, causes pic to reset and main repeated over and over till handshake and flash success!
+    
+    // Good news is when bootloader goes to 0x0600 and is invalid, causes pic to reset and main repeated over and over till handshake and flash success!
 }
-
