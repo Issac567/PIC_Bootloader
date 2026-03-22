@@ -9,6 +9,6 @@ UseWriteBurst=true
 WordsPerPacket=64
 StopBit=1
 Notes=24-bit Architecture
-ExpectedBytes=83696
+ExpectedBytes=83952
 UseDoubleHexAddr=true
 Use4Padding=true
