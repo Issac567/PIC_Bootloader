@@ -5,7 +5,7 @@ Type=Class
 Version=9.85
 @EndOfDesignText@
 
-' VERSION 6.06
+' VERSION 6.05
 
 ' Using .Exe from Build Standalone Package you must include the .map files in 
 ' \BootloaderUploader\Objects\temp\build\bin\configs
