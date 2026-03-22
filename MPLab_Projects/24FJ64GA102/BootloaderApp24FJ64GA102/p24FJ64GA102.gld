@@ -62,7 +62,7 @@ MEMORY
   ivt            : ORIGIN = 0x4,           LENGTH = 0xFC
   _reserved      : ORIGIN = 0x100,         LENGTH = 0x4
   aivt           : ORIGIN = 0x104,         LENGTH = 0xFC
- /* Range: 0x900 to 0xABF6 */
+ /* Range: 0x800 to 0xABF6 */
   program (xr)   : ORIGIN = 0x804,         LENGTH = 0xA1F4
   CONFIG4        : ORIGIN = 0xABF8,        LENGTH = 0x2
   CONFIG3        : ORIGIN = 0xABFA,        LENGTH = 0x2
