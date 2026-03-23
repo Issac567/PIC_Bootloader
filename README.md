@@ -52,6 +52,7 @@ Follow these steps to correctly link the Application and Bootloader projects:
 2. Select your target configuration.
 3. Run **Clean and Build**. 
 4. Locate the output `.hex` file in the `dist/` directory of the project.
+5. Make sure minimal bootloader is flashed before B4J usage.
 
 ### 2. Update Firmware (B4J)
 Updating the device firmware requires the B4J uploader tool, but bootloader must be flashed with MPLAB first:
