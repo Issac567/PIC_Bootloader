@@ -104,12 +104,6 @@ void __attribute__((address(0x908), interrupt, no_auto_psv)) App_ISR(void)
     }
 }
 
-
-// The __at(0xA00) attribute forces the linker to place this code at address 0xA00.
-// This preserves the 0x0000 - 0x9FF range for the Bootloader firmware.  
-// This also avoids the compiler add 1FFFC GOTO function
-// In XC16, we use the 'address' attribute instead of __at()
-//int __attribute__((address(0x900))) main(void) 
 int main(void)
 {
     uint8_t b;                          // Variable to hold the received handshake byte
