@@ -51,8 +51,7 @@ Follow these steps to correctly link the Application and Bootloader projects:
 1. Open the specific project folder in **MPLAB X IDE**.
 2. Select your target configuration.
 3. Run **Clean and Build**. 
-4. Locate the output `.hex` file in the `dist/` directory of the project.
-5. Make sure minimal bootloader is flashed before B4J usage.
+4. Make sure minimal bootloader is flashed before B4J usage.  **Chip with upload icon** to flash.  Under property make sure your programmer is selected.
 
 ### 2. Update Firmware (B4J)
 Updating the device firmware requires the B4J uploader tool, but bootloader must be flashed with MPLAB first:
