@@ -32,7 +32,7 @@ This repository contains a collection of firmware projects for various **PIC mic
 Follow these steps to correctly link the Application and Bootloader projects:
 
 1. **Download the Repository**: Click the green **Code** button and select **Download ZIP**, then extract it to your local machine.
-2. **Open MPLAB X**: Launch the IDE and open both the **Bootloader** project and its corresponding **App** project (e.g., `BootLoader16F88.X` and `BootLoaderApp16F88.X`).
+2. **Open MPLAB X**: Launch the IDE and open the **Bootloader** project (e.g., `BootLoader16F88.X`).
 3. **Import Loadables**:
    * In the Projects pane, locate your **BootLoader16F88** project.
    * Right-click on the **Loadables** folder.
