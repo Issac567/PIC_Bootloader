@@ -47,7 +47,7 @@ Follow these steps to correctly link the Application and Bootloader projects:
 
 ## 🚀 Usage Instructions
 
-### 1. Build the Project
+### 1. Build the Project (MPLAB)
 1. Open the specific project folder in **MPLAB X IDE**.
 2. Select your target configuration.
 3. Run **Clean and Build**. 
