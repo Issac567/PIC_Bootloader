@@ -40,8 +40,8 @@ Follow these steps to correctly link the Application and Bootloader projects:
    * Select the corresponding project folder that has the **BootLoaderApp16F88.X** suffix.
    * Right click **BootLoader16F88** folder and **Set as Main Project**
 4. Click **Production** --> **Clean and Build Project**: This will automatically compile the bootloader/application and also merge them into a single `.hex` file.  **Bootloader folder** have `BootLoader16F88.X.production.hex`, **Application folder** have `BootLoaderApp16F88.X.production.hex` and **Bootloader folder** also have both merged into `BootLoader16F88.X.production.unified.hex`.
-5. Upload/flash **(Chip with upload icon)**  the bootloader and application with MBLAB.  Which allows bootloader to flash, erase and verify in B4J.  We need the bootloader minimal
-6. **B4J Uploader** is what you use to upload the **Application** Intex Hex file to your **16F88** eg.  File location `..\BootloaderApp16F88.X\dist\default\production\BootLoaderApp16F88.X.production.hex`
+5. Upload/flash **(Chip with upload icon)**  the bootloader and application with MBLAB.  Which allows bootloader to flash, erase and verify in B4J.  We need the bootloader minimal.  If set as main, it will flash both bootloader and application.
+6. **B4J Uploader** is what you use to upload the **Application** Intex Hex file to your **16F88** eg.  File location `..\BootloaderApp16F88.X\dist\default\production\BootLoaderApp16F88.X.production.hex`.
 
 ---
 
@@ -57,10 +57,10 @@ Follow these steps to correctly link the Application and Bootloader projects:
 Updating the application device firmware requires the B4J uploader tool, but bootloader must be flashed with MPLAB first:
 1. Connect your target PIC device to your PC.
 2. Open the **B4J Uploader** utility.
-3. Select `Com Port` and click `Open Port`
+3. Select `Com Port` and click `Open Port`.
 4. Select configuration type eg. `16F88` in the combobox
 5. Click `Load Firmware` the `BootLoaderApp16F88.X.production.hex` file generated in the previous step.
-6. Execute the `Flash` command to flash the device.  It will Erase, Flash and Verify in that order
+6. Execute the `Flash` command to flash the device.  It will Erase, Flash and Verify in that order.
 
 ---
 
