@@ -53,7 +53,7 @@ Follow these steps to correctly link the Application and Bootloader projects:
 3. Run **Clean and Build**. 
 4. Locate the output `.hex` file in the `dist/` directory of the project.
 
-### 2. Update Firmware
+### 2. Update Firmware (B4J)
 Updating the device firmware requires the B4J uploader tool, but bootloader must be flashed with MPLAB first:
 1. Connect your target PIC device to your PC.
 2. Open the **B4J Uploader** utility.
