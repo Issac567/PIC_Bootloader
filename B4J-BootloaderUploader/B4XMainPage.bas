@@ -50,7 +50,7 @@ Sub Class_Globals
 	Private cmbPicList As ComboBox
 	Private prgBar As ProgressBar
 	
-	Private firmware() As Byte								' firmware binary from FILE
+	Private firmwareFile() As Byte							' firmware binary from FILE
 	Private firmwareVerify() As Byte						' firmware binary from PIC
 	Private cntVerify As Int								' Counter detection of incoming verify bytes from PIC
 	Private blnProgrammingInProgress As Boolean				' For exit app msgbox while flashing
@@ -341,7 +341,7 @@ Private Sub btnLoadFile_Click
 	If filepath <> "" Then
 		strLastFilePath = filepath
 		LogMessage("Status", "File Path: " & filepath)	
-		firmware = ConvertHexIntelToBinaryRange(filepath, intStartAddrFlash, intEndAddrFlash)
+		firmwareFile = ConvertHexIntelToBinaryRange(filepath, intStartAddrFlash, intEndAddrFlash)
 	Else
 		strLastFilePath = ""
 		LogMessage("Status", "No file selected.")
@@ -449,7 +449,6 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
 		Return firmwareData
         
 	Catch
-		Log(LastException)
 		LogMessage("Status", "Error:  " & LastException & " in ConvertHexIntelToBinaryRange")
 		Dim EmptyArr() As Byte = Array As Byte()
 		Return EmptyArr
@@ -535,19 +534,19 @@ Sub SendFirmware
 	End If
 	
 	Dim block(intBlockSize) As Byte
-	Dim totalBlocks As Int = Ceil(firmware.Length / intBlockSize)
+	Dim totalBlocks As Int = Ceil(firmwareFile.Length / intBlockSize)
 	
-	LogMessage("FirmwareUpload", "Firmware size: " & firmware.Length & " bytes, total blocks: " & totalBlocks & ", bytes/block: " & intBlockSize)
+	LogMessage("FirmwareUpload", "Firmware size: " & firmwareFile.Length & " bytes, total blocks: " & totalBlocks & ", bytes/block: " & intBlockSize)
 	
 	Dim i As Int = 0
-	Do While i <= firmware.Length
+	Do While i <= firmwareFile.Length
 
 		' Copy bytes into block, pad with 0xFF if last block is smaller
-		Dim remaining As Int = firmware.Length - i
+		Dim remaining As Int = firmwareFile.Length - i
 		Dim currentBlockSize As Int = Min(intBlockSize, remaining)
 		For j = 0 To intBlockSize - 1
 			If j < currentBlockSize Then
-				block(j) = firmware(i + j)
+				block(j) = firmwareFile(i + j)
 			Else
 				block(j) = 0xFF   ' padding
 			End If
@@ -586,7 +585,7 @@ Sub SendFirmware
 		End If
 
 		' Update progress bar
-		prgBar.Progress = Min(1, (i + intBlockSize) / firmware.Length)
+		prgBar.Progress = Min(1, (i + intBlockSize) / firmwareFile.Length)
 
 		' Move to next block
 		i = i + intBlockSize
@@ -625,15 +624,15 @@ Sub VerifyStatus
 End Sub
 Sub VerifyFirmware() As Boolean
 	' Make sure both arrays are the same length
-	If firmware.Length <> firmwareVerify.Length Then
+	If firmwareFile.Length <> firmwareVerify.Length Then
 		Return False
 	End If
 
 	' Compare byte by byte
-	For i = 0 To firmware.Length - 1
-		If firmware(i) <> firmwareVerify(i) Then
+	For i = 0 To firmwareFile.Length - 1
+		If firmwareFile(i) <> firmwareVerify(i) Then
 			LogMessage("Status", "Mismatch at byte " & i & _
-                       ": firmware file = " & BytesToHexString2(firmware(i)) & _
+                       ": firmware file = " & BytesToHexString2(firmwareFile(i)) & _
                        " vs firmware verify = " & BytesToHexString2(firmwareVerify(i)))
 			Return False
 		End If
@@ -748,9 +747,9 @@ Sub LoadConfiguration(SelectedPicName As String) As Boolean
 						Dim temp(intExpectedFirmwareBytes) As Byte
 						firmwareVerify = temp
 		
-						' Make sure reload the Intel Hex file to new Firmware() array
+						' Make sure reload the Intel Hex file to new firmwareFile() array
 						If strLastFilePath <> "" Then
-							firmware = ConvertHexIntelToBinaryRange(strLastFilePath, intStartAddrFlash, intEndAddrFlash)
+							firmwareFile = ConvertHexIntelToBinaryRange(strLastFilePath, intStartAddrFlash, intEndAddrFlash)
 						End If
 						
 						' If port already open update stop bit parameter!
