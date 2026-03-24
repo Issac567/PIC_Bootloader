@@ -86,7 +86,7 @@ void Timer2_Stop(void)
 }
 
 // Use the address attribute to match the Bootloader's goto
-void __attribute__((address(0x908), interrupt, no_auto_psv)) App_ISR(void)
+void __attribute__((address(0x908), interrupt, auto_psv)) _T2Interrupt(void)
 {
     // 1. Clear the flag
     // In PIC24, the flag is T2IF in the IFS0 register
