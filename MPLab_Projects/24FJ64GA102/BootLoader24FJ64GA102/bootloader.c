@@ -377,7 +377,7 @@ int main(void) {
     
     LED_PIN  = 0;                   // LED Off (bootloader led))
     
-    asm("goto 0x800");             // Note the '#' symbol for a literal address in PIC24 assembly
+    asm("goto 0x800");          
     
     // Good news is when bootloader goes to 0x0800 and is invalid, causes pic to reset and main repeated over and over till handshake and flash success!
 }
