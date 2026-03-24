@@ -5,7 +5,7 @@ Type=Class
 Version=9.85
 @EndOfDesignText@
 
-' VERSION 6.05
+' VERSION 6.06
 
 ' Using .Exe from Build Standalone Package you must include the .map files in 
 ' \BootloaderUploader\Objects\temp\build\bin\configs
@@ -351,15 +351,15 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
 	Try
 		Dim lines As List = File.ReadList("", filepath)
         
-		' Intel Hex Word Addressed
-		Dim startByte, EndByte As Int
+		' Intel Double Hex Byte Addressed
+		Dim startByte, endByte As Int
 		If blnUseDoubleHexAddr = True Then
 			startByte = startAddr * 2       ' eg. PIC 16F88, PIC 24F
-			EndByte = endAddr * 2
-		' Non Intel Hex Word Addressed
+			endByte = endAddr * 2
+		' Non Intel Double Hex Byte Addressed
 		Else
 			startByte = startAddr           ' eg. PIC 18F27K42
-			EndByte =endAddr
+			endByte = endAddr
 		End If
         
 		' Create binary array relative to startAddr
@@ -377,8 +377,8 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
 		Else
 			' LSB(0xFF) Then MSB(0x3F) format for 18F, 16F
 			For i = 0 To firmwareData.Length - 1 Step 2
-				firmwareData(i) = 0xFF
-				firmwareData(i+1) = intEmptyFlashValue
+				firmwareData(i) = 0xFF					' Low Byte
+				firmwareData(i+1) = intEmptyFlashValue	' High Byte
 			Next
 		End If
         
@@ -415,7 +415,7 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
 			End If
 
 			' Filter out config/higher code
-			If absoluteAddr >= EndByte Then
+			If absoluteAddr >= endByte Then
 				Log("High Memory Data Detected at: " & Bit.ToHexString(absoluteAddr).ToUpperCase)
 				Continue
 			End If
