@@ -142,7 +142,7 @@ void  main(void) {
         if (PIR1bits.RCIF)              // PIR1bits.RCIF = 1 ? at least one byte in RCREG
         {
             b = UART_Rx();
-            if (b == 0x55)              // This is Handshake byte. In application 0xAA is not needed.  It will reboot then 0x55 and 0xAA will be detected
+            if (b == 0x55 || b == 0xAA)  // This is Handshake byte. In application 0xAA is not needed.  It will reboot then 0x55 and 0xAA will be detected
             {
                 //Timer2_Stop;            // Enable Demo to test timer2
                 // Send to Host Handshake received at app location
