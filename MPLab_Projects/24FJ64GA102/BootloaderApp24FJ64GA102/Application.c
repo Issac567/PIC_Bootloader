@@ -136,8 +136,8 @@ int main(void)
         {
             b = UART_Rx();
             
-            // If the handshake byte (0x55) is detected:
-            if (b == 0x55)              
+            // If the handshake byte (0x55 or 0xAA) is detected:
+            if (b == 0x55 || b == 0xAA)              
             {
                 
                 //Timer2_Stop(); // Enable Demo
