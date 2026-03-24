@@ -98,7 +98,7 @@ uint8_t UART_Rx(void)
 
     // 3. Wait for data to be available in the FIFO
     // URXDA (Receive Data Available) is 1 when there is at least 1 byte in the FIFO.
-    while (!U1STAbits.URXDA);
+    //while (!U1STAbits.URXDA);
 
     // 4. Return the byte from the 16-bit register
     return (uint8_t)U1RXREG;
