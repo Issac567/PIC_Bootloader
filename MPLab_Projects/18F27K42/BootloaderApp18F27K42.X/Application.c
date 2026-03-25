@@ -131,10 +131,9 @@ void EEPROM_WriteByte(uint16_t address, uint8_t data)
 }
 
 
-// The __at(0xA00) attribute forces the linker to place this code at address 0xA00.
-// This preserves the 0x0000 - 0x9FF range for the Bootloader firmware.  
+// The __at(0x900) attribute forces the linker to place this code at address 0x900. 
 // This also avoids the compiler add 1FFFC GOTO function
-void __at(0xA00) main(void) 
+void __at(0x900) main(void) 
 {
     uint8_t b;                          // Variable to hold the received handshake byte
     
