@@ -132,6 +132,7 @@ void EEPROM_WriteByte(uint16_t address, uint8_t data)
 
 
 // The __at(0x900) attribute forces the linker to place this code at address 0x900. 
+// Can't place it in 0x800 to 0x802 will build with errors
 // This also avoids the compiler add 1FFFC GOTO function
 void __at(0x900) main(void) 
 {
