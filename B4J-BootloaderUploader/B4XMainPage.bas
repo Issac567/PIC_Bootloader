@@ -5,7 +5,7 @@ Type=Class
 Version=9.85
 @EndOfDesignText@
 
-' VERSION 6.06
+' VERSION 6.07
 
 ' Using .Exe from Build Standalone Package you must include the .map files in 
 ' \BootloaderUploader\Objects\temp\build\bin\configs
@@ -391,7 +391,7 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
 			If line.Length = 0 Or line.CharAt(0) <> ":" Then Continue
             
 			Dim byteCount As Int = Bit.ParseInt(line.SubString2(1, 3), 16)
-			Dim wordAddr As Int = Bit.ParseInt(line.SubString2(3, 7), 16)
+			Dim byteAddr As Int = Bit.ParseInt(line.SubString2(3, 7), 16)
 			Dim recordType As Int = Bit.ParseInt(line.SubString2(7, 9), 16)
             
 			' --- HANDLE EXTENDED ADDRESSING (Record Type 04) ---
@@ -406,7 +406,7 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
 			If recordType <> 0 Then Continue
             
 			' The TRUE address on the chip
-			Dim absoluteAddr As Long = upperAddr + wordAddr
+			Dim absoluteAddr As Long = upperAddr + byteAddr
             
 			' Filter out bootloader/low code
 			If absoluteAddr < startAddr Then 
