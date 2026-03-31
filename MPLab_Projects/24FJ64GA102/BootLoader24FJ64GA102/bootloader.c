@@ -26,7 +26,7 @@
 #include "config.h"
 #include "uart.h"
 
-// Note: B4J Expected bytes = 0xABF6 - 0x0800 = 83,696 BYTES!
+// Note: B4J Expected bytes = 0xABF6 - 0x0800 = 83,952 BYTES with Phantom!
 
 // Adjusted for PIC24FJ64GA102 based on your .gld configuration
 #define FLASH_START          0x00800         // Matches your Application ORIGIN
