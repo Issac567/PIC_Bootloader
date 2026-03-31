@@ -6,8 +6,6 @@
  * Family: 18F27Q43
  */
 
-//NOTE!  DID NOT TEST WITH ACTUAL HARDWARE!!!!!!
-
 #include <xc.h>
 #include <stdint.h>                         // for standard integer types 
 #include <stdbool.h>                        // for bool, true, false
