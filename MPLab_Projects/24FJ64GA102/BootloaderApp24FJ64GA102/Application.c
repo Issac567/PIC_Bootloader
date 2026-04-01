@@ -2,7 +2,7 @@
  * File:   application.c
  * Author: issac
  * Version: 3.06
- * Family: 24F64GA102
+ * Family: 24F256GA702
  * Created on January 18, 2026, 12:13 PM
  */
 
@@ -86,6 +86,7 @@ void Timer2_Stop(void)
 }
 
 // Use the address attribute to match the Bootloader's goto
+//void __attribute__((address(0x908), interrupt, no_auto_psv)) App_ISR(void)
 void __attribute__((address(0x908), interrupt, no_auto_psv)) _T2Interrupt(void)
 {
     // 1. Clear the flag
@@ -110,7 +111,8 @@ int main(void)
     
     // --- PERIPHERAL INITIALIZATION ---
     // PIC24: Ensure all pins are digital
-    AD1PCFG = 0xFFFF; 
+    ANSA = 0x0000;   // all PORTA digital
+    ANSB = 0x0000;   // all PORTB digital
 
     // Configure the LED pin as an output. 
     LED_TRIS = 0;                       
@@ -137,7 +139,7 @@ int main(void)
             b = UART_Rx();
             
             // If the handshake byte (0x55 or 0xAA) is detected:
-            if (b == 0x55 || b == 0xAA)              
+            if (b == 0x55 || b == 0xAA)             
             {
                 
                 //Timer2_Stop(); // Enable Demo
