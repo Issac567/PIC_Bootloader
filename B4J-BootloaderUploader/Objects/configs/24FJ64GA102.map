@@ -1,6 +1,6 @@
 #Fri Feb 06 21:58:55 PST 2026
 EndAddrFlash=44022
-HandShakeDelayMS=200
+HandShakeDelayMS=400
 EmptyFlashValue=0
 PacketDelayMS=1
 PicName=24FJ64GA102
