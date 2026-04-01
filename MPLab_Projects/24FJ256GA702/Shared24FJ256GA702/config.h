@@ -12,7 +12,7 @@
 // FSEC
 #pragma config BWRP = OFF               // Boot Segment Write-Protect bit (Boot Segment may be written)
 #pragma config BSS = DISABLED           // Boot Segment Code-Protect Level bits (No Protection (other than BWRP))
-#pragma config BSEN = ON                // 1. TURN THIS ON to enable the segment boundary
+#pragma config BSEN = OFF               
 #pragma config GWRP = OFF               // General Segment Write-Protect bit (General Segment may be written)
 #pragma config GSS = DISABLED           // General Segment Code-Protect Level bits (No Protection (other than GWRP))
 #pragma config CWRP = OFF               // Configuration Segment Write-Protect bit (Configuration Segment may be written)
@@ -24,7 +24,7 @@
 
 // FOSCSEL
 #pragma config FNOSC = FRCPLL           // FRC with PLL (gives 32 MHz Fosc) 
-#pragma config PLLMODE = PLL4X          // FRC ×4 ? Fosc = 32 MHz
+#pragma config PLLMODE = PLL4X          // FRC Ã—4 ? Fosc = 32 MHz
 #pragma config IESO = OFF               // <-- optional: stay on internal, no switching
 
 // FOSC
