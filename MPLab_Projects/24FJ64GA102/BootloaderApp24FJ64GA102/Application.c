@@ -2,7 +2,7 @@
  * File:   application.c
  * Author: issac
  * Version: 3.06
- * Family: 24F256GA702
+ * Family: 24F64GA102
  * Created on January 18, 2026, 12:13 PM
  */
 
@@ -105,14 +105,14 @@ void __attribute__((address(0x908), interrupt, no_auto_psv)) _T2Interrupt(void)
     }
 }
 
+
 int main(void)
 {
     uint8_t b;                          // Variable to hold the received handshake byte
     
     // --- PERIPHERAL INITIALIZATION ---
     // PIC24: Ensure all pins are digital
-    ANSA = 0x0000;   // all PORTA digital
-    ANSB = 0x0000;   // all PORTB digital
+    AD1PCFG = 0xFFFF; 
 
     // Configure the LED pin as an output. 
     LED_TRIS = 0;                       
