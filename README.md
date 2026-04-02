@@ -74,6 +74,10 @@ Updating the application device firmware requires the B4J uploader tool, but boo
 
 ---
 
+bootloader.c and application.c share the same function name calls across all 6 PIC projects. Adding support for additional PIC devices requires only minor modifications to the C codes, config.h and .map configuration.
+
+---
+
 > **Note:** Ensure your hardware connections are secure and the correct COM port is selected in the B4J uploader before attempting to flash the device.
 
 ---
