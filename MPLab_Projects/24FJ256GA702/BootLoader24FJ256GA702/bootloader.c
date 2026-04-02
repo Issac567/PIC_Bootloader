@@ -245,7 +245,7 @@ bool ReceivePacket(void)
     }
 
     // 2. Combine bytes into 256 16-bit words (128 Low words + 128 High words)
-    // Loop runs 128 times (FLASH_WRITE_BLOCK * 2)
+    // Loop runs 256 times (FLASH_WRITE_BLOCK * 2)
     for (uint16_t i = 0; i < (FLASH_WRITE_BLOCK * 2); i++)
     {
         flash_packet[i] = ((uint16_t)temp[i*2 + 1] << 8) | temp[i*2];
