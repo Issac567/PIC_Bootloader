@@ -14,8 +14,8 @@
  * 3. This prevents memory collisions between the Bootloader and Application.
  * * [APPLICATION RANGE]
  * Start Address (ORIGIN): 0x800
- * End Address:           0xABF6
- * Length:                0xA3F4
+ * End Address:           0x2A7FE
+ * Length:                0x29FFE
  * the Unified Hex generator to merge this App with the Bootloader.
  * ----------------------------------------------------------------------------
  */
