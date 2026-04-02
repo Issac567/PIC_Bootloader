@@ -216,7 +216,7 @@ void Flash_EraseApplication(void)
 //-------------------------------------------------------
 bool ReceivePacket(void)
 {
-    // 64 instructions * 4 bytes/instruction = 256 bytes
+    // 128 instructions * 4 bytes/instruction = 512 bytes
     uint8_t temp[FLASH_WRITE_BLOCK * 4];  
     uint16_t byteCount = 0;
     uint32_t timeoutCounter = 0;
@@ -244,7 +244,7 @@ bool ReceivePacket(void)
         }
     }
 
-    // 2. Combine bytes into 128 16-bit words (64 Low words + 64 High words)
+    // 2. Combine bytes into 256 16-bit words (128 Low words + 128 High words)
     // Loop runs 128 times (FLASH_WRITE_BLOCK * 2)
     for (uint16_t i = 0; i < (FLASH_WRITE_BLOCK * 2); i++)
     {
@@ -274,11 +274,11 @@ void DoFirmwareUpdate(void)
             timeoutCount = 0; 
 
             // 2. FLASH PROGRAMMING
-            // Commits 128 words (64 Low, 64 High) to the PIC24 Row
+            // Commits 256 words (128 Low, 128 High) to the PIC24 Row
             Flash_WriteBlock(flashAddr, flash_packet);
 
             // 3. ADDRESS POINTER ADVANCEMENT
-            // PIC24: 64 instructions = 128 address units (0x80)
+            // PIC24: 128 instructions = 256 address units (0x100)
             flashAddr += (FLASH_WRITE_BLOCK * 2);  
 
             // 4. BOUNDARY CHECK
