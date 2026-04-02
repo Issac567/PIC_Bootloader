@@ -47,7 +47,7 @@
 #define LED_PIN   LATBbits.LATB4                // Use LAT for Output / Bootloader Led Status 
 #define LED_TRIS  TRISBbits.TRISB4              // Output PortB.4 pin
 
-uint16_t flash_packet[FLASH_WRITE_BLOCK * 2];   // Array of 128 words
+uint16_t flash_packet[FLASH_WRITE_BLOCK * 2];   // Array of 256 words
 
 //-------------------------------------------------------
 // INTERNAL OSCILLATOR CLK CONFIG
