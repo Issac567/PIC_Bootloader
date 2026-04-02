@@ -15,7 +15,7 @@
  * * [APPLICATION RANGE]
  * Start Address (ORIGIN): 0x800
  * End Address:           0xABF6
- * Length:                0xA3F4
+ * Length:                0xA3F6
  * the Unified Hex generator to merge this App with the Bootloader.
  * ----------------------------------------------------------------------------
  */
