@@ -63,7 +63,7 @@ MEMORY
   _reserved      : ORIGIN = 0x100,         LENGTH = 0x4
   aivt           : ORIGIN = 0x104,         LENGTH = 0xFC
  /* Range: 0x800 to 0xABF6 */
-  program (xr)   : ORIGIN = 0x804,         LENGTH = 0xA1F4
+  program (xr)   : ORIGIN = 0x804,         LENGTH = 0xA3F6
   CONFIG4        : ORIGIN = 0xABF8,        LENGTH = 0x2
   CONFIG3        : ORIGIN = 0xABFA,        LENGTH = 0x2
   CONFIG2        : ORIGIN = 0xABFC,        LENGTH = 0x2
@@ -77,7 +77,7 @@ __CONFIG1 = 0xABFE;
 
 __NO_HANDLES = 1;          /* Suppress handles on this device  */
 __CODE_BASE = 0x800;
-__CODE_LENGTH = 0xA9F8;
+__CODE_LENGTH = 0xA3F6;
 __IVT_BASE  = 0x4;
 __AIVT_BASE = 0x104;
 __DATA_BASE = 0x800;
