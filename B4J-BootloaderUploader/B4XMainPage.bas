@@ -5,7 +5,7 @@ Type=Class
 Version=9.85
 @EndOfDesignText@
 
-' VERSION 6.07
+' VERSION 6.10
 
 ' Using .Exe from Build Standalone Package you must include the .map files in 
 ' \BootloaderUploader\Objects\temp\build\bin\configs
@@ -20,7 +20,7 @@ Sub Class_Globals
 	Private intStartAddrFlash As Int 						' Used with Intel Hex Conversion
 	Private intEndAddrFlash   As Int						' Used with Intel Hex Conversion
 	Private intEmptyFlashValue As Int						' 16F = 0x3F, 18F = 0xFF, 24F = 0x00 Phantom 24bit
-	Private intWordsPerPacket As Int						' Number of Instruction per block
+	Private intInstructionPacket As Int						' Number of Instruction per block
 	Private intPacketDelayMS As Int							' Delay for Tx Write Packets
 	Private intHandShakeDelayMS As Int						' Delay for 0x55 and 0xAA in between	
 	Private intStopBit As Int = 1							' Default
@@ -528,9 +528,9 @@ Sub SendFirmware
 	Dim intBlockSize As Int
 
 	If blnUse4Padding = True Then
-		intBlockSize = intWordsPerPacket * 4 ' eg. 64 words = 256 intBlockSize 24FJ64BA102
+		intBlockSize = intInstructionPacket * 4 ' eg. 64 words = 256 intBlockSize 24FJ64BA102
 	Else
-		intBlockSize = intWordsPerPacket * 2 ' eg. 4 words = 8 intBlockSize 16F88
+		intBlockSize = intInstructionPacket * 2 ' eg. 4 words = 8 intBlockSize 16F88
 	End If
 	
 	Dim block(intBlockSize) As Byte
@@ -732,7 +732,7 @@ Sub LoadConfiguration(SelectedPicName As String) As Boolean
 						intStartAddrFlash = cfg.Get("StartAddrFlash")		' Start Address of Flash. For Intel Hex Conversion
 						intEndAddrFlash = cfg.Get("EndAddrFlash")			' End Address of Flash
 						intEmptyFlashValue = cfg.Get("EmptyFlashValue")		' Empty Flash Value (eg. 3FFF = 3F)
-						intWordsPerPacket = cfg.Get("WordsPerPacket")		' Total Instruction Words Per Packet for Write Block
+						intInstructionPacket = cfg.Get("InstructionPacket")	' Total Instruction Words Per Packet for Write Block
 						intPacketDelayMS = cfg.Get("PacketDelayMS")			' Write Block Packet Delay
 						intHandShakeDelayMS = cfg.Get("HandShakeDelayMS")	' Handshake Delay (0x55 and 0xAA in between delay)
 						intStopBit = cfg.Get("StopBit")						' 1 or 2 stop bits, older PIC need 2 so it buys time processing other instructions
@@ -768,9 +768,9 @@ Sub LoadConfiguration(SelectedPicName As String) As Boolean
 						LogMessage(":::", "Packet Delay = " & intPacketDelayMS & " ms")
 						LogMessage(":::", "Stop Bit = " & intStopBit)
 						If blnUse4Padding = True Then
-							LogMessage(":::", "Instruction Write Size = " & (intWordsPerPacket * 4) & " bytes w/padding (" &  intWordsPerPacket & " instructions)" )
+							LogMessage(":::", "Instruction Write Size = " & (intInstructionPacket * 4) & " bytes w/padding (" &  intInstructionPacket & " instructions)" )
 						Else
-							LogMessage(":::", "Instruction Write Size = " & (intWordsPerPacket * 2) & " bytes w/padding (" &  intWordsPerPacket & " instructions)" )
+							LogMessage(":::", "Instruction Write Size = " & (intInstructionPacket * 2) & " bytes w/padding (" &  intInstructionPacket & " instructions)" )
 						End If
 						LogMessage(":::", "Expected Firmware Size = " & NumberFormat2(intExpectedFirmwareBytes, 1, 0, 0, True) & " bytes")
 						LogMessage(":::", "Use Write Burst = " & blnUseWriteBurst)

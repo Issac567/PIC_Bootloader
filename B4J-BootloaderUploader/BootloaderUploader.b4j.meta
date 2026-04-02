@@ -4,6 +4,6 @@ ModuleBreakpoints0=
 ModuleBreakpoints1=
 ModuleClosedNodes0=2,3,4,6,7
 ModuleClosedNodes1=2,3,4,5,6,7,8,9,10,11,12,15,16,18,19,21,22,23,25,26,27
-NavigationStack=B4XMainPage,HandleMessage,194,0,B4XMainPage,btnOpen_Click,310,0,B4XMainPage,VerifyStatus,606,0,B4XMainPage,Class_Globals,46,6,B4XMainPage,VerifyFirmware,628,0,B4XMainPage,SendFirmware,542,0,B4XMainPage,btnLoadFile_Click,337,0,Main,CheckPriorityStatus,29,0,B4XMainPage,LoadConfiguration,743,4,B4XMainPage,ConvertHexIntelToBinaryRange,402,6
+NavigationStack=B4XMainPage,HandleMessage,194,0,B4XMainPage,btnOpen_Click,310,0,B4XMainPage,VerifyStatus,606,0,B4XMainPage,VerifyFirmware,628,0,B4XMainPage,btnLoadFile_Click,337,0,Main,CheckPriorityStatus,29,0,B4XMainPage,ConvertHexIntelToBinaryRange,402,6,B4XMainPage,Class_Globals,16,6,B4XMainPage,SendFirmware,526,0,B4XMainPage,LoadConfiguration,728,4
 SelectedBuild=0
 VisibleModules=1
