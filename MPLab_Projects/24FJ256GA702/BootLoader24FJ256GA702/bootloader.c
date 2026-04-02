@@ -32,7 +32,7 @@
 #define FLASH_START          0x00800            // Matches your Application ORIGIN
 #define FLASH_END            0x2A7FE            // Matches your Application END (Last address) 0x2AEFE
 // IMPORTANT: Do not set FLASH_END above 0x2A800. 
-// The PIC24FJ256GA702 erases in 1024-instruction "Pages" (2048 or 0x800 addresses).  Not using Row erase (256 or 0x128 addresses)
+// The PIC24FJ256GA702 erases in 1024-instruction "Pages" (2048 or 0x800 addresses).  Not using Row erase (256 or 0x100 addresses)
 // If the erase loop hits 0x2A800, it wipes the entire block up to 0x2AFFF.
 // Since Configuration Words live at 0x2AF00+, a Page Erase at 0x2A800 will 
 // brick the device by clearing FOSC, FWDT, and FSEC.
