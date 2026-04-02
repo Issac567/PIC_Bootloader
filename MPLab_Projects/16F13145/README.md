@@ -101,7 +101,7 @@ I use **MPLAB X IDE 6.05** (or higher with MBLAB Snap PG164100)
 
 ## 🔌 MPLAB Snap Diagram
 
-![PIC16F88 Pickit Diagram](MPLabSnap.png)
+![PIC16F88 Pickit Diagram](MPLabSnap16F13145.png)
 
 ---
 
