@@ -65,7 +65,7 @@ MEMORY
   data  (a!xr)   : ORIGIN = 0x800,         LENGTH = 0x4000
   reset          : ORIGIN = 0x800,         LENGTH = 0x4
   ivt            : ORIGIN = 0x4,           LENGTH = 0xFC
-  program (xr)   : ORIGIN = 0x804,         LENGTH = 0x2A700
+  program (xr)   : ORIGIN = 0x804,         LENGTH = 0x29FFE
   FSEC           : ORIGIN = 0x2AF00,       LENGTH = 0x2
   FBSLIM         : ORIGIN = 0x2AF10,       LENGTH = 0x2
   FSIGN          : ORIGIN = 0x2AF14,       LENGTH = 0x2
