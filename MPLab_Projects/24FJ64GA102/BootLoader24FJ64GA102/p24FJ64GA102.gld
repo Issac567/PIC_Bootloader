@@ -76,7 +76,7 @@ __CONFIG1 = 0xABFE;
 
 __NO_HANDLES = 1;          /* Suppress handles on this device  */
 __CODE_BASE = 0x200;
-__CODE_LENGTH = 0xA9F8;
+__CODE_LENGTH = 0x600;
 __IVT_BASE  = 0x4;
 __AIVT_BASE = 0x104;
 __DATA_BASE = 0x800;
