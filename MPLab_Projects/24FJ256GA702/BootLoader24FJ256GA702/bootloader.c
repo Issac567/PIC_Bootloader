@@ -222,7 +222,7 @@ bool ReceivePacket(void)
     uint32_t timeoutCounter = 0;
     const uint32_t TIMEOUT_3SEC = 6000000;
     
-    // 1. Collect exactly 256 bytes (matches B4J intBlockSize)
+    // 1. Collect exactly 512 bytes (matches B4J intBlockSize)
     while (byteCount < (FLASH_WRITE_BLOCK * 4))
     {
         if (U1STAbits.URXDA) 
