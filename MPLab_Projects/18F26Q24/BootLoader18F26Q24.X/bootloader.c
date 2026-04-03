@@ -134,12 +134,12 @@ void Verify_Flash(void)
     UART_TxString("<StartFlashVerify>");
     __delay_ms(MSG_MS_DELAY);
 
-    // Q43 Caution: FLASH_ERASE_BLOCK is 128 words (256 bytes)
+    // Q24 Caution: FLASH_ERASE_BLOCK is 128 words (256 bytes)
     // addr increases by the byte-count (128 * 2)
     //for (addr = FLASH_START; addr < FLASH_END; addr += (FLASH_ERASE_BLOCK * 2))
     for (addr = FLASH_START; addr + (FLASH_ERASE_BLOCK * 2) - 1 <= FLASH_END; addr += FLASH_ERASE_BLOCK * 2)
     {
-        // On Q43, this buffer needs to be 128 words long
+        // On Q24, this buffer needs to be 128 words long
         uint16_t packet[FLASH_WRITE_BLOCK];
 
         for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
@@ -173,7 +173,7 @@ void Flash_EraseApplication(void)
     __delay_ms(MSG_MS_DELAY);
     
     // Iterate through Flash memory 
-    // Q43: FLASH_ERASE_BLOCK is 128 (words), so 256 bytes per step
+    // Q24: FLASH_ERASE_BLOCK is 128 (words), so 256 bytes per step
     for (addr = FLASH_START; addr + (FLASH_ERASE_BLOCK * 2) - 1 <= FLASH_END; addr += FLASH_ERASE_BLOCK * 2)
     {
         // 1. Load the 24-bit target address into NVMADR registers
