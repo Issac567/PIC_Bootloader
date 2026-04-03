@@ -74,7 +74,7 @@ Updating the application device firmware requires the B4J uploader tool, but boo
 
 ---
 
-bootloader.c and application.c share the same function name calls across all 7 PIC projects. Adding support for additional PIC devices requires only minor modifications to the C codes, config.h and .map configuration.
+bootloader.c and application.c share the same function name calls across all 8 PIC projects. Adding support for additional PIC devices requires only minor modifications to the C codes, config.h and .map configuration.
 
 ---
 
