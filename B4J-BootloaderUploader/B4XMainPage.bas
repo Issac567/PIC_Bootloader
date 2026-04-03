@@ -5,7 +5,7 @@ Type=Class
 Version=9.85
 @EndOfDesignText@
 
-' VERSION 6.10
+' VERSION 6.11
 
 ' Using .Exe from Build Standalone Package you must include the .map files in 
 ' \BootloaderUploader\Objects\temp\build\bin\configs
@@ -499,6 +499,7 @@ Sub SendHandshakeLoop
 	Dim blnToggle As Boolean
 	
 	DisableFunction
+	prgBar.Progress = 0							' reset
 	
 	Do While True
 		' Status boolean
