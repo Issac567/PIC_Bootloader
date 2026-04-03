@@ -75,56 +75,6 @@ uint16_t Flash_ReadInstruction(uint32_t address)
     return (uint16_t)(NVMDATL | ((uint16_t)NVMDATH << 8));
 }
 
-void Flash_WriteBlock2(uint32_t address, uint16_t *data)
-{
-    // 1. Align address to 128-word (256-byte) boundary for Q43
-    address &= (uint32_t)(~0xFF);   
-
-    // 2. Load the 24-bit Table Pointer to start of the Page Buffer
-    // TBLPTR is used specifically by the TBLWT instruction to fill the buffer
-    TBLPTRU = (uint8_t)((address >> 16) & 0xFF);
-    TBLPTRH = (uint8_t)((address >> 8) & 0xFF);
-    TBLPTRL = (uint8_t)(address & 0xFF);
-
-    // 3. Fill the 256-byte Page Buffer
-    // NOTE: FLASH_WRITE_BLOCK must be 128 for the Q43
-    for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
-    {
-        TABLAT = (uint8_t)(data[i] & 0xFF); 
-        asm("TBLWT*+");   
-
-        TABLAT = (uint8_t)(data[i] >> 8);   
-        asm("TBLWT*+");   
-    }
-
-    // 4. Load the target Flash address into NVMADR
-    // This is the actual destination in Flash memory
-    NVMADRU = (uint8_t)((address >> 16) & 0xFF);
-    NVMADRH = (uint8_t)((address >> 8) & 0xFF);
-    NVMADRL = (uint8_t)(address & 0xFF);
-
-    // 5. Configure NVMCON1 for "Write Page" command (0x05)
-    NVMCON1bits.CMD = 0x05;            // Set the page write command
-
-    // 6. Unlock sequence and start write
-    INTCON0bits.GIE = 0;     
-    
-    // Q43 uses NVMLOCK instead of NVMCON2
-    NVMLOCK = 0x55;          
-    NVMLOCK = 0xAA;          
-    
-    // Start the operation using the GO bit
-    NVMCON0bits.GO = 1;      
-
-    // CPU stalls here until the 256-byte page is written
-    while (NVMCON0bits.GO);  
-
-    INTCON0bits.GIE = 1;     
-
-    // 7. Cleanup: Clear command to NOP
-    NVMCON1bits.CMD = 0x00;            // Disable writes to memory
-}
-
 /**
  * @brief Writes a 128-word page to Program Flash Memory on Q24
  * @param address The 24-bit target Flash address (must be page-aligned)
