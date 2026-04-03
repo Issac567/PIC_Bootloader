@@ -1,4 +1,4 @@
-# 18F27Q43 UART Bootloader Project
+# 16F13145 UART Bootloader Project
 
 ![18F27Q43 Bootloader Diagram](16F13145Image.jpg)
 
