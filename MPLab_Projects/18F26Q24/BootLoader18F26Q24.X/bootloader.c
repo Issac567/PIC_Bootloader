@@ -13,7 +13,7 @@
 #include "config.h"
 #include "uart.h"
 
-// Note: B4J Expected bytes = 0x1FFFF - 0x00800 = 0x1F800 = 129,024 BYTES!
+// Note: B4J Expected bytes = 0xFFFF - 0x00800 = 0x1F800 = 63,488 BYTES!
 
 #define FLASH_START         0x00800         // Recommended for Q24 (Page aligned)
 #define FLASH_END           0x0FFFF         // 64KB Flash limit
