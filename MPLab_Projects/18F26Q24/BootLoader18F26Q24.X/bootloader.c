@@ -19,7 +19,7 @@
 #define FLASH_END           0x0FFFF         // 128KB Flash limit
 #define FLASH_ERASE_BLOCK   128             // Q43 erases in 128-word (256-byte) pages
 #define FLASH_WRITE_BLOCK   128             // Q43 writes in 128-word (256-byte) pages
-#define Q24_BUFFER_RAM_ADDR 0x1500          // Verified: Bank 42 for 64KB Q24 chips
+#define Q24_BUFFER_RAM_ADDR 0x1500          // Verified: Bank 21 for 64KB Q24 chips
 
 #define MSG_MS_DELAY        50              // Standard pacing delay 
 
