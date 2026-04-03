@@ -15,7 +15,7 @@
 
 // Note: B4J Expected bytes = 0x1FFFF - 0x00800 = 0x1F800 = 129,024 BYTES!
 
-#define FLASH_START         0x00800         // Recommended for Q43 (Page aligned)
+#define FLASH_START         0x00800         // Recommended for Q24 (Page aligned)
 #define FLASH_END           0x0FFFF         // 64KB Flash limit
 #define FLASH_ERASE_BLOCK   128             // Q43 erases in 128-word (256-byte) pages
 #define FLASH_WRITE_BLOCK   128             // Q43 writes in 128-word (256-byte) pages
