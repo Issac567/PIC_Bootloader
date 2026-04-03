@@ -85,6 +85,7 @@ uint16_t Flash_ReadInstruction(uint32_t address)
     return word;
 }
 
+// The "Table Latch" Method (Legacy / Bridge)
 void Flash_WriteBlock(uint32_t address, uint16_t *data)
 {
     // 1. Align address to 128-word (256-byte) boundary for Q43
