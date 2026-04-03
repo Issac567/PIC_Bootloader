@@ -1,7 +1,7 @@
 /*
  * File:   uart.c
  * Author: issac
- * Version: 3.01
+ * Version: 3.02
  * Created on January 18, 2026, 12:13 PM
  * Family: 24FJ64GA102
  */
@@ -53,9 +53,10 @@ void UART_Init(void)
     // UARTEN handles the receiver.
 
     // 9. Clear pending RX bytes
-    uint16_t dummy;
+    //uint16_t dummy;
     while (U1STAbits.URXDA) { // While UART1 Receive Data Available
-        dummy = U1RXREG;        
+        //dummy = U1RXREG; 
+        (void)U1RXREG; // Read and intentionally discard the result
     }
 }
 
@@ -93,12 +94,13 @@ uint8_t UART_Rx(void)
     if (U1STAbits.FERR)
     {
         // Read the bad data to clear the error state from the FIFO
-        uint16_t dummy = U1RXREG;
+        //uint16_t dummy = U1RXREG;
+        (void)U1RXREG; // Read and intentionally discard the result
     }
 
     // 3. Wait for data to be available in the FIFO
     // URXDA (Receive Data Available) is 1 when there is at least 1 byte in the FIFO.
-    //while (!U1STAbits.URXDA);
+    //while (!U1STAbits.URXDA);  // not needed.  its done elsewhere
 
     // 4. Return the byte from the 16-bit register
     return (uint8_t)U1RXREG;

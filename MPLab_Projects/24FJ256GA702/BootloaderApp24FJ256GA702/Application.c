@@ -1,9 +1,10 @@
 /*
  * File:   application.c
  * Author: issac
- * Version: 3.06
+ * Version: 3.10
  * Family: 24F256GA702
  * Created on January 18, 2026, 12:13 PM
+ * USE 1.10.375
  */
 
 /**
@@ -14,7 +15,7 @@
  * 3. This prevents memory collisions between the Bootloader and Application.
  * * [APPLICATION RANGE]
  * Start Address (ORIGIN): 0x800
- * End Address:           0x2A7FE
+ * End Address:           0x2A7Fe
  * Length:                0x29FFE
  * the Unified Hex generator to merge this App with the Bootloader.
  * ----------------------------------------------------------------------------

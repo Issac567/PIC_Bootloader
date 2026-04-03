@@ -4,6 +4,7 @@
  * Comments:
  * Revision history: 
  * Version 1.01
+ * Family: 24FJ64GA102
  */
 
 #ifndef CONFIG_H

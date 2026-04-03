@@ -1,9 +1,10 @@
 /*
  * File:   application.c
  * Author: issac
- * Version: 3.05
+ * Version: 3.10
  * Created on January 18, 2026, 12:13 PM
  * Family: 16F13145
+ * PACKS: USE 1.29.444
  */
 
 #include <xc.h>
@@ -84,7 +85,10 @@ void  __at(0x1000)App_ISR(void)
 
 }
 
-
+void GET(void)
+{
+    
+}
 void main(void) {    
     // Add application code here......
     App_ISR();
@@ -93,6 +97,8 @@ void main(void) {
     LED_TRIS = 0;                       // Output
     UART_Init();                        // Init UART
         
+    GET();
+    GET();
     
     // Enable Demo For ISR Test
     //TIMER2_Init();            

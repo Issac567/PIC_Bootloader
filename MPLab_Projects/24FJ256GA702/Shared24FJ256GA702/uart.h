@@ -3,7 +3,7 @@
  * Version: 1.01
  * Author: Issac
  * Created on January 19, 2026, 2:50 PM
- * Family: 24FJ64GA102
+ * Family: 24FJ256GA702
  */
 
 #ifndef UART_H    // This is a "Header Guard"

@@ -1,9 +1,10 @@
 /*
  * File:   application.c
  * Author: issac
- * Version: 3.06
+ * Version: 3.10
  * Family: 24F64GA102
  * Created on January 18, 2026, 12:13 PM
+ * USE 1.10.375
  */
 
 /**

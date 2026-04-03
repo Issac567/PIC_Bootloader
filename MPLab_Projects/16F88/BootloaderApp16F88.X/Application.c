@@ -1,9 +1,10 @@
 /*
  * File:   application.c
  * Author: issac
- * Version: 3.03
+ * Version: 3.05
  * Created on January 18, 2026, 12:13 PM
  * Family: 16F88
+ * USE 1.7.162
  */
 
 #include <xc.h>

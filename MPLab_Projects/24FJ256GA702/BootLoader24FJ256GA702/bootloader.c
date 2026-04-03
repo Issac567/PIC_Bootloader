@@ -1,9 +1,10 @@
 /*
  * File:   bootloader.c
- * Version: 3.06
+ * Version: 3.10
  * Author: Issac
  * Family: 24F256GA702
  * Created on January 19, 2026, 2:50 PM
+ * USE 1.10.375
  */
 
 
@@ -32,7 +33,7 @@
 #define FLASH_START          0x00800            // Matches your Application ORIGIN
 #define FLASH_END            0x2A7FE            // Matches your Application END (Last address) 0x2AEFE
 // IMPORTANT: Do not set FLASH_END above 0x2A800. 
-// The PIC24FJ256GA702 erases in 1024-instruction "Pages" (2048 or 0x800 addresses).  Not using Row erase 256 or 0x100 addresses)
+// The PIC24FJ256GA702 erases in 1024-instruction "Pages" (2048 or 0x800 addresses).  Not using Row erase (256 or 0x128 addresses)
 // If the erase loop hits 0x2A800, it wipes the entire block up to 0x2AFFF.
 // Since Configuration Words live at 0x2AF00+, a Page Erase at 0x2A800 will 
 // brick the device by clearing FOSC, FWDT, and FSEC.
@@ -274,11 +275,11 @@ void DoFirmwareUpdate(void)
             timeoutCount = 0; 
 
             // 2. FLASH PROGRAMMING
-            // Commits 256 words (128 Low, 128 High) to the PIC24 Row
+            // Commits 128 words (128 Low, 128 High) to the PIC24 Row
             Flash_WriteBlock(flashAddr, flash_packet);
 
             // 3. ADDRESS POINTER ADVANCEMENT
-            // PIC24: 128 instructions = 256 address units (0x100)
+            // PIC24: 128 instructions = 256 address units (0x80)
             flashAddr += (FLASH_WRITE_BLOCK * 2);  
 
             // 4. BOUNDARY CHECK

@@ -1,9 +1,10 @@
 /*
  * File:   application.c
  * Author: issac
- * Version: 3.05
+ * Version: 3.10
  * Created on January 18, 2026, 12:13 PM
  * Family: 18F27K42
+ * USE 1.15.303
  */
 
 #include <xc.h>
@@ -131,7 +132,7 @@ void EEPROM_WriteByte(uint16_t address, uint8_t data)
 }
 
 
-// The __at(0x900) attribute forces the linker to place this code at address 0x900. 
+// The __at(0x900) attribute forces the linker to place this code at address 0x900.
 // Can't place it in 0x800 to 0x802 will build with errors. place 0x804 or higher ok
 // This also avoids the compiler add 1FFFC GOTO function
 void __at(0x900) main(void) 
@@ -167,7 +168,7 @@ void __at(0x900) main(void)
             b = UART_Rx();
             
             // If the handshake byte (0x55 or 0xAA) is detected:
-            if (b == 0x55 || b == 0xAA)             
+            if (b == 0x55 || b == 0xAA)              
             {
                 // Enable Demo to Test Timer2
                 //Timer2_Stop();

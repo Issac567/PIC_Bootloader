@@ -1,9 +1,10 @@
 /*
  * File:   bootloader.c
- * Version: 3.06
+ * Version: 3.10
  * Author: Issac
  * Family: 24F64GA102
  * Created on January 19, 2026, 2:50 PM
+ * USE 1.10.375
  */
 
 
@@ -29,18 +30,18 @@
 // Note: B4J Expected bytes = 0xABF6 - 0x0800 = 83,952 BYTES with Phantom!
 
 // Adjusted for PIC24FJ64GA102 based on your .gld configuration
-#define FLASH_START          0x00800         // Matches your Application ORIGIN
-#define FLASH_END            0x0ABF6         // Matches your Application END (Last address)
+#define FLASH_START          0x00800            // Matches your Application ORIGIN
+#define FLASH_END            0x0ABF6            // Matches your Application END (Last address)
 
 // PIC24FJ64GA102 Specific Flash geometry
-#define FLASH_ERASE_BLOCK    512             // Erase page size is 512 instructions (standard for GA102)
-#define FLASH_WRITE_BLOCK    64              // Write row size is 64 instructions (standard for GA102)
+#define FLASH_ERASE_BLOCK    512                // Erase page size is 512 instructions (standard for GA102)
+#define FLASH_WRITE_BLOCK    64                 // Write row size is 64 instructions (standard for GA102)
 
-#define TIMER2_COUNT        186             // 3s 
-#define MSG_MS_DELAY        50              // Standard pacing delay 
+#define TIMER2_COUNT        186                 // 3s 
+#define MSG_MS_DELAY        50                  // Standard pacing delay 
 
-#define LED_PIN   LATBbits.LATB4            // Use LAT for Output / Bootloader Led Status 
-#define LED_TRIS  TRISBbits.TRISB4          // Output PortB.4 pin
+#define LED_PIN   LATBbits.LATB4                // Use LAT for Output / Bootloader Led Status 
+#define LED_TRIS  TRISBbits.TRISB4              // Output PortB.4 pin
 
 uint16_t flash_packet[FLASH_WRITE_BLOCK * 2];   // Array of 128 words
 
@@ -100,10 +101,10 @@ int32_t Flash_ReadInstruction(uint32_t addr)
     high16 = __builtin_tblrdh((uint16_t)(addr & 0xFFFF));
 
     // Assemble [Phantom][MSB][MID][LSB]
-    instr32  = ((int32_t)((high16 >> 8) & 0xFF)) << 24; // Phantom (high byte of high16)
-    instr32 |= ((int32_t)(high16 & 0xFF)) << 16;        // MSB (low byte of high16)
-    instr32 |= ((int32_t)((low16 >> 8) & 0xFF)) << 8;   // MID
-    instr32 |= (low16 & 0xFF);                           // LSB
+    instr32  = ((int32_t)((high16 >> 8) & 0xFF)) << 24;     // Phantom (high byte of high16)
+    instr32 |= ((int32_t)(high16 & 0xFF)) << 16;            // MSB (low byte of high16)
+    instr32 |= ((int32_t)((low16 >> 8) & 0xFF)) << 8;       // MID
+    instr32 |= (low16 & 0xFF);                              // LSB
 
     return instr32;
 }
@@ -367,7 +368,7 @@ int main(void) {
     // 2. I/O Setup
     LED_TRIS = 0;                   // LED Output
     LED_PIN  = 1;                   // LED On (bootloader led)
-       
+    
     // 3. Peripheral Init
     // Ensure your INTOSC_Init sets the clock to 32MHz (Fcy = 16MHz)
     INTOSC_Init();                  
@@ -377,7 +378,7 @@ int main(void) {
     
     LED_PIN  = 0;                   // LED Off (bootloader led))
     
-    asm("goto 0x800");          
+    asm("goto 0x800");            
     
     // Good news is when bootloader goes to 0x0800 and is invalid, causes pic to reset and main repeated over and over till handshake and flash success!
 }

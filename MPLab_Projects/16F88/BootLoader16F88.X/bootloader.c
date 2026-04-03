@@ -1,9 +1,10 @@
 /*
  * File:   bootloader.c
- * Version: 3.04
+ * Version: 3.10
  * Author: Issac
  * Created on January 19, 2026, 2:50 PM
  * Family: 16F88
+ * PACKS: USE 1.7.162
  */
 
 
@@ -82,7 +83,7 @@ uint16_t Flash_ReadInstruction(uint16_t address)
     return word;                        // Full 14-bit instruction
 }
 
-// WRITE FLASH BLOCK Starting Address + 4 (8 byte or 4 Addresses in 1 call)
+// WRITE FLASH BLOCK Starting Address + 4 (8 Bytes or 4 Addresses in 1 call)
 void Flash_WriteBlock(uint16_t address, uint16_t *data) 
 {
     uint16_t i;
