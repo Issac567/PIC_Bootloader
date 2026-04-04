@@ -25,7 +25,7 @@
 #define LED_PIN   LATBbits.LATB4            // Use LAT for Output / Bootloader Led Status 
 #define LED_TRIS  TRISBbits.TRISB4          // Output PortB.4 pin
 
-// HARD-RESERVE THE MEMORY
+// HARD-RESERVE THE MEMORY (0x1500 to 0x15FF)
 // The 'volatile' ensures the compiler doesn't optimize away reads/writes.
 // This forces the compiler to pin this buffer to your hardware address.
 // Verified: Bank 21 for 64KB Q24 chips
