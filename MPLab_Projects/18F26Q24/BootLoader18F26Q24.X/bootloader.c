@@ -17,17 +17,17 @@
 
 #define FLASH_START         0x00800         // Recommended for Q24 (Page aligned)
 #define FLASH_END           0x0FFFF         // 64KB Flash limit
-#define FLASH_ERASE_BLOCK   128             // Q43 erases in 128-word (256-byte) pages
-#define FLASH_WRITE_BLOCK   128             // Q43 writes in 128-word (256-byte) pages        
+#define FLASH_ERASE_BLOCK   128             // Q24 erases in 128-word (256-byte) pages
+#define FLASH_WRITE_BLOCK   128             // Q24 writes in 128-word (256-byte) pages        
 
 #define MSG_MS_DELAY        50              // Standard pacing delay 
 
 #define LED_PIN   LATBbits.LATB4            // Use LAT for Output / Bootloader Led Status 
 #define LED_TRIS  TRISBbits.TRISB4          // Output PortB.4 pin
 
-// HARD-RESERVE THE MEMORY (0x1500 to 0x15FF)
+// HARD-RESERVE THE MEMORY (0x1500 - 0x15FF)
 // The 'volatile' ensures the compiler doesn't optimize away reads/writes.
-// This forces the compiler to pin this buffer to your hardware address.
+// The '__at()' forces the compiler to pin this buffer to your hardware address.
 // Verified: Bank 21 for 64KB Q24 chips
 volatile uint16_t nvm_hardware_buffer[FLASH_WRITE_BLOCK] __section("nvm_ram_area");
 
@@ -39,7 +39,7 @@ uint16_t flash_packet[FLASH_WRITE_BLOCK];   // 128 words, 256 bytes total
 void INTOSC_Init(void)
 {
     // 1. Set Nominal Frequency to 64 MHz
-    // Q43 OSCFRQ: 1000 = 64 MHz
+    // Q24 OSCFRQ: 1000 = 64 MHz
     OSCFRQ = 0x08; 
 
     // 2. Select HFINTOSC as system clock, NDIV = 1
@@ -53,7 +53,7 @@ void INTOSC_Init(void)
         while (OSCCON2 != OSCCON1); 
 
         // 4. Wait for HFINTOSC to be stable
-        // CHANGE: On Q43, the bit is OSCSTATbits.HFOR (HFINTOSC Oscillator Ready)
+        // CHANGE: On Q24, the bit is OSCSTATbits.HFOR (HFINTOSC Oscillator Ready)
         while (!OSCSTATbits.HFOR); 
     #endif
 }
@@ -137,7 +137,7 @@ void Verify_Flash(void)
     //for (addr = FLASH_START; addr < FLASH_END; addr += (FLASH_ERASE_BLOCK * 2))
     for (addr = FLASH_START; addr + (FLASH_ERASE_BLOCK * 2) - 1 <= FLASH_END; addr += FLASH_ERASE_BLOCK * 2)
     {
-        // On Q43, this buffer needs to be 128 words long
+        // On Q24, this buffer needs to be 128 words long
         uint16_t packet[FLASH_WRITE_BLOCK];
 
         for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
@@ -213,7 +213,7 @@ void Flash_EraseApplication(void)
 //-------------------------------------------------------
 bool ReceivePacket(void)
 {
-    // Q43 Warning: FLASH_WRITE_BLOCK is now 128 (words), so temp needs to be 256 bytes.
+    // Q24 Warning: FLASH_WRITE_BLOCK is now 128 (words), so temp needs to be 256 bytes.
     // Ensure your stack size is large enough or make this 'static'.
     uint8_t temp[FLASH_WRITE_BLOCK * 2];  
     uint16_t byteCount = 0;
@@ -265,7 +265,7 @@ void DoFirmwareUpdate(void)
             
         // 1. DATA ACQUISITION
         // IMPORTANT: ReceivePacket must now collect 256 bytes (128 words) 
-        // to fill the larger Q43 Page Buffer.
+        // to fill the larger Q24 Page Buffer.
         if (ReceivePacket())  
         {
             timeoutCount = 0; 
@@ -275,7 +275,7 @@ void DoFirmwareUpdate(void)
             Flash_WriteBlock(flashAddr, flash_packet);
 
             // 3. ADDRESS POINTER ADVANCEMENT
-            // On Q43: 128 words * 2 = 256 bytes.
+            // On Q24: 128 words * 2 = 256 bytes.
             flashAddr += (uint32_t)(FLASH_WRITE_BLOCK * 2);  
 
             // 4. BOUNDARY CHECK
@@ -317,10 +317,10 @@ void WaitHandshake(void)
     
     while (handshakeCounter < TIMEOUT_3SEC)
     {
-        // CHANGE: PIR3bits.U1RXIF moved to PIR6bits.U1RXIF on the Q43
+        // CHANGE: PIR3bits.U1RXIF moved to PIR6bits.U1RXIF on the Q24
         if (PIR4bits.U1RXIF) 
         {
-            // Note: UART_Rx() must return U1RXB for the Q43
+            // Note: UART_Rx() must return U1RXB for the Q24
             curr = UART_Rx();     
             
             if (prev == 0x55 && curr == 0xAA) 
