@@ -28,10 +28,10 @@
 // HARD-RESERVE THE MEMORY
 // The 'volatile' ensures the compiler doesn't optimize away reads/writes.
 // The '__at()' forces the compiler to pin this buffer to your hardware address.
-volatile uint16_t nvm_hardware_buffer[FLASH_WRITE_BLOCK] __at(0x1500); // Verified: Bank 21 for 64KB Q24 chips
+//volatile uint16_t nvm_hardware_buffer[FLASH_WRITE_BLOCK] __at(0x1500); // Verified: Bank 21 for 64KB Q24 chips
+volatile uint16_t nvm_hardware_buffer[FLASH_WRITE_BLOCK] __section("nvm_ram_area");
 
 uint16_t flash_packet[FLASH_WRITE_BLOCK];   // 128 words, 256 bytes total
-
 
 //-------------------------------------------------------
 // INTERNAL OSCILLATOR CLK CONFIG
@@ -93,10 +93,6 @@ void Flash_WriteBlock(uint32_t address, uint16_t *data)
     NVMADRU = (uint8_t)((address >> 16) & 0xFF);
     NVMADRH = (uint8_t)((address >> 8) & 0xFF);
     NVMADRL = (uint8_t)(address & 0xFF);
-
-    // 3. Map a pointer to the Hardware Buffer RAM
-    // This replaces the old TABLAT/TBLWT method
-    // *bufferRamPtr = (uint16_t*)Q24_BUFFER_RAM_ADDR;
 
     // 4. Load the 256-byte Hardware Buffer
     // We copy directly from your global 'Input' array to the Buffer RAM
