@@ -5,6 +5,7 @@
  * Created on January 19, 2026, 2:50 PM
  * Family: 16F13145
  * PACKS: USE 1.29.444
+ * Flash required power off MB102 power supply then flash. Turn MB102 on then flash again for MBLAB Snap
  */
 
 
@@ -34,7 +35,7 @@ uint16_t flash_packet[FLASH_WRITE_BLOCK];   // 32 words, 64 bytes total
 void INTOSC_Init(void)
 {
     // Select HFINTOSC, no divider (NDIV = 1)
-    OSCCON1 = 0x60;   // NOSC = 110 (HFINTOSC), NDIV = 0000 (÷1)
+    OSCCON1 = 0x60;   // NOSC = 110 (HFINTOSC), NDIV = 0000 (Ã·1)
 
     // Set frequency to 32 MHz
     OSCFRQ = 0x06;    // HFFRQ = 110 ? 32 MHz
