@@ -50,7 +50,7 @@ Follow these steps to correctly link the Application and Bootloader projects:
 ### 1. Build the Project (MPLAB)
 1. Open the specific project folder in **MPLAB X IDE**.
 2. Select your target configuration.  Under property make sure your programmer is selected.
-3.  Make sure to resolve packs if neccessary under property.
+3.  Make sure to resolve packs if neccessary under property.  unresolved will not compile successfully. 
 4. Run **Clean and Build**. 
 5. Make sure minimal bootloader is flashed before B4J usage.  **Chip with download icon** to flash.
 
