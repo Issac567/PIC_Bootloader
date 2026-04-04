@@ -18,18 +18,20 @@
 #define FLASH_START         0x00800         // Recommended for Q24 (Page aligned)
 #define FLASH_END           0x0FFFF         // 64KB Flash limit
 #define FLASH_ERASE_BLOCK   128             // Q43 erases in 128-word (256-byte) pages
-#define FLASH_WRITE_BLOCK   128             // Q43 writes in 128-word (256-byte) pages
-#define Q24_BUFFER_RAM_ADDR 0x1500          // Verified: Bank 21 for 64KB Q24 chips
+#define FLASH_WRITE_BLOCK   128             // Q43 writes in 128-word (256-byte) pages        
 
 #define MSG_MS_DELAY        50              // Standard pacing delay 
 
 #define LED_PIN   LATBbits.LATB4            // Use LAT for Output / Bootloader Led Status 
 #define LED_TRIS  TRISBbits.TRISB4          // Output PortB.4 pin
 
+// HARD-RESERVE THE MEMORY
+// The 'volatile' ensures the compiler doesn't optimize away reads/writes.
+// The '__at()' forces the compiler to pin this buffer to your hardware address.
+volatile uint16_t nvm_hardware_buffer[FLASH_WRITE_BLOCK] __at(0x1500); // Verified: Bank 21 for 64KB Q24 chips
+
 uint16_t flash_packet[FLASH_WRITE_BLOCK];   // 128 words, 256 bytes total
 
-
-uint16_t val;
 
 //-------------------------------------------------------
 // INTERNAL OSCILLATOR CLK CONFIG
@@ -94,13 +96,13 @@ void Flash_WriteBlock(uint32_t address, uint16_t *data)
 
     // 3. Map a pointer to the Hardware Buffer RAM
     // This replaces the old TABLAT/TBLWT method
-    uint16_t *bufferRamPtr = (uint16_t*)Q24_BUFFER_RAM_ADDR;
+    // *bufferRamPtr = (uint16_t*)Q24_BUFFER_RAM_ADDR;
 
     // 4. Load the 256-byte Hardware Buffer
     // We copy directly from your global 'Input' array to the Buffer RAM
     for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++) 
     {
-        *bufferRamPtr++ = data[i];
+        nvm_hardware_buffer[i] = data[i];
     }
 
     // 5. Set Command to "Page Write" (0x05)
@@ -139,7 +141,7 @@ void Verify_Flash(void)
     //for (addr = FLASH_START; addr < FLASH_END; addr += (FLASH_ERASE_BLOCK * 2))
     for (addr = FLASH_START; addr + (FLASH_ERASE_BLOCK * 2) - 1 <= FLASH_END; addr += FLASH_ERASE_BLOCK * 2)
     {
-        // On Q24, this buffer needs to be 128 words long
+        // On Q43, this buffer needs to be 128 words long
         uint16_t packet[FLASH_WRITE_BLOCK];
 
         for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
@@ -192,7 +194,7 @@ void Flash_EraseApplication(void)
         NVMLOCK = 0xAA;
 
         // 5. EXECUTION
-        // On Q43, we set the GO bit. The CPU will stall.
+        // On Q24, we set the GO bit. The CPU will stall.
         NVMCON0bits.GO = 1;
 
         // Wait for hardware to clear the GO bit
@@ -273,7 +275,7 @@ void DoFirmwareUpdate(void)
             timeoutCount = 0; 
 
             // 2. FLASH PROGRAMMING
-            // Commits 128 words to the Q43 NVM Page.
+            // Commits 128 words to the Q24 NVM Page.
             Flash_WriteBlock(flashAddr, flash_packet);
 
             // 3. ADDRESS POINTER ADVANCEMENT
