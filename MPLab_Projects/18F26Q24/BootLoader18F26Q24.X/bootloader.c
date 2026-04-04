@@ -27,8 +27,8 @@
 
 // HARD-RESERVE THE MEMORY
 // The 'volatile' ensures the compiler doesn't optimize away reads/writes.
-// The '__at()' forces the compiler to pin this buffer to your hardware address.
-//volatile uint16_t nvm_hardware_buffer[FLASH_WRITE_BLOCK] __at(0x1500); // Verified: Bank 21 for 64KB Q24 chips
+// This forces the compiler to pin this buffer to your hardware address.
+// Verified: Bank 21 for 64KB Q24 chips
 volatile uint16_t nvm_hardware_buffer[FLASH_WRITE_BLOCK] __section("nvm_ram_area");
 
 uint16_t flash_packet[FLASH_WRITE_BLOCK];   // 128 words, 256 bytes total
