@@ -5,7 +5,7 @@ Type=Class
 Version=9.85
 @EndOfDesignText@
 
-' VERSION 6.11
+' VERSION 6.12
 
 ' Using .Exe from Build Standalone Package you must include the .map files in 
 ' \BootloaderUploader\Objects\temp\build\bin\configs
@@ -375,7 +375,7 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
 				firmwareData(i+3) = intEmptyFlashValue  ' Phantom (Void) Byte
 			Next
 		Else
-			' LSB(0xFF) Then MSB(0x3F) format for 18F, 16F
+			' LSB(0xFF) Then MSB(0x3F or 0xFF) format for 18F and 16F
 			For i = 0 To firmwareData.Length - 1 Step 2
 				firmwareData(i) = 0xFF					' Low Byte
 				firmwareData(i+1) = intEmptyFlashValue	' High Byte
@@ -499,8 +499,7 @@ Sub SendHandshakeLoop
 	Dim blnToggle As Boolean
 	
 	DisableFunction
-	prgBar.Progress = 0							' reset
-	
+		
 	Do While True
 		' Status boolean
 		If GetBooleanStatus = True Then Return
@@ -660,6 +659,7 @@ Sub DisableFunction
 	blnAppExitAstreamError = False
 	blnTimeOut = False
 	txtLog.Text = ""
+	prgBar.Progress = 0						
 End Sub
 Sub EnableFunction
 	btnOpen.Enabled = True
