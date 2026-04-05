@@ -13,9 +13,9 @@ The goal of this project is to provide a clean, understandable reference impleme
 
 ## 📂 Repository Structure
 
-* `/MPLAB Projects/BootLoader18F27K42.X`      → MPLAB X Bootloader firmware  
-* `/MPLAB Projects/BootloaderApp18F27K42.X`   → MPLAB X Application firmware
-* `/MPLAB Projects/Shared18F27K42`            → UART and Config.h shared
+* `/BootLoader18F27K42.X`      → MPLAB X Bootloader firmware  
+* `/BootloaderApp18F27K42.X`   → MPLAB X Application firmware
+* `/Shared18F27K42`            → UART and Config.h shared
 * `/B4J/BootloaderUploader`                   → B4J PC uploader tool
 
 ---
