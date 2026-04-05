@@ -15,7 +15,7 @@ The goal of this project is to provide a clean, understandable reference impleme
 
 * `/BootLoader18F27Q43.X`      → MPLAB X Bootloader firmware  
 * `/BootloaderApp18F27Q43.X`   → MPLAB X Application firmware
-* * `/MPLAB Projects/Shared18F27Q43` → UART and Config.h shared
+* `/MPLAB Projects/Shared18F27Q43` → UART and Config.h shared
 * `/BootloaderUploader/B4J`    → B4J PC uploader tool
 
 ---
