@@ -1,0 +1,37 @@
+# HC-05 Bluetooth Software (SPP)
+
+This software is a **simple and reliable tool for communicating with HC-05 Bluetooth modules** using the **Serial Port Profile (SPP)**. It allows you to send and receive data wirelessly with your HC-05 module.  
+
+> **Note:** This software connects via **Bluetooth SPP**, so no physical USB TTL COM wiring is needed. Make sure your HC-05 is paired with your computer or device before use.
+
+---
+
+## Features
+
+- Scan and connect to HC-05 modules over **Bluetooth SPP**  
+- Send and receive data wirelessly  
+- Support for **AT command mode** to configure device settings  (Coming Soon)
+- Easy-to-use interface for communication and control  
+
+---
+
+## How to Use
+
+1. Open the **HC-05 Bluetooth Software**.  
+2. Search for nearby Bluetooth devices and select your **HC-05 module**.  
+3. Connect via **SPP (Serial Port Profile)**.  
+4. Select PIC type, load Firmware file then click flash.
+
+---
+
+## Notes
+
+- Default AT command mode baud is **38400 bps**. Need to change (e.g., to 57600 bps), the software must match.  See online documentation to set your HC05 to AT Mode and change Baud Rate.  Currently, software does not do it.
+- This software communicates **wirelessly over SPP**, so no cables are required for uploading or data exchange.  
+- Ensure the HC-05 is properly paired before connecting and wired properly to your pic Tx and Rx pins.
+
+---
+
+## License
+
+MIT License – Free to use, modify, and distribute.
