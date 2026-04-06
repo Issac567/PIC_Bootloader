@@ -44,6 +44,19 @@ Connect your HC-05 Bluetooth module to the PIC microcontroller as follows:
 
 ---
 
+## How to Use  
+
+1. Open the **B4J Bootloader Uploader** software.  
+2. **Select the PIC device** you want to program.  
+3. **Click Search** and let it populate the list.
+4. **Select HC05** from the list and click **Connect**.
+5. Wait for connection successful.
+6. Click **firmware** to select the **firmware file** (.hex) you want to upload.  
+7. Press **Flash** to start the programming process.  
+8. Wait until the software reports **success**. Do not disconnect the device during flashing.
+
+---
+
 ## HC-05 Command Mode
 
 **Not supported** with Bootloader Uploader at this time.  You need to set HC05 baud to 57600 with alternative method online or https://www.deshide.com/News-detail_DSDTechTools.html .  The **Command Mode** allows you to configure the HC-05 Bluetooth module, including changing:
