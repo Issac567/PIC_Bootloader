@@ -29,10 +29,10 @@ This software is a **simple and reliable PIC microcontroller firmware uploader**
 
 ## How to Use  
 
-1. Open the **PIC Firmware Uploader** software.  
+1. Open the **B4J Bootloader Uploader** software.  
 2. **Select the PIC device** you want to program.  
 3. **Select the COM port** that corresponds to your TTL-to-USB adapter.  
-4. Click **Browse** to select the **firmware file** (.hex) you want to upload.  
+4. Click **firmware** to select the **firmware file** (.hex) you want to upload.  
 5. Press **Flash** to start the programming process.  
 6. Wait until the software reports **success**. Do not disconnect the device during flashing.  
 
