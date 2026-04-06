@@ -1,0 +1,52 @@
+# HC-05 Bluetooth Software (Coming Soon)
+
+This project provides software support for **HC-05 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth using the **Serial Port Profile (SPP)**.
+
+> **Note:** The software is under development and will be available soon.  
+
+---
+
+## Features (Planned)
+
+- Connect to HC-05 over serial (COM port) or Bluetooth SPP  
+- Send and receive data via HC-05  
+- Configure HC-05 module settings via **AT commands**  
+- Set custom baud rates and device names  
+
+---
+
+## HC-05 Command Mode
+
+The **Command Mode** allows you to configure the HC-05 Bluetooth module, including changing:
+
+- Baud rate  
+- Password  
+- Device name  
+- Role (Master/Slave)  
+
+### Enabling Command Mode
+
+1. Connect the **`Key`** pin of HC-05 to **VCC**.  
+2. Power on the module.  
+3. By default, HC-05 enters **AT command mode** at **38400 bps**.  
+
+---
+
+### Common AT Commands
+
+| Function | AT Command Example | Notes |
+|----------|-----------------|-------|
+| Check module | `AT` | Should respond `OK` |
+| Change baud rate | `AT+UART=57600,0,0` | Sets baud rate to **57600 bps**, 1 stop bit, no parity |
+| Change name | `AT+NAME=MyDevice` | Sets Bluetooth device name |
+| Change password | `AT+PSWD=1234` | Sets pairing password |
+| Set role | `AT+ROLE=0` | `0` = Slave, `1` = Master |
+
+> ⚠️ **Important:** If you change the baud rate, your software must match it. Currently, this software **does not automatically change the baud rate**, so you need to ensure the HC-05 baud matches your program settings.  
+
+---
+
+### Setting Baud Rate to 57600
+
+1. Enter **Command Mode** (Key pin high, default 38400 bps).  
+2. Send the following command via a serial terminal (e.g., Arduino Serial Monitor, PuTTY, or B4J):  
