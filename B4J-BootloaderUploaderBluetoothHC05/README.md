@@ -81,7 +81,7 @@ Connect your HC-05 Bluetooth module to the PIC microcontroller as follows:
 | Function | AT Command Example | Notes |
 |----------|-----------------|-------|
 | Check module | `AT` | Should respond `OK` |
-| Change baud rate | `AT+UART=57600,0,0` | Sets baud rate to **57600 bps**, 1 stop bit, no parity |
+| Change baud rate | `AT+UART=57600,1,0` | Sets baud rate to **57600 bps**, 1 stop bit, no parity |
 | Change name | `AT+NAME=MyDevice` | Sets Bluetooth device name |
 | Change password | `AT+PSWD=1234` | Sets pairing password |
 | Set role | `AT+ROLE=0` | `0` = Slave, `1` = Master |
