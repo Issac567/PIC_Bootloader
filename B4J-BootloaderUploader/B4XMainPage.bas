@@ -5,7 +5,7 @@ Type=Class
 Version=9.85
 @EndOfDesignText@
 
-' VERSION 6.12
+' VERSION 6.13
 
 ' Using .Exe from Build Standalone Package you must include the .map files in 
 ' \BootloaderUploader\Objects\temp\build\bin\configs
@@ -53,7 +53,6 @@ Sub Class_Globals
 	Private firmwareFile() As Byte							' firmware binary from FILE
 	Private firmwareVerify() As Byte						' firmware binary from PIC
 	Private cntVerify As Int								' Counter detection of incoming verify bytes from PIC
-	Private blnProgrammingInProgress As Boolean				' For exit app msgbox while flashing
 	Private blnVerifyRequest As Boolean						' <StartFlashVerify> from PIC
 	Private blnHandShakeSuccess As Boolean					' <InitReceived> from PIC
 	Private blnExitTimeoutError As Boolean					' <TimeoutError> from PIC
@@ -111,7 +110,7 @@ End Sub
 Private Sub B4XPage_CloseRequest As ResumableSub
 	
 	' Flash in progress alert user!
-	If blnProgrammingInProgress = True Then
+	If btnFlash.Text = "Stop" Then
 		Dim sf4 As Object = xui.Msgbox2Async("Flash in progress!", "Quit?", "Yes", "", "No", Null)
 		Wait For (sf4) Msgbox_Result(ret3 As Int)
 				
@@ -476,7 +475,7 @@ Private Sub btnFlash_Click
 			SendHandshakeLoop
 		End If
 	' Flash Stop Logic
-	Else
+	Else If btnFlash.Text = "Stop" Then
 		Dim sf3 As Object = xui.Msgbox2Async("Flash in progress! Do you want to stop?", "Flashing", "Yes", "", "No", Null)
 		Wait For (sf3) Msgbox_Result(ret2 As Int)		
 		If ret2 = xui.DialogResponse_Positive Then
@@ -651,7 +650,6 @@ Sub DisableFunction
 	cmbPort.Enabled = False
 	cmbPicList.Enabled = False
 	cntVerify = 0
-	blnProgrammingInProgress = True
 	btnFlash.Text = "Stop"
 	blnAppStopQuit = False
 	blnHandShakeSuccess = False
@@ -667,7 +665,6 @@ Sub EnableFunction
 	cmbPort.Enabled = True
 	cmbPicList.Enabled = True
 	blnVerifyRequest = False
-	blnProgrammingInProgress = False
 	btnFlash.Text = "Flash"
 	blnAppStopQuit = True
 	blnACK = False
