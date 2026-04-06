@@ -93,4 +93,4 @@ Connect your HC-05 Bluetooth module to the PIC microcontroller as follows:
 ### Setting Baud Rate to 57600
 
 1. Enter **Command Mode** (Key pin high, default 38400 bps).  
-2. Send the following command via a serial terminal (e.g., Arduino Serial Monitor, PuTTY, or B4J):  
+2. Send the following command via a serial terminal (e.g., TTL USB with link above, Arduino Serial Monitor, PuTTY, or B4J):  
