@@ -15,6 +15,18 @@ This project provides software support for **HC-05 Bluetooth modules**, enabling
 
 ---
 
+## Hardware Setup  
+
+1. Connect your **HC05 adapter** to the PIC:  
+   - **TX of HC05 → RX of PIC**  
+   - **RX of HC05 → TX of PIC**  
+   - **GND → GND**
+   - **VCC → 3.3/5v**
+   - Power your PIC as required (usually 5V or 3.3V depending on your PIC).  
+2. Make sure the PIC is flashed with bootloader firmware.  
+
+---
+
 ## HC-05 Command Mode
 
 Not supported with Bootloader Uploader at this time.  You need to set HC05 baud to 57600 with alternative method online or https://www.deshide.com/News-detail_DSDTechTools.html .  The **Command Mode** allows you to configure the HC-05 Bluetooth module, including changing:
