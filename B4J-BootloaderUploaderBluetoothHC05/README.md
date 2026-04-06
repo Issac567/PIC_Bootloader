@@ -46,7 +46,7 @@ Connect your HC-05 Bluetooth module to the PIC microcontroller as follows:
 
 ## HC-05 Command Mode
 
-Not supported with Bootloader Uploader at this time.  You need to set HC05 baud to 57600 with alternative method online or https://www.deshide.com/News-detail_DSDTechTools.html .  The **Command Mode** allows you to configure the HC-05 Bluetooth module, including changing:
+**Not supported** with Bootloader Uploader at this time.  You need to set HC05 baud to 57600 with alternative method online or https://www.deshide.com/News-detail_DSDTechTools.html .  The **Command Mode** allows you to configure the HC-05 Bluetooth module, including changing:
 
 - Baud rate  
 - Password  
