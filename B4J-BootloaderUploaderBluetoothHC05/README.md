@@ -1,4 +1,4 @@
-# HC-05 Bluetooth Software (Coming Soon)
+# PIC Uploader (HC-05 Bluetooth) Software (Coming Soon)
 
 This project provides software support for **HC-05 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth using the **Serial Port Profile (SPP)**.
 
