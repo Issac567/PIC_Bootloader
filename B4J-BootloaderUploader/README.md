@@ -23,7 +23,7 @@ This software is a **simple and reliable PIC microcontroller firmware uploader**
    - **RX of USB → TX of PIC**  
    - **GND → GND**  
    - Power your PIC as required (usually 5V or 3.3V depending on your PIC).  
-2. Make sure the PIC is flashed with bootloader firmware.  
+2. The PIC must have a serial bootloader firmware pre-installed for uploading to work.  
 
 ---
 
