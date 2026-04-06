@@ -55,9 +55,10 @@ Not supported with Bootloader Uploader at this time.  You need to set HC05 baud 
 
 ### Enabling Command Mode
 
-1. Connect the **`Key`** pin of HC-05 to **VCC**.  
-2. Power on the module.  
-3. By default, HC-05 enters **AT command mode** at **38400 bps**.  
+1. Connect the **`Key`** pin of HC-05 to **VCC**.
+2. Hold button down
+3. Power on the module and release button after few seconds. 
+4. By default, HC-05 enters **AT command mode** at **38400 bps**.  
 
 ---
 
