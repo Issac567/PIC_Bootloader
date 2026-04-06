@@ -17,7 +17,7 @@ This project provides software support for **HC-05 Bluetooth modules**, enabling
 
 ## HC-05 Command Mode
 
-The **Command Mode** allows you to configure the HC-05 Bluetooth module, including changing:
+Not supported with Bootloader Uploader at this time.  You need to set HC05 baud to 57600 with alternative method online.  The **Command Mode** allows you to configure the HC-05 Bluetooth module, including changing:
 
 - Baud rate  
 - Password  
