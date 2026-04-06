@@ -15,15 +15,32 @@ This project provides software support for **HC-05 Bluetooth modules**, enabling
 
 ---
 
-## Hardware Setup  
+## Hardware Setup
 
-1. Connect your **HC05 adapter** to the PIC:  
-   - **TX of HC05 → RX of PIC**  
-   - **RX of HC05 → TX of PIC**  
-   - **GND → GND**
-   - **VCC → 3.3/5v**
-   - Power your PIC as required (usually 5V or 3.3V depending on your PIC).  
-2. Make sure the PIC is flashed with bootloader firmware.  
+Connect your HC-05 Bluetooth module to the PIC microcontroller as follows:
+
+- **TX of HC-05 → RX of PIC**  
+- **RX of HC-05 → TX of PIC**  
+- **GND → GND**  
+- **VCC → 3.3V or 5V** (depending on your HC-05 module)
+
+> ⚠️ Ensure voltage compatibility. Most HC-05 breakout boards accept **5V on VCC**, but logic levels are typically **3.3V**.
+
+---
+
+### Requirements
+
+- Power your PIC microcontroller as required (**typically 5V or 3.3V** depending on the device).  
+- Ensure a **common ground** between HC-05 and PIC.  
+- The PIC must have a **serial bootloader firmware pre-installed** for uploading to work.  
+
+---
+
+### Notes
+
+- TX/RX lines must be **crossed** (TX → RX, RX → TX).  
+- HC-05 communicates using **UART (serial)** over Bluetooth SPP.  
+- No USB-to-TTL adapter is required for normal operation — communication is **wireless via Bluetooth**.
 
 ---
 
