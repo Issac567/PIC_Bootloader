@@ -32,7 +32,10 @@ Connect your HC-05 Bluetooth module to the PIC microcontroller as follows:
 
 - Power your PIC microcontroller as required (**typically 5V or 3.3V** depending on the device).  
 - Ensure a **common ground** between HC-05 and PIC.  
-- The PIC must have a **serial bootloader firmware pre-installed** for uploading to work.  
+- The PIC must have a **serial bootloader firmware pre-installed** for uploading to work.
+- HC-05 must be paired with your PC first in the operating system’s Bluetooth settings
+Default PIN is usually 1234 or 0000
+B4J does not show a password prompt — pairing is handled entirely by the OS
 
 ---
 
