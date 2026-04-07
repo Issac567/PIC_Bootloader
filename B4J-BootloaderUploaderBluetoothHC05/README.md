@@ -23,7 +23,7 @@ Connect your HC-05 Bluetooth module to the PIC microcontroller as follows:
 - **RX of HC-05 → TX of PIC**  
 - **GND → GND**  
 - **VCC → 3.3V or 5V** (depending on your HC-05 module)
-- **Key** pin - Do not connect to VCC. It puts it in AT Mode on mine.
+- **EN** pin - Do not connect to VCC. It puts it in AT Mode on mine.
 
 > ⚠️ Ensure voltage compatibility. Most HC-05 breakout boards accept **5V on VCC**, but logic levels are typically **3.3V**.
 
@@ -72,7 +72,7 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 
 ### Enabling Command Mode
 
-1. Connect the **`Key`** pin of HC-05 to **VCC**.
+1. Connect the **`EN`** pin of HC-05 to **VCC**.
 2. Hold button down (Mine did not need this step)
 3. Power on the module and release button after few seconds (Mine did not need this step).
 4. Should blink very slow
