@@ -61,7 +61,7 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 
 ---
 
-## HC-05 Command Mode (Here and below Required by 3rd party Software)
+## HC-05 AT Command Mode (Here and below Required by 3rd party Software)
 
 **Not supported** with Bootloader Uploader at this time.  You need to set HC05 baud to 57600 with alternative method online or https://www.deshide.com/News-detail_DSDTechTools.html .  The **Command Mode** allows you to configure the HC-05 Bluetooth module, including changing:
 
@@ -70,7 +70,7 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 - Device name  
 - Role (Master/Slave)  
 
-### Enabling Command Mode
+### Enabling AT Command Mode
 
 1. Connect the **`EN`** pin of HC-05 to **VCC** (Mine was 3.3v).
 2. Hold button down (Mine did not need this step)
