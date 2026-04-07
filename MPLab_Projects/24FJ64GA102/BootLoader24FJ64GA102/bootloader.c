@@ -38,7 +38,7 @@
 #define FLASH_WRITE_BLOCK    64                 // Write row size is 64 instructions (standard for GA102)
 
 #define TIMER2_COUNT        186                 // 3s 
-#define MSG_MS_DELAY        50                  // Standard pacing delay 
+#define MSG_MS_DELAY 150                      // (min 150 for BT latency) Standard pacing delay 
 
 #define LED_PIN   LATBbits.LATB4                // Use LAT for Output / Bootloader Led Status 
 #define LED_TRIS  TRISBbits.TRISB4              // Output PortB.4 pin
