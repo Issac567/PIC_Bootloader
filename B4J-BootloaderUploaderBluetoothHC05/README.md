@@ -78,7 +78,7 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 4. Should blink very slow
 5. By default, HC-05 enters **AT command mode** at **38400 bps**.
 6. Use the software https://www.deshide.com/News-detail_DSDTechTools.html
-7. Change the Baud to 57600 with software
+7. Change the baud rate to 57600 using the software (Note: AT command mode always uses 38400 and is not affected).
 
 ---
 
