@@ -72,13 +72,21 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 
 ### Enabling AT Command Mode
 
+2 Ways to connect
+
+`OPTION 1`
 1. Connect the **`EN`** pin of HC-05 to **VCC** (Mine was 3.3v).
-2. Hold button down (Mine did not need this step)
-3. Power on the module and release button after few seconds.
-4. Should blink very slow
-5. By default, HC-05 enters **AT command mode** at **38400 bps**.
-6. Use the software https://www.deshide.com/News-detail_DSDTechTools.html
-7. Change the baud rate to 57600 using the software (Note: AT command mode always uses 38400 and is not affected).
+2. Power on the module.
+   
+`OPTION 2`
+1. **EN** pin not needed.  Hold Button Down.
+2. Power on the module and release button after 3 seconds.
+
+ 
+3. Should blink very slow.
+4. By default, HC-05 enters **AT command mode** at **38400 bps**.
+5. Use the software https://www.deshide.com/News-detail_DSDTechTools.html
+6. Change the baud rate to 57600 using the software (Note: AT command mode always uses 38400 and is not affected).
 
 ---
 
