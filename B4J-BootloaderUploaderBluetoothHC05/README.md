@@ -55,13 +55,13 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 3. **Select HC05** from the list and click **Connect**.
 4. Wait for connection successful.
 5. **Select the PIC device** you want to program.
-6. Click **firmware** to select the **firmware file** (.hex) you want to upload.  
+6. Click **Load Firmware** to select the **firmware file** (.hex) you want to upload.  
 7. Press **Flash** to start the programming process.  
 8. Wait until the software reports **success**. Do not disconnect the device during flashing.
 
 ---
 
-## HC-05 Command Mode
+## HC-05 Command Mode (Here and below Required by 3rd party Software)
 
 **Not supported** with Bootloader Uploader at this time.  You need to set HC05 baud to 57600 with alternative method online or https://www.deshide.com/News-detail_DSDTechTools.html .  The **Command Mode** allows you to configure the HC-05 Bluetooth module, including changing:
 
@@ -72,11 +72,13 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 
 ### Enabling Command Mode
 
-1. Connect the **`EN`** pin of HC-05 to **VCC**.
+1. Connect the **`EN`** pin of HC-05 to **VCC** (Mine was 3.3v).
 2. Hold button down (Mine did not need this step)
-3. Power on the module and release button after few seconds (Mine did not need this step).
+3. Power on the module and release button after few seconds.
 4. Should blink very slow
-5. By default, HC-05 enters **AT command mode** at **38400 bps**.  
+5. By default, HC-05 enters **AT command mode** at **38400 bps**.
+6. Use the software https://www.deshide.com/News-detail_DSDTechTools.html
+7. Change the Baud to 57600 with software
 
 ---
 
@@ -90,13 +92,13 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 | Change password | `AT+PSWD=1234` | Sets pairing password |
 | Set role | `AT+ROLE=0` | `0` = Slave, `1` = Master |
 
-> ⚠️ **Important:** If you change the baud rate, your software must match it. Currently, this software **does not automatically change the baud rate**, so you need to ensure the HC-05 baud matches your program settings.  
+> ⚠️ **Important:** If you change the baud rate, your firmware must match it. Currently, B4J Uploader **does not automatically change the baud rate**, so you need to ensure the HC-05 baud matches your program settings.  
 
 ---
 
 ### Setting Baud Rate to 57600
 
-1. Enter **Command Mode** (Key pin high, default 38400 bps).  
+1. Enter **Command Mode** (EN pin high, default 38400 bps for AT Mode only).  
 2. Send the following command via a serial terminal (e.g., TTL USB with link above, Arduino Serial Monitor, PuTTY, or B4J):
 
 ---
