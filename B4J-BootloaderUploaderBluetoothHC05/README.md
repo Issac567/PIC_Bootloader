@@ -96,13 +96,6 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 
 ---
 
-### Setting Baud Rate to 57600
-
-1. Enter **Command Mode** (EN pin high, default 38400 bps for AT Mode only).  
-2. Send the following command via a serial terminal (e.g., TTL USB with link above, Arduino Serial Monitor, PuTTY, or B4J):
-
----
-
 ## License  
 
 MIT License – Free to use, modify, and distribute.
