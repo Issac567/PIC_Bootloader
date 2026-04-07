@@ -20,7 +20,7 @@
 #define FLASH_END 0x1FFFF                   // Flash end address
 #define FLASH_ERASE_BLOCK 64                // Runtime can only do 64 Word erase max!
 #define FLASH_WRITE_BLOCK 64                // Can only do 64 Word block write max with PIC 18F24K47! 
-#define MSG_MS_DELAY 50                     // Delay for UART_TxString   
+#define MSG_MS_DELAY 150                      // (min 150 for BT latency) Standard pacing delay  
 
 #define LED_PIN   LATBbits.LATB4            // Use LAT for Output / Bootloader Led Status 
 #define LED_TRIS  TRISBbits.TRISB4          // Output PortB.4 pin
