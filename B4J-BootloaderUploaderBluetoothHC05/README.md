@@ -75,7 +75,7 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 `2 Ways to connect`
 
 `OPTION 1`
-1. Connect the **`EN`** pin of HC-05 to **VCC** (Mine was 3.3v).
+1. Connect the **EN** pin of HC-05 to **VCC** (Mine was 3.3v).
 2. Power on the module.
    
 `OPTION 2`
