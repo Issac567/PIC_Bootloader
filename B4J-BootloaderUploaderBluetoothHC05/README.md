@@ -82,7 +82,7 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 1. **EN** pin not needed.  Hold Button Down.
 2. Power on the module and release button after 3 seconds.
 
- 
+--
 3. Should blink very slow.
 4. By default, HC-05 enters **AT command mode** at **38400 bps**.
 5. Use the software https://www.deshide.com/News-detail_DSDTechTools.html
