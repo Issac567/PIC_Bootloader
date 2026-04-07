@@ -2,8 +2,6 @@
 
 This project provides software support for **HC-05 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth using the **Serial Port Profile (SPP)**.
 
-> **Note:** The software is under development and will be available soon.  
-
 ---
 
 ## Features (Planned)
@@ -24,7 +22,9 @@ Connect your HC-05 Bluetooth module to the PIC microcontroller as follows:
 - **GND → GND**  
 - **VCC → 3.3V or 5V** (depending on your HC-05 module)
 - **EN** pin - Do not connect to VCC. It puts it in AT Mode on mine.
-
+- 
+> **Note:** OS Bluetooth setting did not find my HC-05.  I used B4J Uploader and did a search.  Select and connect then windows will prompt new Bluetooth Device found.  Go to it and enter password.
+ 
 > ⚠️ Ensure voltage compatibility. Most HC-05 breakout boards accept **5V on VCC**, but logic levels are typically **3.3V**.
 
 ---
