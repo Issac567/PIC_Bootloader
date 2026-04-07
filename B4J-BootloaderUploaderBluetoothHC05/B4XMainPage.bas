@@ -35,6 +35,7 @@ Sub Class_Globals
 	' jBluetooth Library + Astream
 	'---------------------------------------
 	Private btHC05 As Bluetooth								' Bluetooth
+	Private btConnection As BluetoothConnection				' Bluetooth Connection
 	Private astream As AsyncStreams							' Read/Write Stream
 	
 	'---------------------------------------
@@ -45,9 +46,9 @@ Sub Class_Globals
 	
 	Private btnFlash As Button
 	Private btnLoadFile As Button
-	Private btnSearch As Button
-	Private btnConnect As Button
-	Private ListView1 As ListView
+	Private btnSearch As Button								' NEW
+	Private btnConnect As Button							' NEW
+	Private ListView1 As ListView							' NEW
 	Private txtLog As TextArea
 	Private cmbPicList As ComboBox
 	Private prgBar As ProgressBar
@@ -68,7 +69,7 @@ Sub Class_Globals
 
 	Private strLastFilePath As String						' Reloads firmware from FILE when PIC name changed so Firmware array be corrected
 	
-	Private foundDevices As Map
+	Private foundDevices As Map								' NEW
 	
 	
 End Sub
@@ -293,6 +294,8 @@ Private Sub btHC05_DiscoveryFinished
 	LogMessage("Bluetooth", "Discovery completed")
 End Sub
 Private Sub btHC05_Connected (Success As Boolean, connection As BluetoothConnection)
+	btConnection = connection
+	
 	If Success Then
 		If astream.IsInitialized Then astream.Close
 		astream.Initialize(connection.InputStream, connection.OutputStream, "AStream")
@@ -314,7 +317,7 @@ Private Sub cmbPicList_SelectedIndexChanged(Index As Int, Value As Object)
 	End If
 End Sub
 
-Private Sub btnSearch_Click 'new
+Private Sub btnSearch_Click 'NEW
 	If btHC05.IsEnabled = True Then
 		Dim res As Boolean = btHC05.StartDiscovery
 		If res Then
@@ -332,7 +335,8 @@ Private Sub btnSearch_Click 'new
 	End If
 End Sub
 
-Private Sub btnConnect_Click 'new
+Private Sub btnConnect_Click 'NEW
+
 	btHC05.CancelDiscovery
 	
 	' USE (57600 Baud) from HC05 to PIC
@@ -358,13 +362,13 @@ Private Sub btnConnect_Click 'new
 				Return
 			End If
 		End If
-		
-		LogMessage("Note", "After disconnect, the HC-05 may require a power cycle before reconnecting due to Bluetooth stack limitations.")
-				
+			
 		' close Astream
 		If astream.IsInitialized Then
 			astream.Close
 		End If
+		
+		btConnection.Disconnect
 				
 		btnConnect.Text = "Connect"
 		LogMessage("Status", "Connection Closed")
@@ -705,8 +709,8 @@ End Sub
 ' Disable/Enable
 '--------------------------------------------------------
 Sub DisableFunction
-	ListView1.Enabled = False  'new
-	btnSearch.Enabled = False  'new
+	ListView1.Enabled = False  'NEW
+	btnSearch.Enabled = False  'NEW
 	
 	btnLoadFile.Enabled = False
 	cmbPicList.Enabled = False
@@ -721,8 +725,8 @@ Sub DisableFunction
 	prgBar.Progress = 0						
 End Sub
 Sub EnableFunction
-	ListView1.Enabled = True 'new
-	btnSearch.Enabled = True 'new
+	ListView1.Enabled = True 'NEW
+	btnSearch.Enabled = True 'NEW
 	
 	btnLoadFile.Enabled = True
 	cmbPicList.Enabled = True
