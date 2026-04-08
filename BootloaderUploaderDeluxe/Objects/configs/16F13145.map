@@ -1,0 +1,14 @@
+#Fri Feb 06 21:58:55 PST 2026
+EndAddrFlash=8191
+HandShakeDelayMS=200
+EmptyFlashValue=63
+PacketDelayMS=0
+PicName=16F13145
+StartAddrFlash=1536
+UseWriteBurst=true
+InstructionPacket=32
+StopBit=1
+Notes=None
+ExpectedBytes=13312
+UseDoubleHexAddr=true
+Use4Padding=false
