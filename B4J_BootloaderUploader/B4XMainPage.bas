@@ -6,7 +6,7 @@ Version=9.85
 @EndOfDesignText@
 
 ' VERSION 6.20
-' SSP Bluetooth
+' SSP Bluetooth and Serial Com
 
 ' Using .Exe from Build Standalone Package you must include the .map files in 
 ' \BootloaderUploader\Objects\temp\build\bin\configs
