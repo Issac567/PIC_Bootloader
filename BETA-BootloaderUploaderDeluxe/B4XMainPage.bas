@@ -5,7 +5,7 @@ Type=Class
 Version=9.85
 @EndOfDesignText@
 
-' VERSION 6.13
+' VERSION 6.14
 ' SSP Bluetooth
 
 ' Using .Exe from Build Standalone Package you must include the .map files in 
@@ -358,7 +358,11 @@ Private Sub btnSearch_Click 'NEW
 End Sub
 
 Private Sub btnConnect_Click 'NEW
-
+	If btnOpen.Text = "Close Port" Then 
+		xui.Msgbox2Async("Please close Serial Com Port to continue.", "Serial Com Running", "Ok", "", "", Null)
+		Return
+	End If
+	
 	btHC05.CancelDiscovery
 	
 	' USE (57600 Baud) from HC05 to PIC
@@ -398,6 +402,10 @@ Private Sub btnConnect_Click 'NEW
 End Sub
 
 Private Sub btnOpen_Click
+	If btnConnect.Text = "Disconnect" Then
+		xui.Msgbox2Async("Please disconnect from Bluetooth to continue.", "Bluetooth Running", "Ok", "", "", Null)
+		Return
+	End If
 	
 	' Open Port (57600 Baud)
 	If btnOpen.Text = "Open Port" Then
