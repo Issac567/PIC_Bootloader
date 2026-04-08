@@ -5,7 +5,7 @@ Type=Class
 Version=9.85
 @EndOfDesignText@
 
-' VERSION 6.14
+' VERSION 6.20
 ' SSP Bluetooth
 
 ' Using .Exe from Build Standalone Package you must include the .map files in 
@@ -358,16 +358,17 @@ Private Sub btnSearch_Click 'NEW
 End Sub
 
 Private Sub btnConnect_Click 'NEW
-	If btnOpen.Text = "Close Port" Then 
-		xui.Msgbox2Async("Please close Serial Com Port to continue.", "Serial Com Running", "Ok", "", "", Null)
-		Return
-	End If
-	
-	btHC05.CancelDiscovery
-	
 	' USE (57600 Baud) from HC05 to PIC
 	If btnConnect.Text = "Connect" Then
 		If ListView1.SelectedIndex <> - 1 Then
+			
+			' Close the port!
+			If btnOpen.Text = "Close Port" Then
+				btnOpen_Click
+				Sleep(200)
+			End If
+		
+			btHC05.CancelDiscovery
 			' Connect Bluetooth with Address selected from listview
 			Dim address As String = foundDevices.Get(ListView1.SelectedItem)
 			btHC05.Connect(address)
@@ -397,30 +398,31 @@ Private Sub btnConnect_Click 'NEW
 		btConnection.Disconnect
 				
 		btnConnect.Text = "Connect"
-		LogMessage("Status", "Connection Closed")
+		LogMessage("Status", "Bluetooth disconnected")
 	End If
 End Sub
 
 Private Sub btnOpen_Click
-	If btnConnect.Text = "Disconnect" Then
-		xui.Msgbox2Async("Please disconnect from Bluetooth to continue.", "Bluetooth Running", "Ok", "", "", Null)
-		Return
-	End If
-	
 	' Open Port (57600 Baud)
 	If btnOpen.Text = "Open Port" Then
 		Try
+			' Disconnect from Bluetooth!
+			If btnConnect.Text = "Disconnect" Then
+				btnConnect_Click
+				Sleep(200)
+			End If
+	
 			serial1.Open(cmbPort.Value)
 			serial1.SetParams(serial1.BAUDRATE_57600, serial1.DATABITS_8, intStopBit, serial1.PARITY_NONE)  ' Set baud=57600, 8 data bits, config value, no parity
 			If astream.IsInitialized Then astream.Close
 			astream.Initialize(serial1.GetInputStream, serial1.GetOutputStream, "astream")
 		Catch
-			LogMessage("Status", "Error Open Port" & LastException)
+			LogMessage("Status", "Error opening port" & LastException)
 			Return
 		End Try
 		btnOpen.Text = "Close Port"
 		btnRefreshCom.Enabled = False
-		LogMessage("Status", "Port Opened")
+		LogMessage("Status", "Serial Com opened")
 		
 	' Close Port
 	Else
@@ -430,7 +432,7 @@ Private Sub btnOpen_Click
 		End If
 		btnOpen.Text = "Open Port"
 		btnRefreshCom.Enabled = True
-		LogMessage("Status", "Port Closed")
+		LogMessage("Status", "Serial Com closed")
 	End If
 End Sub
 
