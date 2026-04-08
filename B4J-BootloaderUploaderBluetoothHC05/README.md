@@ -1,3 +1,4 @@
+# Use the Beta B4J 2 in 1 package not this.
 # PIC B4J Uploader (HC-05 SSP Bluetooth)
 
 This project provides software support for **HC-05 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth using the **Serial Port Profile (SPP)**.
