@@ -1,4 +1,3 @@
-# Serial Com and Bluetooth in one package. The other 2 B4J Uploader will be removed.
 # PIC B4J Uploader (Serial COM - TTL USB)  
 
 This software is a **simple and reliable PIC microcontroller firmware uploader**. It allows you to flash firmware to your PIC devices using a **TTL-to-USB serial connection**.  
