@@ -32,7 +32,7 @@ Sub Class_Globals
 	Private blnUse4Padding As Boolean						' 24 Bit need step 4, others step 2. Used with Intel Hex Conversion
 	
 	'---------------------------------------
-	' jBluetooth Library + Astream
+	' jBluetooth and Serial Library + Astream
 	'---------------------------------------
 	Private btHC05 As Bluetooth								' Bluetooth
 	Private btConnection As BluetoothConnection				' Bluetooth Connection
