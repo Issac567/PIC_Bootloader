@@ -5,7 +5,7 @@ Type=Class
 Version=9.85
 @EndOfDesignText@
 
-' VERSION 6.20
+' VERSION 6.21
 ' SSP Bluetooth and Serial Com
 
 ' Using .Exe from Build Standalone Package you must include the .map files in 
@@ -147,8 +147,16 @@ Private Sub B4XPage_CloseRequest As ResumableSub
 	' Close them when exiting!
 	If astream.IsInitialized Then 		
 		astream.Close
+		
+		' Close Serial Com
+		serial1.Close
+		
+		' Disconnect Bluetooth
+		If btnConnect.text = "Disconnect" Then
+			btConnection.Disconnect
+		End If
 	End If
-	
+		
 	' Save screen dimension
 	Dim wMap As Map
 	wMap.Initialize
