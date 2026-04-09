@@ -156,6 +156,78 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 > ⚠️ **Important:** If you change the baud rate, your firmware must match it. Currently, B4J Uploader **does not automatically change the baud rate**, so you need to ensure the HC-05 baud matches your program settings.  
 
 ---
+---
+---
+
+# PIC B4J Uploader (HC-08 Bluetooth BLE) coming soon
+
+This project provides software support for **HC-08 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth BLE with Bleak library.
+
+---
+
+## Features (Planned)
+
+- Connect to HC-08 over Bluetooth BLE 
+- Send and receive data via HC-08  
+- Configure HC-08 module settings via **AT commands**
+- Set custom baud rates and device names  
+
+---
+
+## Hardware Setup
+
+Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
+
+- **TX of HC-08 → RX of PIC**  
+- **RX of HC-08 → TX of PIC**  
+- **GND → GND**  
+- **VCC → 3.3V or 5V** (depending on your HC-05 module)
+- **EN** pin - Do not connect to VCC. It puts it in AT Mode on mine.
+- 
+> **Note:** If your OS does not automatically detect the HC-08, use the B4J Uploader’s search function. Select the device and connect — Windows will then prompt that a new Bluetooth device is found. Go to the prompt and enter the password to complete pairing.”
+ 
+> ⚠️ Ensure voltage compatibility. Most HC-08 breakout boards accept **5V on VCC**, but logic levels are typically **3.3V**.
+
+---
+
+### Requirements
+
+- Power your PIC microcontroller as required (**typically 5V or 3.3V** depending on the device).  
+- Ensure a **common ground** between HC-08 and PIC.  
+- The PIC must have a **serial bootloader firmware pre-installed** for uploading to work.
+
+---
+
+### Notes
+
+- TX/RX lines must be **crossed** (TX → RX, RX → TX).  
+- HC-08 communicates using **UART (serial)** over Bluetooth BLE.  
+- No USB-to-TTL adapter is required for normal operation — communication is **wireless via Bluetooth**.
+
+---
+
+## How to Use  
+
+1. Open the **B4J Bootloader Uploader** software.  
+2. **Click Scan** and let it populate the list.
+3. **Select HC08** from the list and click **Connect**.
+4. Wait for connection successful.
+5. **Select the PIC device** you want to program.
+6. Click **Load Firmware** to select the **firmware file** (.hex) you want to upload.  
+7. Press **Flash** to start the programming process.  
+8. Wait until the software reports **success**. Do not disconnect the device during flashing.
+
+---
+
+## HC-08 AT Command Mode (Here and below Required by 3rd party Software)
+
+**Not supported** with Bootloader Uploader at this time.  You need to set HC05 baud to 57600 with alternative method online or https://www.deshide.com/News-detail_DSDTechTools.html .  The **Command Mode** allows you to configure the HC-05 Bluetooth module, including changing:
+
+- Baud rate  
+- Password  
+- Device name  
+- Role (Master/Slave)
+  
 
 ## License  
 
