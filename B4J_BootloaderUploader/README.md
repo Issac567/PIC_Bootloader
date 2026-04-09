@@ -138,7 +138,7 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 - **TX of HC-08 → RX of PIC**  
 - **RX of HC-08 → TX of PIC**  
 - **GND → GND**  
-- **VCC → 3.3V or 5V** (depending on your HC-05 module)
+- **VCC → 3.0V to 3.6** (depending on your HC-08 module)
 - **EN** pin - Do not connect to VCC. It puts it in AT Mode on mine.
   
 > ⚠️ Ensure voltage compatibility. Most HC-08 breakout boards accept **5V on VCC**, but logic levels are typically **3.3V**.
