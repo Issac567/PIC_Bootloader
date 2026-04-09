@@ -25,7 +25,6 @@ This repository contains a collection of firmware projects for various **PIC mic
 * [MPLAB Compiler – Microchip](https://www.microchip.com/en-us/tools-resources/develop/mplab-xc-compilers)
 * [B4J – B4X](https://www.b4x.com/b4j.html)
 
-# Hardware Required (Minimum one of these)
 * USB-to-TTL serial adapter [Aliexpress](https://www.aliexpress.us/w/wholesale-USB%2525252dto%2525252dTTL-serial-adapter.html?spm=a2g0o.productlist.search.0)
 * HC-05 Bluetooth SSP adapter [Aliexpress](https://www.aliexpress.us/w/wholesale-hc05-bluetooth-module.html?osf=auto_suggest&spm=a2g0n.productlist.header.0)
 
