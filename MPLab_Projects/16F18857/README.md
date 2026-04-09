@@ -139,6 +139,7 @@ I use **MPLAB X IDE 6.05** (supports Pickit 3/3.5 if using this!)
 
 * PIC16F18857
 * USB-to-TTL serial adapter [Aliexpress](https://www.aliexpress.us/w/wholesale-USB%2525252dto%2525252dTTL-serial-adapter.html?spm=a2g0o.productlist.search.0)
+* HC-05 Bluetooth SSP adapter [Aliexpress](https://www.aliexpress.us/w/wholesale-hc05-bluetooth-module.html?osf=auto_suggest&spm=a2g0n.productlist.header.0)
 * MPLAB X IDE [MPLAB Ecosystem – Microchip](https://www.microchip.com/en-us/tools-resources/archives/mplab-ecosystem)
 * B4J (Anywhere Software) [B4J – B4X](https://www.b4x.com/b4j.html)
 
