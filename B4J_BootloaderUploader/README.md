@@ -201,7 +201,7 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 1. Should blink very slow.
 2. By default, HC-05 enters **AT command mode** at **38400 bps** and HC-08 enters at **9600**.
 3. Use the software https://www.deshide.com/News-detail_DSDTechTools.html
-4. Change the baud rate to 57600 using the software (Note: AT command mode always uses 38400 (Hc-05) and 9600 (HC-08) and is not affected).
+4. Change the baud rate to 57600 using the software (Note: AT command mode always uses 38400 (HC-05) and 9600 (HC-08) and is not affected).
 
 ---
 
@@ -215,7 +215,7 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 | Change password | `AT+PSWD=1234` | Sets pairing password |
 | Set role | `AT+ROLE=0` | `0` = Slave, `1` = Master |
 
-> ⚠️ **Important:** If you change the baud rate, your firmware must match it. Currently, B4J Uploader **does not automatically change the baud rate**, so you need to ensure the HC-05 baud matches your program settings.
+> ⚠️ **Important:** If you change the baud rate, your firmware must match it. Currently, B4J Uploader **does not automatically change the baud rate**, so you need to ensure the HC-05/HC-08 baud matches your program settings.
 
 ---
 
