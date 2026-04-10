@@ -223,7 +223,7 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 
 ### Libraries required
 
-* jRandomAccess
+* jRandomAccessFile
 * jSerial
 * jFX
 * B4XPages
