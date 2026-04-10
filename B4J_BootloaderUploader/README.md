@@ -218,6 +218,20 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 > ⚠️ **Important:** If you change the baud rate, your firmware must match it. Currently, B4J Uploader **does not automatically change the baud rate**, so you need to ensure the HC-05/HC-08 baud matches your program settings.
 
 ---
+---
+---
+
+### Libraries required
+
+* jRandomAccess
+* jSerial
+* jFX
+* B4XPages
+* jBluetooth
+* BluetoothConnection
+* Bleak
+* PyBridge
+  
 
 ## License  
 
