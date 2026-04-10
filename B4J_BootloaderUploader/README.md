@@ -52,7 +52,7 @@ This software is a **simple and reliable PIC microcontroller firmware uploader**
 ---
 ---
 
-# $\color{blue}{\text{# PIC B4J Uploader (HC-05 SSP Bluetooth)}}$
+# $\color{blue}{\text{PIC B4J Uploader (HC-05 SSP Bluetooth)}}$
 
 This project provides software support for **HC-05 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth using the **Serial Port Profile (SPP)**.
 
@@ -117,7 +117,7 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 ---
 ---
 
-# $\color{blue}{\text{# PIC B4J Uploader (HC-08 Bluetooth BLE) coming soon}}$
+# $\color{blue}{\text{PIC B4J Uploader (HC-08 Bluetooth BLE) coming soon}}$
 
 This project provides software support for **HC-08 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth BLE with Bleak library.
 
@@ -177,7 +177,7 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 ---
 ---
 
-# $\color{blue}{\text{# HC-05/HC-08 AT Command Mode (Required by 3rd party Software)}}$
+# $\color{blue}{\text{HC-05/HC-08 AT Command Mode (Required by 3rd party Software)}}$
 
 **Not supported** with Bootloader Uploader at this time.  You need to set HC05/HC08 baud to 57600 with alternative method online or https://www.deshide.com/News-detail_DSDTechTools.html .  The **Command Mode** allows you to configure the HC-05 or HC-08 Bluetooth module, including changing:
 
