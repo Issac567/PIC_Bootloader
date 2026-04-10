@@ -177,7 +177,7 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 ---
 ---
 
-# $\color{blue}{\text{HC-05/HC-08 AT Command Mode (Required by 3rd party Software) k}}$
+# $\color{blue}{\text{HC-05/HC-08 AT Command Mode (Required by 3rd party Software)}}$
 
 **Not supported** with Bootloader Uploader at this time.  You need to set HC05/HC08 baud to 57600 with alternative method online or https://www.deshide.com/News-detail_DSDTechTools.html .  The **Command Mode** allows you to configure the HC-05 or HC-08 Bluetooth module, including changing:
 
