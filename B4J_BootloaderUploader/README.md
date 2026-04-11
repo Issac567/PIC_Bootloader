@@ -188,7 +188,7 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 
 ### Hardware Setup
 
-Connect your HC-05/08 Bluetooth module to the **TTB USB** as follows and using the 3rd party software:
+Connect your HC-05/08 Bluetooth module to the **TTL USB** as follows and using the 3rd party software:
 
 - **TX of HC-05/08 → RX of TTL USB**  
 - **RX of HC-05/08 → TX of TTL USB**  
