@@ -7,6 +7,16 @@
 - Device name  
 - Role (Master/Slave)  
 
+## Hardware Setup
+
+Connect your HC-05/08 Bluetooth module to the **TTB USB** as follows:
+
+- **TX of HC-05/08 → RX of TTL USB**  
+- **RX of HC-05/08 → TX of TTL USB**  
+- **GND → GND**  
+- **VCC → 3.3V or 5V** (depending on your HC-05/08 module)
+- **EN** → VCC
+  
 ### Enabling AT Command Mode
 
 `2 Ways to connect`
