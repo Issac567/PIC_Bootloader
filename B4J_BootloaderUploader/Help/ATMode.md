@@ -9,7 +9,7 @@
 
 ## 🔌 HC-05/08 to TTL USB Diagram
 
-![Wiring diagram](BTtoTTLb.png)
+![Wiring diagram](BTtoTTL.png)
 
 ### Hardware Setup
 
