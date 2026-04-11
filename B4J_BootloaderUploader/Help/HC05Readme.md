@@ -1,4 +1,4 @@
-# $\color{blue}{\text{PIC B4J Uploader (HC-05 SSP Bluetooth)}}$
+# PIC B4J Uploader (HC-05 SSP Bluetooth)
 
 This project provides software support for **HC-05 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth using the **Serial Port Profile (SPP)**.
 
