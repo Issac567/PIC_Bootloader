@@ -7,7 +7,7 @@
 - Device name  
 - Role (Master/Slave)  
 
-## Hardware Setup
+### Hardware Setup
 
 Connect your HC-05/08 Bluetooth module to the **TTB USB** as follows:
 
