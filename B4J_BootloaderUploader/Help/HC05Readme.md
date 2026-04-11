@@ -13,7 +13,7 @@ This project provides software support for **HC-05 Bluetooth modules**, enabling
 
 ---
 
-## 🔌 HC-05/08 to Microchip Diagram
+## 🔌 HC-05 to Microchip Diagram
 
 ![Wiring diagram](HC05toPIC.png)
 
