@@ -1,4 +1,4 @@
-# $\color{blue}{\text{PIC B4J Uploader (HC-08 Bluetooth BLE) coming soon}}$
+# PIC B4J Uploader (HC-08 Bluetooth BLE) coming soon
 
 This project provides software support for **HC-08 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth BLE with Bleak library.
 
