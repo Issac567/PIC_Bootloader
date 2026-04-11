@@ -50,11 +50,12 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 
 ## How to Use  
 
-1. Open the **B4J Bootloader Uploader** software.  
-2. **Click Search** and let it populate the list.
-3. **Select HC05** from the list and click **Connect**.
-4. Wait for connection successful.
-5. **Select the PIC device** you want to program.
-6. Click **Load Firmware** to select the **firmware file** (.hex) you want to upload.  
-7. Press **Flash** to start the programming process.  
-8. Wait until the software reports **success**. Do not disconnect the device during flashing.
+1. Open the **B4J Bootloader Uploader** software.
+2. Select **HC-05 Bluetooth** Tab 
+3. **Click Search** and let it populate the list.
+4. **Select HC05** from the list and click **Connect**.
+5. Wait for connection successful.
+6. **Select the PIC device** you want to program.
+7. Click **Load Firmware** to select the **firmware file** (.hex) you want to upload.  
+8. Press **Flash** to start the programming process.  
+9. Wait until the software reports **success**. Do not disconnect the device during flashing.
