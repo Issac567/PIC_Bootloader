@@ -130,6 +130,8 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 7. Press **Flash** to start the programming process.  
 8. Wait until the software reports **success**. Do not disconnect the device during flashing.
 
+[↑ Back to Table of Contents](#-table-of-contents)
+
 ---
 ---
 ---
@@ -193,7 +195,9 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 6. Click **Load Firmware** to select the **firmware file** (.hex) you want to upload.  
 7. Press **Flash** to start the programming process.  
 8. Wait until the software reports **success**. Do not disconnect the device during flashing.
-  
+
+[↑ Back to Table of Contents](#-table-of-contents)
+
 ---
 ---
 ---
@@ -253,6 +257,8 @@ Connect your HC-05/08 Bluetooth module to the **TTL USB** as follows and using t
 
 > ⚠️ **Important:** If you change the baud rate, your firmware must match it. Currently, B4J Uploader **does not automatically change the baud rate**, so you need to ensure the HC-05/HC-08 baud matches your program settings.
 
+[↑ Back to Table of Contents](#-table-of-contents)
+
 ---
 ---
 ---
@@ -272,3 +278,6 @@ Connect your HC-05/08 Bluetooth module to the **TTL USB** as follows and using t
 ## License  
 
 MIT License – Free to use, modify, and distribute.
+
+[↑ Back to Table of Contents](#-table-of-contents)
+
