@@ -6,8 +6,6 @@
 * [Libraries & License](#libraries-required)
 
 ---
----
----
 
 # PIC B4J Uploader (Serial COM - TTL USB)
 
@@ -61,8 +59,6 @@ This software is a **simple and reliable PIC microcontroller firmware uploader**
 
 [↑ Back to Table of Contents](#-table-of-contents)
 
----
----
 ---
 
 # PIC B4J Uploader (HC-05 SSP Bluetooth)
@@ -133,8 +129,6 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 [↑ Back to Table of Contents](#-table-of-contents)
 
 ---
----
----
 
 # PIC B4J Uploader (HC-08 Bluetooth BLE) coming soon
 
@@ -199,8 +193,6 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 [↑ Back to Table of Contents](#-table-of-contents)
 
 ---
----
----
 
 # HC-05/HC-08 AT Command Mode (Required by 3rd party Software)
 
@@ -259,8 +251,6 @@ Connect your HC-05/08 Bluetooth module to the **TTL USB** as follows and using t
 
 [↑ Back to Table of Contents](#-table-of-contents)
 
----
----
 ---
 
 ### Libraries required
