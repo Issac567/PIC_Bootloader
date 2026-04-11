@@ -7,6 +7,6 @@
 2. **Open Terminal:** >    Right-click inside that folder and select **Open in Terminal** (or Open PowerShell).
 
 3. **Run the installation command:**
->    ```bash
->    .\python.exe -m pip install bleak
->    ```
+    ```bash
+    .\python.exe -m pip install bleak
+    ```
