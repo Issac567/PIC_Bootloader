@@ -2,7 +2,7 @@
 ---
 ---
 
-# $\color{blue}{\text{PIC B4J Uploader (Serial COM - TTL USB)}}$
+# PIC B4J Uploader (Serial COM - TTL USB)
 
 This software is a **simple and reliable PIC microcontroller firmware uploader**. It allows you to flash firmware to your PIC devices using a **TTL-to-USB serial connection**.  
 
@@ -52,7 +52,7 @@ This software is a **simple and reliable PIC microcontroller firmware uploader**
 ---
 ---
 
-# $\color{blue}{\text{PIC B4J Uploader (HC-05 SSP Bluetooth)}}$
+# PIC B4J Uploader (HC-05 SSP Bluetooth)
 
 This project provides software support for **HC-05 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth using the **Serial Port Profile (SPP)**.
 
@@ -117,7 +117,7 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 ---
 ---
 
-# $\color{blue}{\text{PIC B4J Uploader (HC-08 Bluetooth BLE) coming soon}}$
+# PIC B4J Uploader (HC-08 Bluetooth BLE) coming soon
 
 This project provides software support for **HC-08 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth BLE with Bleak library.
 
