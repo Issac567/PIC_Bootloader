@@ -9,7 +9,7 @@
 
 ## 🔌 Pickit 3/3.5 Diagram
 
-![Wiring diagram](BTtoTTLUSB.jpg)
+![Wiring diagram](BTtoTTL.jpg)
 
 ### Hardware Setup
 
