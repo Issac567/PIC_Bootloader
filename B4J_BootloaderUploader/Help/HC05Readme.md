@@ -13,6 +13,10 @@ This project provides software support for **HC-05 Bluetooth modules**, enabling
 
 ---
 
+## 🔌 HC-05/08 to Microchip Diagram
+
+![Wiring diagram](HC05toPIC.png)
+
 ## Hardware Setup
 
 Connect your HC-05 Bluetooth module to the PIC microcontroller as follows:
