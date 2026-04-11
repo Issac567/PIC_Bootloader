@@ -7,7 +7,7 @@
 - Device name  
 - Role (Master/Slave)  
 
-## 🔌 Pickit 3/3.5 Diagram
+## 🔌 HC-05/08 to TTL USB Diagram
 
 ![Wiring diagram](BTtoTTL.jpg)
 
