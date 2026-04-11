@@ -22,7 +22,7 @@ This software is a **simple and reliable PIC microcontroller firmware uploader**
 
 # 🔌 TTL USB to Microchip Diagram
 
-![Wiring diagram](TTLtoPIC.jpg)
+![Wiring diagram](./Help/TTLtoPIC.jpg)
 
 ## Hardware Setup  
 
