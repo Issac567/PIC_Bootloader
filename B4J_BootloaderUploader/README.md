@@ -20,6 +20,10 @@ This software is a **simple and reliable PIC microcontroller firmware uploader**
 
 ---
 
+## 🔌 HC-05 to Microchip Diagram
+
+![Wiring diagram](/Help/HC05toPIC.png)
+
 ## Hardware Setup  
 
 1. Connect your **TTL-to-USB adapter** to the PIC:  
