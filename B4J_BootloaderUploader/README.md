@@ -6,9 +6,6 @@
 * [Libraries & License](#libraries-required)
 
 ---
-
-
----
 ---
 ---
 
