@@ -13,6 +13,10 @@ This project provides software support for **HC-08 Bluetooth modules**, enabling
 
 ---
 
+## 🔌 HC-08 to Microchip Diagram
+
+![Wiring diagram](HC08toPIC.png)
+
 ## Hardware Setup
 
 Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
