@@ -1,5 +1,5 @@
-> ### ⚠️ BLEAK DEPENDENCIES INSTRUCTIONS
-> **HC-08 requires the Bleak Library and its dependencies.**
+### ⚠️ BLEAK DEPENDENCIES INSTRUCTIONS
+**HC-08 requires the Bleak Library and its dependencies.**
 > You must install these dependencies manually to enable Bluetooth functionality.
 >
 > 1. **Locate the Python executable:** >    `C:\Program Files\Anywhere Software\B4J\Libraries\Python\python\python.exe`
