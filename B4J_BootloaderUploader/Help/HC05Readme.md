@@ -22,7 +22,7 @@ Connect your HC-05 Bluetooth module to the PIC microcontroller as follows:
 - **GND → GND**  
 - **VCC → 3.3V or 5V** (depending on your HC-05 module)
 - **EN** pin - Do not connect to VCC. It puts it in AT Mode on mine.
-- 
+  
 > **Note:** If your OS does not automatically detect the HC-05, use the B4J Uploader’s search function. Select the device and connect — Windows will then prompt that a new Bluetooth device is found. Go to the prompt and enter the password to complete pairing.”
  
 > ⚠️ Ensure voltage compatibility. Most HC-05 breakout boards accept **5V on VCC**, but logic levels are typically **3.3V**.
