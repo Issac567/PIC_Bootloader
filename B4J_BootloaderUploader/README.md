@@ -59,6 +59,8 @@ This software is a **simple and reliable PIC microcontroller firmware uploader**
 - Ensure the **PIC is powered properly** before attempting to flash firmware.  
 - This uploader works via **serial connection only**, using TTL-to-USB.  
 
+[↑ Back to Table of Contents](#-table-of-contents)
+
 ---
 ---
 ---
