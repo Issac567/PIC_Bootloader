@@ -7,6 +7,10 @@
 - Device name  
 - Role (Master/Slave)  
 
+## 🔌 Pickit 3/3.5 Diagram
+
+![Wiring diagram](BTtoTTLUSB.jpg)
+
 ### Hardware Setup
 
 Connect your HC-05/08 Bluetooth module to the **TTL USB** as follows and using the 3rd party software:
