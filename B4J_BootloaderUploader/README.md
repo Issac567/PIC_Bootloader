@@ -261,7 +261,7 @@ Connect your HC-05/08 Bluetooth module to the **TTL USB** as follows and using t
 | Change password | `AT+PSWD=1234` | Sets pairing password |
 | Set role | `AT+ROLE=0` | `0` = Slave, `1` = Master |
 
-> ⚠️ **Important:** If you change the baud rate, your firmware must match it. Currently, B4J Uploader **does not automatically change the baud rate**, so you need to ensure the HC-05/HC-08 baud matches your program settings.
+> ⚠️ **Important:** If you change the baud rate, your firmware must match it. So you need to ensure the HC-05/HC-08 baud matches your program settings.
 
 [↑ Back to Table of Contents](#-table-of-contents)
 
