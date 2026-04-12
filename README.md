@@ -26,6 +26,7 @@ This repository contains a collection of firmware projects for various **PIC mic
 * [B4J – B4X](https://www.b4x.com/b4j.html)
 * USB-to-TTL serial adapter [Aliexpress](https://www.aliexpress.us/w/wholesale-USB%2525252dto%2525252dTTL-serial-adapter.html?spm=a2g0o.productlist.search.0)
 * HC-05 Bluetooth SSP adapter [Aliexpress](https://www.aliexpress.us/w/wholesale-hc05-bluetooth-module.html?osf=auto_suggest&spm=a2g0n.productlist.header.0)
+* HC-08 Bluetooth BLE adapter [Aliexpress](https://www.aliexpress.us/w/wholesale-hc08-bluetooth-module.html?spm=a2g0o.productlist.auto_suggest.2.bf20493bPXGW1g)
 
 ---
 
