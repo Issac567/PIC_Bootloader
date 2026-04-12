@@ -209,8 +209,10 @@ Connect your DT-06 WIFI module to the PIC microcontroller as follows:
 
 ---
 
-# HC-05/HC-08 AT Command Mode (Required by 3rd party Software)
-**Not supported** with Bootloader Uploader at this time.  You need to set HC05/HC08 baud to 57600 with alternative method online or https://www.deshide.com/News-detail_DSDTechTools.html .  The **Command Mode** allows you to configure the HC-05 or HC-08 Bluetooth module, including changing:
+# HC-05/HC-08 AT Command Mode
+< Bootloader Uploader v8.04 now supports AT Command Mode.
+
+You need to set HC05/HC08 baud to 57600 with Bootloader Uploader, alternative method online or https://www.deshide.com/News-detail_DSDTechTools.html .  The **Command Mode** allows you to configure the HC-05 or HC-08 Bluetooth module, including changing:
 
 - Baud rate  
 - Password  
