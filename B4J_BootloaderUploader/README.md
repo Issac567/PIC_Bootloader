@@ -178,19 +178,20 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 
 [↑ Back to Table of Contents](#-table-of-contents)
 
-## 🔌 TTL USB to Microchip Diagram
+---
 
-![Wiring diagram](./Help/TTLtoPIC.jpg)
+## 🔌 WIFI to Microchip Diagram
+
+![Wiring diagram](./Help/WIFItoPIC.jpg)
 
 ## Hardware Setup  
 
-1. Connect your **TTL-to-USB adapter** to the PIC:  
-   - **TX of USB → RX of PIC**  
-   - **RX of USB → TX of PIC**  
-   - **GND → GND**  
-   - Power your PIC as required (usually 5V or 3.3V depending on your PIC).  
-2. The PIC must have a serial bootloader firmware pre-installed for uploading to work.  
+Connect your DT-06 WIFI module to the PIC microcontroller as follows:
 
+- **TX of DT-06 → RX of PIC**  
+- **RX of DT-06 → TX of PIC**  
+- **GND → GND**  
+- **VCC → 3.0V to 3.6** (depending on your DT-06 module)
 
 ## How to Use  
 
