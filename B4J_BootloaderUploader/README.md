@@ -49,6 +49,9 @@ This software is a **simple and reliable PIC microcontroller firmware uploader**
 This project provides software support for **HC-05 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth using the **Serial Port Profile (SPP)**.
 
 
+> **Note:** This software communicates via **serial COM ports**. It requires a properly connected **HC-05 Bluetooth adapter** to the PIC target device.
+
+
 ## 🔌 HC-05 to Microchip Diagram
 ![Wiring diagram](./Help/HC05toPIC.png)
 
@@ -102,6 +105,9 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 This project provides software support for **HC-08 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth BLE with Bleak library.
 
 
+> **Note:** This software communicates via **serial COM ports**. It requires a properly connected **HC-08 Bluetooth adapter** to the PIC target device.
+
+
 ## 🔌 HC-08 to Microchip Diagram
 ![Wiring diagram](./Help/HC08toPIC.png)
 
@@ -151,6 +157,9 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 
 # PIC B4J Uploader (DT-06 WIFI)
 This project provides software support for **HC-08 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth BLE with Bleak library.
+
+
+> **Note:** This software communicates via **serial COM ports**. It requires a properly connected **DT-06 WIFI adapter** to the PIC target device.
 
 
 ## 🔌 DT-06 to Microchip Diagram
