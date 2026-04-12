@@ -134,7 +134,7 @@ This project provides software support for **HC-08 Bluetooth modules**, enabling
 - Set custom baud rates and device names  
 
 
-## 🔌 TESTTTTTTTTTTTTTTTTTTTt
+## 🔌 HC-08 to Microchip Diagram
 
 ![Wiring diagram](./Help/HC08toPIC.png)
 
