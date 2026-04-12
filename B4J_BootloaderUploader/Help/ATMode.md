@@ -8,11 +8,9 @@
 - Role (Master/Slave)  
 
 ## 🔌 HC-05/08 to TTL USB Diagram
-
 ![Wiring diagram](BTtoTTL.png)
 
 ### Hardware Setup
-
 Connect your HC-05/08 Bluetooth module to the **TTL USB** as follows and using the 3rd party software:
 
 - **TX of HC-05/08 → RX of TTL USB**  
@@ -22,7 +20,6 @@ Connect your HC-05/08 Bluetooth module to the **TTL USB** as follows and using t
 - **EN** → VCC
   
 ### Enabling AT Command Mode
-
 `2 Ways to connect`
 
 `OPTION 1`
@@ -42,7 +39,6 @@ Connect your HC-05/08 Bluetooth module to the **TTL USB** as follows and using t
 ---
 
 ### Common AT Commands
-
 | Function | AT Command Example | Notes |
 |----------|-----------------|-------|
 | Check module | `AT` | Should respond `OK` |
