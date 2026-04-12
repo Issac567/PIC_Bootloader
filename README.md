@@ -29,8 +29,6 @@ This repository contains a collection of firmware projects for various **PIC mic
 
 ---
 
-## 🛠 Setup & Installation
-
 Follow these steps to correctly link the Application and Bootloader projects:
 
 1. **Download the Repository**: Click the green **Code** button and select **Download ZIP**, then extract it to your local machine.
