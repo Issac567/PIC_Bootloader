@@ -52,3 +52,7 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 8. Press **Flash** to start the programming process.  
 9. Wait until the software reports **success**. Do not disconnect the device during flashing.
 
+## Notes  
+- Make sure your **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
+- Ensure the **PIC is powered properly** before attempting to flash firmware.  
+
