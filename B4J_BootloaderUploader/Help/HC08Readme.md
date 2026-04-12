@@ -1,11 +1,9 @@
 # PIC B4J Uploader (HC-08 Bluetooth BLE) coming soon
-
 This project provides software support for **HC-08 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth BLE with Bleak library.
 
 ---
 
 ## Features (Planned)
-
 - Connect to HC-08 over Bluetooth BLE 
 - Send and receive data via HC-08  
 - Configure HC-08 module settings via **AT commands**
@@ -14,11 +12,9 @@ This project provides software support for **HC-08 Bluetooth modules**, enabling
 ---
 
 ## 🔌 HC-08 to Microchip Diagram
-
 ![Wiring diagram](HC08toPIC.png)
 
 ## Hardware Setup
-
 Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 
 - **TX of HC-08 → RX of PIC**  
@@ -32,23 +28,13 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 ---
 
 ### Requirements
-
 - Power your PIC microcontroller as required (**typically 5V or 3.3V** depending on the device).  
 - Ensure a **common ground** between HC-08 and PIC.  
 - The PIC must have a **serial bootloader firmware pre-installed** for uploading to work.
 
 ---
 
-### Notes
-
-- TX/RX lines must be **crossed** (TX → RX, RX → TX).  
-- HC-08 communicates using **UART (serial)** over Bluetooth BLE.  
-- No USB-to-TTL adapter is required for normal operation — communication is **wireless via Bluetooth**.
-
----
-
 ## How to Use  
-
 1. Open the **B4J Bootloader Uploader** software.
 2. 2. Select **HC-08 Bluetooth** Tab 
 3. **Click Scan** and let it populate the list.
@@ -58,3 +44,11 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 7. Click **Load Firmware** to select the **firmware file** (.hex) you want to upload.  
 8. Press **Flash** to start the programming process.  
 9. Wait until the software reports **success**. Do not disconnect the device during flashing.
+
+---
+
+### Notes
+- TX/RX lines must be **crossed** (TX → RX, RX → TX).  
+- HC-08 communicates using **UART (serial)** over Bluetooth BLE.  
+- No USB-to-TTL adapter is required for normal operation — communication is **wireless via Bluetooth**.
+
