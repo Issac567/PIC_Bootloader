@@ -2,7 +2,7 @@
 * [1. USB TTL (Serial COM)](#serial-com---ttl-usb)
 * [2. HC-05 Bluetooth (SPP)](#hc-05-bluetooth-ssp)
 * [3. HC-08 Bluetooth (BLE)](#hc-08-bluetooth-ble)
-* [4. DT-06 WIFI (TCP/IP)](#dt-06-wifi-tcp/ip)
+* [4. DT-06 WIFI (TCP/IP)](#dt-06-wifi-tcp-ip)
 * [5. AT Command Mode (3rd Party)](#hc-05hc-08-at-command-mode-required-by-3rd-party-software)
 * [Libraries & License](#libraries-required)
 
