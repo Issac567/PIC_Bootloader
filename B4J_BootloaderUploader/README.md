@@ -89,6 +89,10 @@ Connect your HC-05 Bluetooth module to the PIC microcontroller as follows:
 Default PIN is usually 1234 or 0000
 B4J does not show a password prompt — pairing is handled entirely by the OS
 
+### Notes
+- TX/RX lines must be **crossed** (TX → RX, RX → TX).  
+- HC-05 communicates using **UART (serial)** over Bluetooth SPP.  
+- No USB-to-TTL adapter is required for normal operation — communication is **wireless via Bluetooth**.
 
 ## How to Use  
 1. Open the **B4J Bootloader Uploader** software.  
@@ -100,17 +104,11 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 7. Press **Flash** to start the programming process.  
 8. Wait until the software reports **success**. Do not disconnect the device during flashing.
 
-
-### Notes
-- TX/RX lines must be **crossed** (TX → RX, RX → TX).  
-- HC-05 communicates using **UART (serial)** over Bluetooth SPP.  
-- No USB-to-TTL adapter is required for normal operation — communication is **wireless via Bluetooth**.
-
 [↑ Back to Table of Contents](#-table-of-contents)
 
 ---
 
-# PIC B4J Uploader (HC-08 Bluetooth BLE) coming soon
+# PIC B4J Uploader (HC-08 Bluetooth BLE)
 This project provides software support for **HC-08 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth BLE with Bleak library.
 
 
@@ -141,6 +139,10 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 - Ensure a **common ground** between HC-08 and PIC.  
 - The PIC must have a **serial bootloader firmware pre-installed** for uploading to work.
 
+### Notes
+- TX/RX lines must be **crossed** (TX → RX, RX → TX).  
+- HC-08 communicates using **UART (serial)** over Bluetooth BLE.  
+- No USB-to-TTL adapter is required for normal operation — communication is **wireless via Bluetooth**.
 
 ## How to Use  
 1. Open the **B4J Bootloader Uploader** software.  
@@ -151,12 +153,6 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 6. Click **Load Firmware** to select the **firmware file** (.hex) you want to upload.  
 7. Press **Flash** to start the programming process.  
 8. Wait until the software reports **success**. Do not disconnect the device during flashing.
-
-
-### Notes
-- TX/RX lines must be **crossed** (TX → RX, RX → TX).  
-- HC-08 communicates using **UART (serial)** over Bluetooth BLE.  
-- No USB-to-TTL adapter is required for normal operation — communication is **wireless via Bluetooth**.
 
 [↑ Back to Table of Contents](#-table-of-contents)
 
@@ -174,6 +170,10 @@ Connect your DT-06 WIFI module to the PIC microcontroller as follows:
 - **GND → GND**  
 - **VCC → 3.0V to 3.6** (depending on your DT-06 module)
 
+### Notes
+- TX/RX lines must be **crossed** (TX → RX, RX → TX).  
+- DT-06 communicates using **UART (serial)** over WIF.  
+- No USB-to-TTL adapter is required for normal operation — communication is **wireless via Bluetooth**.
 
 ## How to Use  
 1. Open the **B4J Bootloader Uploader** software.
