@@ -8,7 +8,7 @@
 
 ---
 
-# (Serial COM - TTL USB)
+# Serial COM - TTL USB
 This software is a **simple and reliable PIC microcontroller firmware uploader**. It allows you to flash firmware to your PIC devices using a **TTL-to-USB serial connection**.  
 
 > **Note:** This software communicates via **serial COM ports**. It requires a properly connected **TTL-to-USB adapter** to the PIC target device.  
