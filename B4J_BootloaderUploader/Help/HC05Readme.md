@@ -3,14 +3,6 @@ This project provides software support for **HC-05 Bluetooth modules**, enabling
 
 ---
 
-## Features (Planned)
-- Connect to HC-05 over Bluetooth SPP  
-- Send and receive data via HC-05  
-- Configure HC-05 module settings via **AT commands**
-- Set custom baud rates and device names  
-
----
-
 ## 🔌 HC-05 to Microchip Diagram
 ![Wiring diagram](HC05toPIC.png)
 
