@@ -24,6 +24,8 @@ This repository contains a collection of firmware projects for various **PIC mic
 * [MPLAB Ecosystem – Microchip (Recommend MPLAB X 6.05 for both Pickit 3/MBLAP Snap)](https://www.microchip.com/en-us/tools-resources/archives/mplab-ecosystem)
 * [MPLAB Compiler – Microchip](https://www.microchip.com/en-us/tools-resources/develop/mplab-xc-compilers)
 * [B4J – B4X](https://www.b4x.com/b4j.html)
+
+## 🛠 Adaptors Required (Choose any one) - wifi not supported now!
 * [Aliexpress - USB-to-TTL serial adapter](https://www.aliexpress.us/w/wholesale-USB%2525252dto%2525252dTTL-serial-adapter.html?spm=a2g0o.productlist.search.0)
 * [Aliexpress - HC-05 Bluetooth SSP adapter ](https://www.aliexpress.us/w/wholesale-hc05-bluetooth-module.html?osf=auto_suggest&spm=a2g0n.productlist.header.0)
 * [Aliexpress - HC-08 Bluetooth BLE adapter ](https://www.aliexpress.us/w/wholesale-hc08-bluetooth-module.html?spm=a2g0o.productlist.auto_suggest.2.bf20493bPXGW1g)
