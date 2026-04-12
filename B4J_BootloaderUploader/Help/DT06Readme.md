@@ -1,5 +1,5 @@
 ## 🔌 DT-06 to Microchip Diagram
-![Wiring diagram](./Help/WIFItoPIC.jpg)
+![Wiring diagram](WIFItoPIC.jpg)
 
 
 ## Hardware Setup  
