@@ -175,6 +175,12 @@ Connect your DT-06 WIFI module to the PIC microcontroller as follows:
 - **VCC → 3.0V to 3.6** (depending on your DT-06 module)
 
 
+### Requirements
+- Power your PIC microcontroller as required (**typically 5V or 3.3V** depending on the device).  
+- Ensure a **common ground** between DT-06 and PIC.  
+- The PIC must have a **serial bootloader firmware pre-installed** for uploading to work.
+
+  
 ### Notes
 - TX/RX lines must be **crossed** (TX → RX, RX → TX).  
 - DT-06 communicates using **UART (serial)** over WIF.  
