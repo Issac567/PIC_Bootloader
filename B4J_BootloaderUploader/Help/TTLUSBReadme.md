@@ -5,15 +5,6 @@ This software is a **simple and reliable PIC microcontroller firmware uploader**
 
 ---
 
-## Features  
-- Select **PIC device type** from a list of supported microcontrollers  
-- Choose the **COM port** connected to your PIC via TTL-to-USB  
-- Load a **firmware file** (.hex) from your computer  
-- **Flash** the firmware to the PIC microcontroller with a single click  
-- Simple and intuitive user interface  
-
----
-
 ## 🔌 TTL USB to Microchip Diagram
 ![Wiring diagram](TTLtoPIC.jpg)
 
