@@ -3,14 +3,6 @@ This project provides software support for **HC-08 Bluetooth modules**, enabling
 
 ---
 
-## Features (Planned)
-- Connect to HC-08 over Bluetooth BLE 
-- Send and receive data via HC-08  
-- Configure HC-08 module settings via **AT commands**
-- Set custom baud rates and device names  
-
----
-
 ## 🔌 HC-08 to Microchip Diagram
 ![Wiring diagram](HC08toPIC.png)
 
