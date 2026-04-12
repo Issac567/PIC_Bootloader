@@ -1,5 +1,5 @@
 ## 📋 Table of Contents
-* [1. Serial COM (TTL USB)](#pic-b4j-uploader-serial-com---ttl-usb)
+* [1. Serial COM (TTL USB)](#serial-com---ttl-usb)
 * [2. HC-05 Bluetooth (SPP)](#pic-b4j-uploader-hc-05-ssp-bluetooth)
 * [3. HC-08 Bluetooth (BLE)](#pic-b4j-uploader-hc-08-bluetooth-ble)
 * [4. DT-06 WIFI](#pic-b4j-uploader-dt-06-wifi)
@@ -8,7 +8,7 @@
 
 ---
 
-# PIC B4J Uploader (Serial COM - TTL USB)
+# (Serial COM - TTL USB)
 This software is a **simple and reliable PIC microcontroller firmware uploader**. It allows you to flash firmware to your PIC devices using a **TTL-to-USB serial connection**.  
 
 > **Note:** This software communicates via **serial COM ports**. It requires a properly connected **TTL-to-USB adapter** to the PIC target device.  
