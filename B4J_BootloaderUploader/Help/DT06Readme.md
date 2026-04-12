@@ -1,3 +1,12 @@
+# DT-06 WIFI TCP/IP
+This project provides software support for **DT-06 WIFI modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over TCP/IP.
+
+
+> **Note:** This software communicates via **serial COM ports**. It requires a properly connected **DT-06 WIFI adapter** to the PIC target device.
+
+- make sure to change baud to 57600 by using web browser at 192.168.4.1 and use port 9000.
+- connect to WIFI in OS settings first, then use web browser.
+
 ## 🔌 DT-06 to Microchip Diagram
 ![Wiring diagram](WIFItoPIC.jpg)
 
