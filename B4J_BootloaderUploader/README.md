@@ -1,8 +1,9 @@
 ## 📋 Table of Contents
 * [1. Serial COM (TTL USB)](#pic-b4j-uploader-serial-com---ttl-usb)
 * [2. HC-05 Bluetooth (SPP)](#pic-b4j-uploader-hc-05-ssp-bluetooth)
-* [3. HC-08 Bluetooth (BLE)](#pic-b4j-uploader-hc-08-bluetooth-ble-coming-soon)
-* [4. AT Command Mode (3rd Party)](#hc-05hc-08-at-command-mode-required-by-3rd-party-software)
+* [3. HC-08 Bluetooth (BLE)](#pic-b4j-uploader-hc-08-bluetooth-ble)
+* [4. DT-06 WIFI](#pic-b4j-uploader-dt-06-wifi)
+* [5. AT Command Mode (3rd Party)](#hc-05hc-08-at-command-mode-required-by-3rd-party-software)
 * [Libraries & License](#libraries-required)
 
 ---
@@ -165,6 +166,9 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 [↑ Back to Table of Contents](#-table-of-contents)
 
 ---
+
+# PIC B4J Uploader (DT-06 WIFI)
+This project provides software support for **HC-08 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth BLE with Bleak library.
 
 ## 🔌 DT-06 to Microchip Diagram
 ![Wiring diagram](./Help/WIFItoPIC.jpg)
