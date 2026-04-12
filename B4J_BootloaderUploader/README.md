@@ -104,6 +104,10 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 7. Press **Flash** to start the programming process.  
 8. Wait until the software reports **success**. Do not disconnect the device during flashing.
 
+## Notes  
+- Make sure your **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
+- Ensure the **PIC is powered properly** before attempting to flash firmware.
+  
 [↑ Back to Table of Contents](#-table-of-contents)
 
 ---
@@ -154,6 +158,10 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 7. Press **Flash** to start the programming process.  
 8. Wait until the software reports **success**. Do not disconnect the device during flashing.
 
+## Notes  
+- Make sure your **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
+- Ensure the **PIC is powered properly** before attempting to flash firmware.
+  
 [↑ Back to Table of Contents](#-table-of-contents)
 
 ---
@@ -173,7 +181,7 @@ Connect your DT-06 WIFI module to the PIC microcontroller as follows:
 ### Notes
 - TX/RX lines must be **crossed** (TX → RX, RX → TX).  
 - DT-06 communicates using **UART (serial)** over WIF.  
-- No USB-to-TTL adapter is required for normal operation — communication is **wireless via Bluetooth**.
+- No USB-to-TTL adapter is required for normal operation — communication is **wireless via WIFI**.
 
 ## How to Use  
 1. Open the **B4J Bootloader Uploader** software.
