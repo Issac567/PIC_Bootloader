@@ -1,4 +1,4 @@
-# HC-05 SSP Bluetooth
+# HC-05 Bluetooth SSP
 This project provides software support for **HC-05 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth using the **Serial Port Profile (SPP)**.
 
 > **Note:** This software communicates via **serial COM ports**. It requires a properly connected **HC-05 Bluetooth adapter** to the PIC target device.
