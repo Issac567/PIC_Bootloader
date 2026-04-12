@@ -39,13 +39,6 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 
 ---
 
-### Notes
-- TX/RX lines must be **crossed** (TX → RX, RX → TX).  
-- HC-05 communicates using **UART (serial)** over Bluetooth SPP.  
-- No USB-to-TTL adapter is required for normal operation — communication is **wireless via Bluetooth**.
-
----
-
 ## How to Use  
 1. Open the **B4J Bootloader Uploader** software.
 2. Select **HC-05 Bluetooth** Tab 
@@ -56,3 +49,10 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 7. Click **Load Firmware** to select the **firmware file** (.hex) you want to upload.  
 8. Press **Flash** to start the programming process.  
 9. Wait until the software reports **success**. Do not disconnect the device during flashing.
+
+---
+
+### Notes
+- TX/RX lines must be **crossed** (TX → RX, RX → TX).  
+- HC-05 communicates using **UART (serial)** over Bluetooth SPP.  
+- No USB-to-TTL adapter is required for normal operation — communication is **wireless via Bluetooth**.
