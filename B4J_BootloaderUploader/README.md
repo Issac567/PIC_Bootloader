@@ -161,6 +161,9 @@ This project provides software support for **HC-08 Bluetooth modules**, enabling
 
 > **Note:** This software communicates via **serial COM ports**. It requires a properly connected **DT-06 WIFI adapter** to the PIC target device.
 
+- make sure to change baud to 57600 by using web browser at 192.168.4.1 and use port 9000.
+- connect to WIFI in OS settings first, then use web browser.
+
 
 ## 🔌 DT-06 to Microchip Diagram
 ![Wiring diagram](./Help/WIFItoPIC.jpg)
