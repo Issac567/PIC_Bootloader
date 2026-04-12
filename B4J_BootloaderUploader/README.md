@@ -8,14 +8,12 @@
 ---
 
 # PIC B4J Uploader (Serial COM - TTL USB)
-
 This software is a **simple and reliable PIC microcontroller firmware uploader**. It allows you to flash firmware to your PIC devices using a **TTL-to-USB serial connection**.  
 
 > **Note:** This software communicates via **serial COM ports**. It requires a properly connected **TTL-to-USB adapter** to the PIC target device.  
 
 
 ## Features  
-
 - Select **PIC device type** from a list of supported microcontrollers  
 - Choose the **COM port** connected to your PIC via TTL-to-USB  
 - Load a **firmware file** (.hex) from your computer  
@@ -24,11 +22,9 @@ This software is a **simple and reliable PIC microcontroller firmware uploader**
 
 
 ## 🔌 TTL USB to Microchip Diagram
-
 ![Wiring diagram](./Help/TTLtoPIC.jpg)
 
 ## Hardware Setup  
-
 1. Connect your **TTL-to-USB adapter** to the PIC:  
    - **TX of USB → RX of PIC**  
    - **RX of USB → TX of PIC**  
@@ -38,7 +34,6 @@ This software is a **simple and reliable PIC microcontroller firmware uploader**
 
 
 ## How to Use  
-
 1. Open the **B4J Bootloader Uploader** software.  
 2. **Select the PIC device** you want to program.  
 3. **Select the COM port** that corresponds to your TTL-to-USB adapter.  
@@ -48,7 +43,6 @@ This software is a **simple and reliable PIC microcontroller firmware uploader**
 
 
 ## Notes  
-
 - Make sure your **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
 - Ensure the **PIC is powered properly** before attempting to flash firmware.  
 - This uploader works via **serial connection only**, using TTL-to-USB.  
@@ -58,12 +52,10 @@ This software is a **simple and reliable PIC microcontroller firmware uploader**
 ---
 
 # PIC B4J Uploader (HC-05 SSP Bluetooth)
-
 This project provides software support for **HC-05 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth using the **Serial Port Profile (SPP)**.
 
 
 ## Features (Planned)
-
 - Connect to HC-05 over Bluetooth SPP  
 - Send and receive data via HC-05  
 - Configure HC-05 module settings via **AT commands**
@@ -71,11 +63,9 @@ This project provides software support for **HC-05 Bluetooth modules**, enabling
 
 
 ## 🔌 HC-05 to Microchip Diagram
-
 ![Wiring diagram](./Help/HC05toPIC.png)
 
 ## Hardware Setup
-
 Connect your HC-05 Bluetooth module to the PIC microcontroller as follows:
 
 - **TX of HC-05 → RX of PIC**  
@@ -90,7 +80,6 @@ Connect your HC-05 Bluetooth module to the PIC microcontroller as follows:
 
 
 ### Requirements
-
 - Power your PIC microcontroller as required (**typically 5V or 3.3V** depending on the device).  
 - Ensure a **common ground** between HC-05 and PIC.  
 - The PIC must have a **serial bootloader firmware pre-installed** for uploading to work.
@@ -100,14 +89,12 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 
 
 ### Notes
-
 - TX/RX lines must be **crossed** (TX → RX, RX → TX).  
 - HC-05 communicates using **UART (serial)** over Bluetooth SPP.  
 - No USB-to-TTL adapter is required for normal operation — communication is **wireless via Bluetooth**.
 
 
 ## How to Use  
-
 1. Open the **B4J Bootloader Uploader** software.  
 2. **Click Search** and let it populate the list.
 3. **Select HC05** from the list and click **Connect**.
@@ -122,12 +109,10 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 ---
 
 # PIC B4J Uploader (HC-08 Bluetooth BLE) coming soon
-
 This project provides software support for **HC-08 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth BLE with Bleak library.
 
 
 ## Features (Planned)
-
 - Connect to HC-08 over Bluetooth BLE 
 - Send and receive data via HC-08  
 - Configure HC-08 module settings via **AT commands**
@@ -135,11 +120,9 @@ This project provides software support for **HC-08 Bluetooth modules**, enabling
 
 
 ## 🔌 HC-08 to Microchip Diagram
-
 ![Wiring diagram](./Help/HC08toPIC.png)
 
 ## Hardware Setup
-
 Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 
 - **TX of HC-08 → RX of PIC**  
@@ -152,21 +135,18 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 
 
 ### Requirements
-
 - Power your PIC microcontroller as required (**typically 5V or 3.3V** depending on the device).  
 - Ensure a **common ground** between HC-08 and PIC.  
 - The PIC must have a **serial bootloader firmware pre-installed** for uploading to work.
 
 
 ### Notes
-
 - TX/RX lines must be **crossed** (TX → RX, RX → TX).  
 - HC-08 communicates using **UART (serial)** over Bluetooth BLE.  
 - No USB-to-TTL adapter is required for normal operation — communication is **wireless via Bluetooth**.
 
 
 ## How to Use  
-
 1. Open the **B4J Bootloader Uploader** software.  
 2. **Click Scan** and let it populate the list.
 3. **Select HC08** from the list and click **Connect**.
@@ -180,12 +160,10 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 
 ---
 
-## 🔌 WIFI to Microchip Diagram
-
+## 🔌 DT-06 to Microchip Diagram
 ![Wiring diagram](./Help/WIFItoPIC.jpg)
 
 ## Hardware Setup  
-
 Connect your DT-06 WIFI module to the PIC microcontroller as follows:
 
 - **TX of DT-06 → RX of PIC**  
@@ -194,29 +172,24 @@ Connect your DT-06 WIFI module to the PIC microcontroller as follows:
 - **VCC → 3.0V to 3.6** (depending on your DT-06 module)
 
 ## How to Use  
-
-1. Open the **B4J Bootloader Uploader** software.  
-2. **Select the PIC device** you want to program.  
-3. **Select the COM port** that corresponds to your TTL-to-USB adapter.  
-4. Click **Load Firmware** to select the **firmware file** (.hex) you want to upload.  
-5. Press **Flash** to start the programming process.  
-6. Wait until the software reports **success**. Do not disconnect the device during flashing.  
-
+1. Open the **B4J Bootloader Uploader** software.
+2. Set Host IP to **192.168.4.1**
+3. Set Port to **9000**  
+4. **Click Connect** and wait for success connection.
+5. **Select the PIC device** you want to program.
+6. Click **Load Firmware** to select the **firmware file** (.hex) you want to upload.  
+7. Press **Flash** to start the programming process.  
+8. Wait until the software reports **success**. Do not disconnect the device during flashing. 
 
 ## Notes  
-
 - Make sure your **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
 - Ensure the **PIC is powered properly** before attempting to flash firmware.  
-- This uploader works via **serial connection only**, using TTL-to-USB.  
 
 [↑ Back to Table of Contents](#-table-of-contents)
 
 ---
 
----
-
 # HC-05/HC-08 AT Command Mode (Required by 3rd party Software)
-
 **Not supported** with Bootloader Uploader at this time.  You need to set HC05/HC08 baud to 57600 with alternative method online or https://www.deshide.com/News-detail_DSDTechTools.html .  The **Command Mode** allows you to configure the HC-05 or HC-08 Bluetooth module, including changing:
 
 - Baud rate  
@@ -225,11 +198,9 @@ Connect your DT-06 WIFI module to the PIC microcontroller as follows:
 - Role (Master/Slave)  
 
 ## 🔌 HC-05/08 to TTL USB Diagram
-
 ![Wiring diagram](./Help/BTtoTTL.png)
 
 ### Hardware Setup
-
 Connect your HC-05/08 Bluetooth module to the **TTL USB** as follows and using the 3rd party software:
 
 - **TX of HC-05/08 → RX of TTL USB**  
@@ -239,7 +210,6 @@ Connect your HC-05/08 Bluetooth module to the **TTL USB** as follows and using t
 - **EN** → VCC
   
 ### Enabling AT Command Mode
-
 `2 Ways to connect`
 
 `OPTION 1`
@@ -258,7 +228,6 @@ Connect your HC-05/08 Bluetooth module to the **TTL USB** as follows and using t
 
 
 ### Common AT Commands
-
 | Function | AT Command Example | Notes |
 |----------|-----------------|-------|
 | Check module | `AT` | Should respond `OK` |
@@ -274,7 +243,6 @@ Connect your HC-05/08 Bluetooth module to the **TTL USB** as follows and using t
 ---
 
 ### Libraries required
-
 * jRandomAccessFile
 * jSerial
 * jFX
@@ -286,7 +254,6 @@ Connect your HC-05/08 Bluetooth module to the **TTL USB** as follows and using t
   
 
 ## License  
-
 MIT License – Free to use, modify, and distribute.
 
 [↑ Back to Table of Contents](#-table-of-contents)
