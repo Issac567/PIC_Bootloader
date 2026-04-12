@@ -1,5 +1,5 @@
 ## 📋 Table of Contents
-* [1. TTL USB (Serial COM)](#serial-com---ttl-usb)
+* [1. USB TTL (Serial COM)](#serial-com---ttl-usb)
 * [2. HC-05 Bluetooth (SPP)](#hc-05-ssp-bluetooth)
 * [3. HC-08 Bluetooth (BLE)](#hc-08-bluetooth-ble)
 * [4. DT-06 WIFI](#dt-06-wifi)
