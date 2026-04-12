@@ -34,7 +34,7 @@ Connect your HC-05/08 Bluetooth module to the **TTL USB** as follows and using t
 `Continue from Option`
 1. Should blink very slow.
 2. By default, HC-05 enters **AT command mode** at **38400 bps** and HC-08 enters at **9600**.
-3. Use the software Bootloader Uploader or https://www.deshide.com/News-detail_DSDTechTools.html
+3. Use the Bootloader Uploader software or https://www.deshide.com/News-detail_DSDTechTools.html
 4. Change the baud rate to 57600 using the software (Note: AT command mode always uses 38400 (HC-05) and 9600 (HC-08) and is not affected).
 
 ---
