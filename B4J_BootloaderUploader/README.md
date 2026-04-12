@@ -106,7 +106,7 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 8. Wait until the software reports **success**. Do not disconnect the device during flashing.
 
 ## Notes  
-- Make sure your **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
+- Make sure your HC-05 **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
 - Ensure the **PIC is powered properly** before attempting to flash firmware.
   
 [↑ Back to Table of Contents](#-table-of-contents)
@@ -160,7 +160,7 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 8. Wait until the software reports **success**. Do not disconnect the device during flashing.
 
 ## Notes  
-- Make sure your **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
+- Make sure your HC-08 **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
 - Ensure the **PIC is powered properly** before attempting to flash firmware.
   
 [↑ Back to Table of Contents](#-table-of-contents)
@@ -199,7 +199,7 @@ Connect your DT-06 WIFI module to the PIC microcontroller as follows:
 
 
 ## Notes  
-- Make sure your **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
+- Make sure your DT-06 **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
 - Ensure the **PIC is powered properly** before attempting to flash firmware.  
 
 [↑ Back to Table of Contents](#-table-of-contents)
