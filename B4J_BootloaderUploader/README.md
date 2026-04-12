@@ -134,7 +134,7 @@ This project provides software support for **HC-08 Bluetooth modules**, enabling
 - Set custom baud rates and device names  
 
 
-## 🔌 HC-08 to Microchip Diagram
+## 🔌 TESTTTTTTTTTTTTTTTTTTTt
 
 ![Wiring diagram](./Help/HC08toPIC.png)
 
@@ -177,6 +177,40 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 8. Wait until the software reports **success**. Do not disconnect the device during flashing.
 
 [↑ Back to Table of Contents](#-table-of-contents)
+
+## 🔌 TTL USB to Microchip Diagram
+
+![Wiring diagram](./Help/TTLtoPIC.jpg)
+
+## Hardware Setup  
+
+1. Connect your **TTL-to-USB adapter** to the PIC:  
+   - **TX of USB → RX of PIC**  
+   - **RX of USB → TX of PIC**  
+   - **GND → GND**  
+   - Power your PIC as required (usually 5V or 3.3V depending on your PIC).  
+2. The PIC must have a serial bootloader firmware pre-installed for uploading to work.  
+
+
+## How to Use  
+
+1. Open the **B4J Bootloader Uploader** software.  
+2. **Select the PIC device** you want to program.  
+3. **Select the COM port** that corresponds to your TTL-to-USB adapter.  
+4. Click **Load Firmware** to select the **firmware file** (.hex) you want to upload.  
+5. Press **Flash** to start the programming process.  
+6. Wait until the software reports **success**. Do not disconnect the device during flashing.  
+
+
+## Notes  
+
+- Make sure your **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
+- Ensure the **PIC is powered properly** before attempting to flash firmware.  
+- This uploader works via **serial connection only**, using TTL-to-USB.  
+
+[↑ Back to Table of Contents](#-table-of-contents)
+
+---
 
 ---
 
