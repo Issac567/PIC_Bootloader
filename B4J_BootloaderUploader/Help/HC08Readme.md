@@ -1,7 +1,7 @@
 # HC-08 Bluetooth BLE
 This project provides software support for **HC-08 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth BLE with Bleak library.
 
-> **Note:** This software communicates via **serial COM ports**. It requires a properly connected **HC-08 Bluetooth adapter** to the PIC target device.
+> **Note:** This software communicates via Bluetooth to serial COM ports to PIC. It requires a properly connected **HC-08 Bluetooth adapter** to the PIC target device.
 
 ---
 
