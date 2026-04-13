@@ -12,7 +12,7 @@ This project provides software support for **DT-06 WIFI modules**, enabling easy
 
 
 ## Hardware Setup  
-Connect your DT-06 WIFI module to the PIC microcontroller as follows:
+Connect your `DT-06` WIFI module to the PIC microcontroller as follows:
 
 - **TX of DT-06 → RX of PIC**  
 - **RX of DT-06 → TX of PIC**  
@@ -22,7 +22,7 @@ Connect your DT-06 WIFI module to the PIC microcontroller as follows:
 
 ### Requirements
 - Power your PIC microcontroller as required (**typically 5V or 3.3V** depending on the device).  
-- Ensure a **common ground** between DT-06 and PIC.  
+- Ensure a **common ground** between `DT-06` and PIC.  
 - The PIC must have a **serial bootloader firmware pre-installed** for uploading to work.
 
   
@@ -44,5 +44,5 @@ Connect your DT-06 WIFI module to the PIC microcontroller as follows:
 
 
 ## Notes  
-- Make sure your DT-06 **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
+- Make sure your `DT-06` **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
 - Ensure the **PIC is powered properly** before attempting to flash firmware.  
