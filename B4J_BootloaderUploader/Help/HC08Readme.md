@@ -9,7 +9,7 @@ This project provides software support for **HC-08 Bluetooth modules**, enabling
 ![Wiring diagram](HC08toPIC.png)
 
 ## Hardware Setup
-Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
+Connect your `HC-08` Bluetooth module to the PIC microcontroller as follows:
 
 - **TX of HC-08 → RX of PIC**  
 - **RX of HC-08 → TX of PIC**  
@@ -17,13 +17,13 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 - **VCC → 3.0V to 3.6** (depending on your HC-08 module)
 - **EN** pin - Do not connect to VCC. It puts it in AT Mode on mine.
   
-> ⚠️ Ensure voltage compatibility. Most HC-08 breakout boards accept **5V on VCC**, but logic levels are typically **3.3V**.
+> ⚠️ Ensure voltage compatibility. Most `HC-08` breakout boards accept **5V on VCC**, but logic levels are typically **3.3V**.
 
 ---
 
 ### Requirements
 - Power your PIC microcontroller as required (**typically 5V or 3.3V** depending on the device).  
-- Ensure a **common ground** between HC-08 and PIC.  
+- Ensure a **common ground** between `HC-08` and PIC.  
 - The PIC must have a **serial bootloader firmware pre-installed** for uploading to work.
 
 ---
@@ -31,7 +31,7 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 ### Notes
 - TX/RX lines must be **crossed** (TX → RX, RX → TX).  
 - HC-08 communicates using **UART (serial)** over Bluetooth BLE.  
-- No USB-to-TTL adapter is required for normal operation — communication is **wireless via Bluetooth**.
+- No `USB-to-TTL` adapter is required for normal operation — communication is **wireless via Bluetooth**.
 
 ---
 
@@ -47,6 +47,6 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 9. Wait until the software reports **success**. Do not disconnect the device during flashing.
 
 ## Notes  
-- Make sure your HC-08 **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
+- Make sure your `HC-08` **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
 - Ensure the **PIC is powered properly** before attempting to flash firmware.  
 
