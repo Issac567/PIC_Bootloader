@@ -132,7 +132,7 @@ Connect your `HC-08` Bluetooth module to the PIC microcontroller as follows:
 
 ### Notes
 - TX/RX lines must be **crossed** (TX → RX, RX → TX).  
-- HC-08 communicates using **UART (serial)** over Bluetooth BLE.  
+- `HC-08` communicates using **UART (serial)** over Bluetooth BLE.  
 - No `USB-to-TTL` adapter is required for normal operation — communication is **wireless via Bluetooth**.
 
 
