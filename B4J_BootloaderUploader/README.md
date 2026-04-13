@@ -3,7 +3,7 @@
 * [2. HC-05 Bluetooth (SPP)](#hc-05-bluetooth-ssp)
 * [3. HC-08 Bluetooth (BLE)](#hc-08-bluetooth-ble)
 * [4. DT-06 WIFI (TCP/IP)](#dt-06-wifi-tcpip)
-* [5. AT Command Mode (3rd Party)](#hc-05hc-08-at-command-mode)
+* [5. AT Command Mode](#hc-05hc-08-at-command-mode)
 * [Libraries & License](#libraries-required)
 
 ---
