@@ -31,7 +31,7 @@ Connect your HC-05/08 Bluetooth module to the **TTL USB** as follows:
 1. **EN** pin not needed.  Hold Button Down.
 2. Power on the module and release button after 3 seconds.
 
-`Continue from Option`
+`Continue from OPTION 1 or 2`
 1. Should blink very slow.
 2. By default, HC-05 enters **AT command mode** at **38400 bps** and HC-08 enters at **9600**.
 3. Use the Bootloader Uploader software or https://www.deshide.com/News-detail_DSDTechTools.html
