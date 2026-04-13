@@ -39,7 +39,7 @@ This software is a **simple and reliable PIC microcontroller firmware uploader**
 ## Notes  
 - Make sure your **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
 - Ensure the **PIC is powered properly** before attempting to flash firmware.  
-- This uploader works via **serial connection only**, using TTL-to-USB.  
+- This uploader works via **serial connection only**, using `TTL-to-USB`.  
 
 [↑ Back to Table of Contents](#-table-of-contents)
 
@@ -57,7 +57,7 @@ This project provides software support for **HC-05 Bluetooth modules**, enabling
 
 
 ## Hardware Setup
-Connect your HC-05 Bluetooth module to the PIC microcontroller as follows:
+Connect your `HC-05` Bluetooth module to the PIC microcontroller as follows:
 
 - **TX of HC-05 → RX of PIC**  
 - **RX of HC-05 → TX of PIC**  
@@ -65,14 +65,14 @@ Connect your HC-05 Bluetooth module to the PIC microcontroller as follows:
 - **VCC → 3.3V or 5V** (depending on your HC-05 module)
 - **EN** pin - Do not connect to VCC. It puts it in AT Mode on mine.
 - 
-> **Note:** If your OS does not automatically detect the HC-05, use the B4J Uploader’s search function. Select the device and connect — Windows will then prompt that a new Bluetooth device is found. Go to the prompt and enter the password to complete pairing.”
+> **Note:** If your OS does not automatically detect the `HC-05`, use the B4J Uploader’s search function. Select the device and connect — Windows will then prompt that a new Bluetooth device is found. Go to the prompt and enter the password to complete pairing.”
  
-> ⚠️ Ensure voltage compatibility. Most HC-05 breakout boards accept **5V on VCC**, but logic levels are typically **3.3V**.
+> ⚠️ Ensure voltage compatibility. Most `HC-05` breakout boards accept **5V on VCC**, but logic levels are typically **3.3V**.
 
 
 ### Requirements
 - Power your PIC microcontroller as required (**typically 5V or 3.3V** depending on the device).  
-- Ensure a **common ground** between HC-05 and PIC.  
+- Ensure a **common ground** between `HC-05` and PIC.  
 - The PIC must have a **serial bootloader firmware pre-installed** for uploading to work.
 - HC-05 must be paired with your PC first in the operating system’s Bluetooth settings
 Default PIN is usually 1234 or 0000
@@ -94,7 +94,7 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 8. Wait until the software reports **success**. Do not disconnect the device during flashing.
 
 ## Notes  
-- Make sure your HC-05 **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
+- Make sure your `HC-05` **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
 - Ensure the **PIC is powered properly** before attempting to flash firmware.
   
 [↑ Back to Table of Contents](#-table-of-contents)
@@ -113,7 +113,7 @@ This project provides software support for **HC-08 Bluetooth modules**, enabling
 
 
 ## Hardware Setup
-Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
+Connect your `HC-08` Bluetooth module to the PIC microcontroller as follows:
 
 - **TX of HC-08 → RX of PIC**  
 - **RX of HC-08 → TX of PIC**  
@@ -121,12 +121,12 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 - **VCC → 3.0V to 3.6** (depending on your HC-08 module)
 - **EN** pin - Do not connect to VCC. It puts it in AT Mode on mine.
   
-> ⚠️ Ensure voltage compatibility. Most HC-08 breakout boards accept **5V on VCC**, but logic levels are typically **3.3V**.
+> ⚠️ Ensure voltage compatibility. Most `HC-08` breakout boards accept **5V on VCC**, but logic levels are typically **3.3V**.
 
 
 ### Requirements
 - Power your PIC microcontroller as required (**typically 5V or 3.3V** depending on the device).  
-- Ensure a **common ground** between HC-08 and PIC.  
+- Ensure a **common ground** between `HC-08` and PIC.  
 - The PIC must have a **serial bootloader firmware pre-installed** for uploading to work.
 
 
@@ -148,7 +148,7 @@ Connect your HC-08 Bluetooth module to the PIC microcontroller as follows:
 
 
 ## Notes  
-- Make sure your HC-08 **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
+- Make sure your `HC-08` **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
 - Ensure the **PIC is powered properly** before attempting to flash firmware.
   
 [↑ Back to Table of Contents](#-table-of-contents)
@@ -180,13 +180,13 @@ Connect your DT-06 WIFI module to the PIC microcontroller as follows:
 
 ### Requirements
 - Power your PIC microcontroller as required (**typically 5V or 3.3V** depending on the device).  
-- Ensure a **common ground** between DT-06 and PIC.  
+- Ensure a **common ground** between `DT-06` and PIC.  
 - The PIC must have a **serial bootloader firmware pre-installed** for uploading to work.
 
   
 ### Notes
 - TX/RX lines must be **crossed** (TX → RX, RX → TX).  
-- DT-06 communicates using **UART (serial)** over WIFI.  
+- `DT-06` communicates using **UART (serial)** over WIFI.  
 - No USB-to-TTL adapter is required for normal operation — communication is **wireless via WIFI**.
 
 
@@ -202,7 +202,7 @@ Connect your DT-06 WIFI module to the PIC microcontroller as follows:
 
 
 ## Notes  
-- Make sure your DT-06 **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
+- Make sure your `DT-06` **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
 - Ensure the **PIC is powered properly** before attempting to flash firmware.  
 
 [↑ Back to Table of Contents](#-table-of-contents)
@@ -212,7 +212,7 @@ Connect your DT-06 WIFI module to the PIC microcontroller as follows:
 # HC-05/HC-08 AT Command Mode
 > Bootloader Uploader v8.04 now supports AT Command Mode.
 
-You need to set HC05/HC08 baud to 57600 with Bootloader Uploader, alternative method online or https://www.deshide.com/News-detail_DSDTechTools.html .  The **Command Mode** allows you to configure the HC-05 or HC-08 Bluetooth module, including changing:
+You need to set `HC05/HC08` baud to 57600 with Bootloader Uploader, alternative method online or https://www.deshide.com/News-detail_DSDTechTools.html .  The **Command Mode** allows you to configure the `HC-05` or HC-08 Bluetooth module, including changing:
 
 - Baud rate  
 - Password  
@@ -225,7 +225,7 @@ You need to set HC05/HC08 baud to 57600 with Bootloader Uploader, alternative me
 
 
 ### Hardware Setup
-Connect your HC-05/08 Bluetooth module to the **TTL USB** as follows:
+Connect your `HC-05/08` Bluetooth module to the **TTL USB** as follows:
 
 - **TX of HC-05/08 → RX of TTL USB**  
 - **RX of HC-05/08 → TX of TTL USB**  
@@ -238,7 +238,7 @@ Connect your HC-05/08 Bluetooth module to the **TTL USB** as follows:
 `2 Ways to connect`
 
 `OPTION 1`
-1. Connect the **EN** pin of HC-05/08 to **VCC** (Mine was 3.3v).
+1. Connect the **EN** pin of `HC-05/08` to **VCC** (Mine was 3.3v).
 2. Power on the module.
    
 `OPTION 2`
@@ -247,9 +247,9 @@ Connect your HC-05/08 Bluetooth module to the **TTL USB** as follows:
 
 `Continue from OPTION 1 or 2`
 1. Should blink very slow.
-2. By default, HC-05 enters **AT command mode** at **38400 bps** and HC-08 enters at **9600**.
+2. By default, `HC-05` enters **AT command mode** at **38400 bps** and `HC-08` enters at **9600**.
 3. Use the Bootloader Uploader or software https://www.deshide.com/News-detail_DSDTechTools.html
-4. Change the baud rate to 57600 using the software (Note: AT command mode always uses 38400 (HC-05) and 9600 (HC-08) and is not affected).
+4. Change the baud rate to 57600 using the software (Note: AT command mode always uses 38400 `(HC-05)` and 9600 `(HC-08)` and is not affected).
 
 
 ### Common AT Commands
