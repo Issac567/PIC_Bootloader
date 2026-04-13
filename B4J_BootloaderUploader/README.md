@@ -81,7 +81,7 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 ### Notes
 - TX/RX lines must be **crossed** (TX → RX, RX → TX).  
 - HC-05 communicates using **UART (serial)** over Bluetooth SPP.  
-- No USB-to-TTL adapter is required for normal operation — communication is **wireless via Bluetooth**.
+- No `USB-to-TTL` adapter is required for normal operation — communication is **wireless via Bluetooth**.
 
 ## How to Use  
 1. Open the **B4J Bootloader Uploader** software.  
@@ -133,7 +133,7 @@ Connect your `HC-08` Bluetooth module to the PIC microcontroller as follows:
 ### Notes
 - TX/RX lines must be **crossed** (TX → RX, RX → TX).  
 - HC-08 communicates using **UART (serial)** over Bluetooth BLE.  
-- No USB-to-TTL adapter is required for normal operation — communication is **wireless via Bluetooth**.
+- No `USB-to-TTL` adapter is required for normal operation — communication is **wireless via Bluetooth**.
 
 
 ## How to Use  
