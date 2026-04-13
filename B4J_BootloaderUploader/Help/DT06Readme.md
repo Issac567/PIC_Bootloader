@@ -28,7 +28,7 @@ Connect your `DT-06` WIFI module to the PIC microcontroller as follows:
   
 ### Notes
 - TX/RX lines must be **crossed** (TX → RX, RX → TX).  
-- DT-06 communicates using **UART (serial)** over WIFI.  
+- `DT-06` communicates using **UART (serial)** over WIFI.  
 - No USB-to-TTL adapter is required for normal operation — communication is **wireless via WIFI**.
 
 
