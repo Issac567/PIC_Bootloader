@@ -49,7 +49,7 @@ This software is a **simple and reliable PIC microcontroller firmware uploader**
 This project provides software support for **HC-05 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth using the **Serial Port Profile (SPP)**.
 
 
-> **Note:** This software communicates via **serial COM ports**. It requires a properly connected **HC-05 Bluetooth adapter** to the PIC target device.
+> **Note:** This software communicates via Bluetooth to serial COM ports to PIC. It requires a properly connected **HC-05 Bluetooth adapter** to the PIC target device.
 
 
 ## 🔌 HC-05 to Microchip Diagram
@@ -105,7 +105,7 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 This project provides software support for **HC-08 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth BLE with Bleak library.
 
 
-> **Note:** This software communicates via **serial COM ports**. It requires a properly connected **HC-08 Bluetooth adapter** to the PIC target device.
+> **Note:** This software communicates via  Bluetooth to serial COM ports to PIC. It requires a properly connected **HC-08 Bluetooth adapter** to the PIC target device.
 
 
 ## 🔌 HC-08 to Microchip Diagram
@@ -159,7 +159,7 @@ Connect your `HC-08` Bluetooth module to the PIC microcontroller as follows:
 This project provides software support for **DT-06 WIFI modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over TCP/IP.
 
 
-> **Note:** This software communicates via **serial COM ports**. It requires a properly connected **DT-06 WIFI adapter** to the PIC target device.
+> **Note:** This software communicates via WIFI to serial COM ports to PIC. It requires a properly connected **DT-06 WIFI adapter** to the PIC target device.
 
 - make sure to change baud to `57600` by using web browser at `192.168.4.1` and use port `9000`.
 - connect to WIFI in OS settings first, then use web browser.
