@@ -22,7 +22,7 @@ This software is a **simple and reliable PIC microcontroller firmware uploader**
 1. Open the **B4J Bootloader Uploader** software.
 2. Select **TTL USB Serial** Tab 
 3. **Select the PIC device** you want to program.  
-4. **Select the COM port** that corresponds to your TTL-to-USB adapter.  
+4. **Select the COM port** that corresponds to your `TTL-to-USB` adapter.  
 5. Click **Load Firmware** to select the **firmware file** (.hex) you want to upload.  
 6. Press **Flash** to start the programming process.  
 7. Wait until the software reports **success**. Do not disconnect the device during flashing.  
@@ -32,5 +32,5 @@ This software is a **simple and reliable PIC microcontroller firmware uploader**
 ## Notes  
 - Make sure your **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
 - Ensure the **PIC is powered properly** before attempting to flash firmware.  
-- This uploader works via **serial connection only**, using TTL-to-USB.  
+- This uploader works via **serial connection only**, using `TTL-to-USB`.  
 
