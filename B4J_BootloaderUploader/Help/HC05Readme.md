@@ -9,7 +9,7 @@ This project provides software support for **HC-05 Bluetooth modules**, enabling
 ![Wiring diagram](HC05toPIC.png)
 
 ## Hardware Setup
-Connect your HC-05 Bluetooth module to the PIC microcontroller as follows:
+Connect your `HC-05` Bluetooth module to the PIC microcontroller as follows:
 
 - **TX of HC-05 → RX of PIC**  
 - **RX of HC-05 → TX of PIC**  
@@ -17,9 +17,9 @@ Connect your HC-05 Bluetooth module to the PIC microcontroller as follows:
 - **VCC → 3.3V or 5V** (depending on your HC-05 module)
 - **EN** pin - Do not connect to VCC. It puts it in AT Mode on mine.
   
-> **Note:** If your OS does not automatically detect the HC-05, use the B4J Uploader’s search function. Select the device and connect — Windows will then prompt that a new Bluetooth device is found. Go to the prompt and enter the password to complete pairing.”
+> **Note:** If your OS does not automatically detect the `HC-05`, use the B4J Uploader’s search function. Select the device and connect — Windows will then prompt that a new Bluetooth device is found. Go to the prompt and enter the password to complete pairing.”
  
-> ⚠️ Ensure voltage compatibility. Most HC-05 breakout boards accept **5V on VCC**, but logic levels are typically **3.3V**.
+> ⚠️ Ensure voltage compatibility. Most `HC-05` breakout boards accept **5V on VCC**, but logic levels are typically **3.3V**.
 
 ---
 
@@ -27,7 +27,7 @@ Connect your HC-05 Bluetooth module to the PIC microcontroller as follows:
 - Power your PIC microcontroller as required (**typically 5V or 3.3V** depending on the device).  
 - Ensure a **common ground** between HC-05 and PIC.  
 - The PIC must have a **serial bootloader firmware pre-installed** for uploading to work.
-- HC-05 must be paired with your PC first in the operating system’s Bluetooth settings
+- `HC-05` must be paired with your PC first in the operating system’s Bluetooth settings
 Default PIN is usually 1234 or 0000
 B4J does not show a password prompt — pairing is handled entirely by the OS
 
@@ -36,7 +36,7 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 ### Notes
 - TX/RX lines must be **crossed** (TX → RX, RX → TX).  
 - HC-05 communicates using **UART (serial)** over Bluetooth SPP.  
-- No USB-to-TTL adapter is required for normal operation — communication is **wireless via Bluetooth**.
+- No `USB-to-TTL` adapter is required for normal operation — communication is **wireless via Bluetooth**.
 
 ---
 
@@ -52,5 +52,5 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 9. Wait until the software reports **success**. Do not disconnect the device during flashing.
 
 ## Notes  
-- Make sure your HC-05 **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
+- Make sure your `HC-05` **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
 - Ensure the **PIC is powered properly** before attempting to flash firmware.  
