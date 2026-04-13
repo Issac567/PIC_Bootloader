@@ -161,7 +161,7 @@ This project provides software support for **DT-06 WIFI modules**, enabling easy
 
 > **Note:** This software communicates via **serial COM ports**. It requires a properly connected **DT-06 WIFI adapter** to the PIC target device.
 
-- make sure to change baud to 57600 by using web browser at 192.168.4.1 and use port 9000.
+- make sure to change baud to `57600` by using web browser at `192.168.4.1` and use port `9000`.
 - connect to WIFI in OS settings first, then use web browser.
 
 
@@ -170,7 +170,7 @@ This project provides software support for **DT-06 WIFI modules**, enabling easy
 
 
 ## Hardware Setup  
-Connect your DT-06 WIFI module to the PIC microcontroller as follows:
+Connect your `DT-06` WIFI module to the PIC microcontroller as follows:
 
 - **TX of DT-06 → RX of PIC**  
 - **RX of DT-06 → TX of PIC**  
@@ -212,7 +212,7 @@ Connect your DT-06 WIFI module to the PIC microcontroller as follows:
 # HC-05/HC-08 AT Command Mode
 > Bootloader Uploader v8.04 now supports AT Command Mode.
 
-You need to set `HC05/HC08` baud to 57600 with Bootloader Uploader, alternative method online or https://www.deshide.com/News-detail_DSDTechTools.html .  The **Command Mode** allows you to configure the `HC-05` or HC-08 Bluetooth module, including changing:
+You need to set `HC05/HC08` baud to `57600` with Bootloader Uploader, alternative method online or https://www.deshide.com/News-detail_DSDTechTools.html .  The **Command Mode** allows you to configure the `HC-05` or HC-08 Bluetooth module, including changing:
 
 - Baud rate  
 - Password  
@@ -249,7 +249,7 @@ Connect your `HC-05/08` Bluetooth module to the **TTL USB** as follows:
 1. Should blink very slow.
 2. By default, `HC-05` enters **AT command mode** at **38400 bps** and `HC-08` enters at **9600**.
 3. Use the Bootloader Uploader or software https://www.deshide.com/News-detail_DSDTechTools.html
-4. Change the baud rate to 57600 using the software (Note: AT command mode always uses 38400 `(HC-05)` and 9600 `(HC-08)` and is not affected).
+4. Change the baud rate to `57600` using the software (Note: AT command mode always uses 38400 `(HC-05)` and 9600 `(HC-08)` and is not affected).
 
 
 ### Common AT Commands
