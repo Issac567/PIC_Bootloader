@@ -160,10 +160,30 @@ This project provides software support for **DT-06 WIFI modules**, enabling easy
 
 > **Note:** This software communicates via WIFI to serial COM ports to PIC. It requires a properly connected **DT-06 WIFI adapter** to the PIC target device.
 
-- Connect to WIFI in OS settings first, then use web browser.
-- Connect to this access point with a computer or mobile device. Open a browser and in the address bar type http://192.168.4.1 and press enter. You will see the configuration menu of the WiFi module. First, configure the communication between the WiFi module and PIC. Navigate to **MODULE** > Serial. Set BaudRate to `57600`. Leave the remaining fields at their defaults `(8, NONE, 1, 50)`. Click Save.
-- Next, configure protocol, address, and port on which AIS data will be broadcasted. Navigate to **MODULE** > Networks. In the field Socket Type at the top of the page, select UDP Broadcast from the drop down. Further down the page, in the fields below the blue section title **TCP CLient**, enter the IP address `192.168.4.1` and the port number `9000`. Click Save. 
+## **Corrected DT-06 Configuration Guide**
 
+**1. Establish Connection**
+* Connect to the DT-06 WiFi in your OS settings (usually named `DT-06_XXXXXX`).
+* Open a browser and type `http://192.168.4.1` into the address bar.
+
+**2. Configure Serial-to-PIC Communication**
+* Navigate to **MODULE** > **Serial**.
+* Set **BaudRate** to `57600`.
+* Leave remaining fields at defaults: `8, NONE, 1, 50`.
+* **Click Save.**
+
+**3. Find Your Target IP (B4J Computer)**
+* While connected to the DT-06 WiFi, open a **Command Prompt** (cmd) on your PC.
+* Type `ipconfig` and press Enter.
+* Look for the **IPv4 Address** under "Wireless LAN adapter Wi-Fi."
+* **Note:** This is usually `192.168.4.2`.
+
+**4. Configure Network Protocol**
+* Navigate to **MODULE** > **Networks**.
+* **Socket Type:** Select `TCP Client` from the dropdown.
+* **TCP Client IP:** Enter the PC IP found in Step 3 (e.g., `192.168.4.2`).
+* **TCP Client Port:** Enter `9000`.
+* **Click Save.** *Note: Ensure your B4J ServerSocket is initialized to Port 9000.*
 
 ## 🔌 DT-06 to Microchip Diagram
 ![Wiring diagram](./Help/WIFItoPIC.jpg)
