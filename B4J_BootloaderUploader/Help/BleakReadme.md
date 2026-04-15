@@ -10,4 +10,4 @@
     ```bash
     .\python.exe -m pip install bleak
     ```
-4. In B4J, configure path to  `C:\Program Files\Anywhere Software\B4J\Libraries\Python\python\python.exe`
+4. In **B4J**, configure path to  `C:\Program Files\Anywhere Software\B4J\Libraries\Python\python\python.exe`
