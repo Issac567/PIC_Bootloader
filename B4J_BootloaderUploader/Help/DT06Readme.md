@@ -4,7 +4,8 @@ This project provides software support for **DT-06 WIFI modules**, enabling easy
 > **Note:** This software communicates via WIFI to serial COM ports to PIC. It requires a properly connected **DT-06 WIFI adapter** to the PIC target device.
 
 - Connect to WIFI in OS settings first, then use web browser.
-- Connect to this access point with a computer or mobile device. Open a browser and in the address bar type http://192.168.4.1 and press enter. You will see the configuration menu of the WiFi module. First, configure the communication between the WiFi module and PIC. Navigate to **MODULE** > Serial. Set BaudRate to `57600`. Leave the remaining fields at their defaults `(8, NONE, 1, 50)`. Click Save. 
+- Connect to this access point with a computer or mobile device. Open a browser and in the address bar type http://192.168.4.1 and press enter. You will see the configuration menu of the WiFi module. First, configure the communication between the WiFi module and PIC. Navigate to **MODULE** > Serial. Set BaudRate to `57600`. Leave the remaining fields at their defaults `(8, NONE, 1, 50)`. Click Save.
+- - Next, configure protocol, address, and port on which AIS data will be broadcasted. Navigate to **MODULE** > Networks. In the field Socket Type at the top of the page, select UDP Broadcast from the drop down. Further down the page, in the fields below the blue section title **TCP CLient**, enter the IP address `192.168.4.1` and the port number `9000`. Click Save. 
 
 ## 🔌 DT-06 to Microchip Diagram
 ![Wiring diagram](WIFItoPIC.jpg)
