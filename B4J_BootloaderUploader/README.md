@@ -172,17 +172,10 @@ This project provides software support for **DT-06 WIFI modules**, enabling easy
 * Leave remaining fields at defaults: `8, NONE, 1, 50`.
 * **Click Save.**
 
-**3. Find Your Target IP (B4J Computer)**
-* While connected to the DT-06 WiFi, open a **Command Prompt** (cmd) on your PC.
-* Type `ipconfig` and press Enter.
-* Look for the **IPv4 Address** under "Wireless LAN adapter Wi-Fi."
-* **Note:** This is usually `192.168.4.2`.
-
-**4. Configure Network Protocol**
+**3. Configure Network Protocol**
 * Navigate to **MODULE** > **Networks**.
-* **Socket Type:** Select `TCP Client` from the dropdown.
-* **TCP Client IP:** Enter the PC IP found in Step 3 (e.g., `192.168.4.2`).
-* **TCP Client Port:** Enter `9000`.
+* **Socket Type:** Select `TCP Server` from the dropdown.
+* **Port:** Enter `9000`.
 * **Click Save.** *Note: Ensure your B4J ServerSocket is initialized to Port 9000.*
 
 ## 🔌 DT-06 to Microchip Diagram
