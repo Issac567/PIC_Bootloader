@@ -4,7 +4,7 @@ This project provides software support for **DT-06 WIFI modules**, enabling easy
 > **Note:** This software communicates via WIFI to serial COM ports to PIC. It requires a properly connected **DT-06 WIFI adapter** to the PIC target device.
 
 - Connect to WIFI in OS settings first, then use web browser.
-- Connect to this access point with a computer or mobile device. Open a browser and in the address bar type http://192.168.4.1 and press enter. You will see the configuration menu of the WiFi module. First, configure the communication between the WiFi module and PIC. Navigate to MODULE > Serial. Set BaudRate to 57600. Leave the remaining fields at their defaults (8, NONE, 1, 50). Click Save. 
+- Connect to this access point with a computer or mobile device. Open a browser and in the address bar type http://192.168.4.1 and press enter. You will see the configuration menu of the WiFi module. First, configure the communication between the WiFi module and PIC. Navigate to **MODULE** > Serial. Set BaudRate to `57600`. Leave the remaining fields at their defaults `(8, NONE, 1, 50)`. Click Save. 
 
 ## 🔌 DT-06 to Microchip Diagram
 ![Wiring diagram](WIFItoPIC.jpg)
