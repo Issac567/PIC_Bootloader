@@ -5,7 +5,7 @@ This project provides software support for **HM-10 Bluetooth modules**, enabling
 
 ---
 
-## 🔌 HC-08 to Microchip Diagram
+## 🔌 HM-10 to Microchip Diagram
 ![Wiring diagram](HC08toPIC.png)
 
 ## Hardware Setup
@@ -14,7 +14,7 @@ Connect your `HC-08` Bluetooth module to the PIC microcontroller as follows:
 - **TX of HM-10 → RX of PIC**  
 - **RX of HM-10 → TX of PIC**  
 - **GND → GND**  
-- **VCC → 3.0V to 3.6** (depending on your HC-08 module)
+- **VCC → 3.0V to 3.6** (depending on your HM-10 module)
 - **EN** pin - Do not connect to VCC. It puts it in AT Mode on mine.
   
 > ⚠️ Ensure voltage compatibility. Most `HC-08` breakout boards accept **5V on VCC**, but logic levels are typically **3.3V**.
@@ -30,7 +30,7 @@ Connect your `HC-08` Bluetooth module to the PIC microcontroller as follows:
 
 ### Notes
 - TX/RX lines must be **crossed** (TX → RX, RX → TX).  
-- HC-08 communicates using **UART (serial)** over Bluetooth BLE.  
+- HM-10 communicates using **UART (serial)** over Bluetooth BLE.  
 - No `USB-to-TTL` adapter is required for normal operation — communication is **wireless via Bluetooth**.
 
 ---
