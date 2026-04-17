@@ -3,7 +3,7 @@
 * [2. HC-05 Bluetooth (SPP)](#hc-05-bluetooth-ssp)
 * [3. HC-08 Bluetooth (BLE)](#hc-08-bluetooth-ble)
 * [4. DT-06 WIFI (TCP/IP)](#dt-06-wifi-tcpip)
-* [5. AT Command Mode](#hc-05hc-08-at-command-mode)
+* [5. AT Command Mode](#hc-05hm-10-at-command-mode)
 * [Libraries & License](#libraries-required)
 
 ---
@@ -108,17 +108,17 @@ This project provides software support for **HC-08 Bluetooth modules**, enabling
 > **Note:** This software communicates via  Bluetooth to serial COM ports to PIC. It requires a properly connected **HC-08 Bluetooth adapter** to the PIC target device.
 
 
-## 🔌 HC-08 to Microchip Diagram
+## 🔌 HM-10 to Microchip Diagram
 ![Wiring diagram](./Help/HC08toPIC.png)
 
 
 ## Hardware Setup
 Connect your `HC-08` Bluetooth module to the PIC microcontroller as follows:
 
-- **TX of HC-08 → RX of PIC**  
-- **RX of HC-08 → TX of PIC**  
+- **TX of HM-10 → RX of PIC**  
+- **RX of HM-10→ TX of PIC**  
 - **GND → GND**  
-- **VCC → 3.0V to 3.6** (depending on your HC-08 module)
+- **VCC → 3.0V to 3.6** (depending on your HM-10 module)
 - **EN** pin - Do not connect to VCC. It puts it in AT Mode on mine.
   
 > ⚠️ Ensure voltage compatibility. Most `HC-08` breakout boards accept **5V on VCC**, but logic levels are typically **3.3V**.
@@ -126,20 +126,20 @@ Connect your `HC-08` Bluetooth module to the PIC microcontroller as follows:
 
 ### Requirements
 - Power your PIC microcontroller as required (**typically 5V or 3.3V** depending on the device).  
-- Ensure a **common ground** between `HC-08` and PIC.  
+- Ensure a **common ground** between `HM-10` and PIC.  
 - The PIC must have a **serial bootloader firmware pre-installed** for uploading to work.
 
 
 ### Notes
 - TX/RX lines must be **crossed** (TX → RX, RX → TX).  
-- `HC-08` communicates using **UART (serial)** over Bluetooth BLE.  
+- `HM-10` communicates using **UART (serial)** over Bluetooth BLE.  
 - No `USB-to-TTL` adapter is required for normal operation — communication is **wireless via Bluetooth**.
 
 
 ## How to Use  
 1. Open the **B4J Bootloader Uploader** software.  
 2. **Click Scan** and let it populate the list.
-3. **Select HC08** from the list and click **Connect**.
+3. **Select HM-10** from the list and click **Connect**.
 4. Wait for connection successful.
 5. **Select the PIC device** you want to program.
 6. Click **Load Firmware** to select the **firmware file** (.hex) you want to upload.  
@@ -148,7 +148,7 @@ Connect your `HC-08` Bluetooth module to the PIC microcontroller as follows:
 
 
 ## Notes  
-- Make sure your `HC-08` **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
+- Make sure your `HM-10` **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
 - Ensure the **PIC is powered properly** before attempting to flash firmware.
   
 [↑ Back to Table of Contents](#-table-of-contents)
