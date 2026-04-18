@@ -10,7 +10,7 @@ You need to set `HC05/HC08` baud to `57600` with Bootloader Uploader, alternativ
 
 
 ## 🔌 HC-05/HM-10 to TTL USB Diagram
-![Wiring diagram](/BTtoTTL.png)
+![Wiring diagram](BTtoTTL.png)
 
 
 ### Hardware Setup
