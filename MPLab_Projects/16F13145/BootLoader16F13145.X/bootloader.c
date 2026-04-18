@@ -1,11 +1,11 @@
 /*
  * File:   bootloader.c
- * Version: 3.10
+ * Version: 4.01
  * Author: Issac
  * Created on January 19, 2026, 2:50 PM
  * Family: 16F13145
  * PACKS: USE 1.29.444
- * Flash required power off MB102 power supply then flash. Turn MB102 on then flash again for MBLAB Snap
+ * Flash requires power off MB102 power supply then flash. Turn MB102 on then flash again with MBLAB Snap
  */
 
 
@@ -21,13 +21,13 @@
 #define FLASH_END 0x1FFF                    // Flash end address for 4-word block
 #define FLASH_ERASE_BLOCK 32                // Runtime can only do 32 word block erase max!
 #define FLASH_WRITE_BLOCK 32                // Can only do 32 word block write max with PIC 16F13145!
-#define MSG_MS_DELAY 150                      // (min 150 for BT latency) Standard pacing delay 
+#define MSG_MS_DELAY 150                    // (min 150 for BT latency) Standard pacing delay  
 
 #define LED_PIN   LATAbits.LATA4            // Use LAT for Output / Bootloader Led Status 
 #define LED_TRIS  TRISAbits.TRISA4          // Output PortB.4 pin
 
 uint16_t flash_packet[FLASH_WRITE_BLOCK];   // 32 words, 64 bytes total
-
+bool isBLE = false;                         // BLE Detection uses different verify_flash process
 
 //-------------------------------------------------------
 // INTERNAL OSCILLATOR CLK CONFIG
@@ -35,7 +35,7 @@ uint16_t flash_packet[FLASH_WRITE_BLOCK];   // 32 words, 64 bytes total
 void INTOSC_Init(void)
 {
     // Select HFINTOSC, no divider (NDIV = 1)
-    OSCCON1 = 0x60;   // NOSC = 110 (HFINTOSC), NDIV = 0000 (Ã·1)
+    OSCCON1 = 0x60;   // NOSC = 110 (HFINTOSC), NDIV = 0000 (÷1)
 
     // Set frequency to 32 MHz
     OSCFRQ = 0x06;    // HFFRQ = 110 ? 32 MHz
@@ -137,9 +137,10 @@ void Flash_WriteBlock(uint16_t address, uint16_t *data)
 // VERIFY FLASH DATA
 //-------------------------------------------------------
 // Verify Flash is performed after Flash Write is completed
-void Verify_Flash(void)
+void Flash_Verify(void)
 {
     uint16_t addr;
+    uint8_t ble_counter = 0;
     
     // Send to host
     UART_TxString("<StartFlashVerify>");
@@ -161,6 +162,20 @@ void Verify_Flash(void)
             // eg. 0x3FFF = FF first then 3F second (B4J binary is backwards!)
             UART_Tx(packet[i] & 0xFF);              // First Byte (LSB)
             UART_Tx(packet[i] >> 8);                // Second Byte (MSB) Shift upper to lower
+            
+            // BLE can only send MTU Limits usually 20 bytes per session
+            if (isBLE) 
+            {
+                ble_counter += 2;
+        
+                // 2. Every 20 bytes, we must pause for the HM-10 radio
+                if (ble_counter >= 20) 
+                {
+                    // Wait for the HM-10 to clear its internal UART-to-BLE buffer
+                    __delay_ms(15);         // Important to keep it min 15 ms! BLE Cant handle less then that!
+                    ble_counter = 0;
+                }
+            }
         }
 
         __delay_ms(1);                              // tested 1 ms ok!  as long below first delay is there!
@@ -292,7 +307,7 @@ void DoFirmwareUpdate(void)
                 UART_TxString("<EndFlashWrite>");
                 __delay_ms(MSG_MS_DELAY);  
                  
-                Verify_Flash();
+                Flash_Verify();
                 
                 return;
             }
@@ -338,9 +353,12 @@ void WaitHandshake(void) {
         {
             curr = UART_Rx();
                 
-            // Expecting 0xAA and 0x55 from PC to enter Flash mode
+            // Expecting 0xAA/0xBB and 0x55 from PC to enter Flash mode
+            // All Devices except BLE
             if(prev == 0x55 && curr == 0xAA) 
-            {                           
+            {       
+                isBLE = false;
+                
                 // Send initialization acknowledgment before starting Erase and Flash update
                 UART_TxString("<InitReceived>");
                 __delay_ms(MSG_MS_DELAY);
@@ -350,7 +368,19 @@ void WaitHandshake(void) {
                 DoFirmwareUpdate();                     // Flash Write
                 return;
             }
-            
+            // Check for other devices BLE
+            else if (prev == 0x55 && curr == 0xBB)
+            {      
+                isBLE = true;
+
+                UART_TxString("<InitReceived>");
+                __delay_ms(MSG_MS_DELAY);
+                
+                Flash_EraseApplication();  
+                DoFirmwareUpdate();        
+                
+                return;          
+            }            
             // sliding window byte comparison
             prev = curr;
         }

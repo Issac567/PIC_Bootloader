@@ -1,6 +1,6 @@
 /*
  * File:   bootloader.c
- * Version: 3.10
+ * Version: 4.01
  * Author: Issac
  * Family: 24F256GA702
  * Created on January 19, 2026, 2:50 PM
@@ -43,12 +43,13 @@
 #define FLASH_WRITE_BLOCK    128                 // Write row size is 128 instructions (standard for GA702)
 
 #define TIMER2_COUNT        186                 // 3s 
-#define MSG_MS_DELAY 150                      // (min 150 for BT latency) Standard pacing delay 
+#define MSG_MS_DELAY 150                        // (min 150 for BT latency) Standard pacing delay 
 
 #define LED_PIN   LATBbits.LATB4                // Use LAT for Output / Bootloader Led Status 
 #define LED_TRIS  TRISBbits.TRISB4              // Output PortB.4 pin
 
 uint16_t flash_packet[FLASH_WRITE_BLOCK * 2];   // Array of 256 words
+bool isBLE = false;                             // BLE Detection uses different verify_flash process
 
 //-------------------------------------------------------
 // INTERNAL OSCILLATOR CLK CONFIG
@@ -144,10 +145,11 @@ void Flash_WriteBlock(uint32_t address, uint16_t *data)
 //-------------------------------------------------------
 // VERIFY FLASH DATA
 //-------------------------------------------------------
-void Verify_Flash(void)
+void Flash_Verify(void)
 {
     uint32_t addr;
-
+    uint8_t ble_counter = 0;
+    
     UART_TxString("<StartFlashVerify>");
     __delay_ms(MSG_MS_DELAY);
 
@@ -160,7 +162,7 @@ void Verify_Flash(void)
         {
             packet[i] = Flash_ReadInstruction(addr + (uint32_t)(i * 2));
         }
-
+        
         // Send block
         for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
         {
@@ -168,6 +170,20 @@ void Verify_Flash(void)
             UART_Tx((packet[i] >>  8) & 0xFF);
             UART_Tx((packet[i] >> 16) & 0xFF);
             UART_Tx((packet[i] >> 24) & 0xFF);
+            
+            // BLE can only send MTU Limits usually 20 bytes per session
+            if (isBLE) 
+            {
+                ble_counter += 4;
+        
+                // 2. Every 20 bytes, we must pause for the HM-10 radio
+                if (ble_counter >= 20) 
+                {
+                    // Wait for the HM-10 to clear its internal UART-to-BLE buffer
+                    __delay_ms(15);         // Important to keep it min 15 ms! BLE Cant handle less then that!
+                    ble_counter = 0;
+                }
+            }
         }
 
         __delay_ms(1);
@@ -289,7 +305,7 @@ void DoFirmwareUpdate(void)
                 UART_TxString("<EndFlashWrite>");
                 __delay_ms(MSG_MS_DELAY);
                 
-                Verify_Flash(); // This will also need to walk in 256-byte steps
+                Flash_Verify(); // This will also need to walk in 256-byte steps
                 return;
             }
         }
@@ -325,8 +341,11 @@ void WaitHandshake(void)
             // UART_Rx() should return U1RXREG on this chip
             curr = UART_Rx();     
             
+            // Check for SSP, TTL USB and WIFI uses this!
             if (prev == 0x55 && curr == 0xAA) 
-            {                                               
+            {         
+                isBLE = false;
+                
                 UART_TxString("<InitReceived>");
                 __delay_ms(MSG_MS_DELAY);
                 
@@ -334,6 +353,20 @@ void WaitHandshake(void)
                 DoFirmwareUpdate();        
                 
                 return; 
+                
+            }
+            // Check for other devices BLE
+            else if (prev == 0x55 && curr == 0xBB)
+            {      
+                isBLE = true;
+
+                UART_TxString("<InitReceived>");
+                __delay_ms(MSG_MS_DELAY);
+                
+                Flash_EraseApplication();  
+                DoFirmwareUpdate();        
+                
+                return;          
             }
             
             prev = curr;
@@ -352,7 +385,7 @@ void WaitHandshake(void)
 //-------------------------------------------------------
 // MAIN ENTRY FOR BOOTLOADER
 //-------------------------------------------------------
-int main(void) {    
+int main(void) {       
      // 1. Digital/Analog Configuration
     // The GA102 uses AD1PCFG. Setting a bit to 1 makes the pin DIGITAL.
     ANSA = 0x0000;   // all PORTA digital
@@ -366,7 +399,7 @@ int main(void) {
     // Ensure your INTOSC_Init sets the clock to 32MHz (Fcy = 16MHz)
     INTOSC_Init();                  
     UART_Init();                    // Init Hardware UART (PPS happens inside here) 
-     
+    
     WaitHandshake();                // wait for 0x55 0xAA (3s timeout then goto app))
     
     LED_PIN  = 0;                   // LED Off (bootloader led))

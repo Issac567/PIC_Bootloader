@@ -1,7 +1,7 @@
 /*
  * File:   uart.c
  * Author: issac
- * Version: 3.02
+ * Version: 3.03
  * Created on January 18, 2026, 12:13 PM
  * Family: 24FJ256GA702
  */
@@ -11,6 +11,8 @@
 #include <stdint.h>    // MUST HAVE: Defines "uint8_t"
 #include "uart.h"      // MUST HAVE: Connects the C file to your Header file
 
+#define FCY 16000000UL
+#include <libpic30.h>
 
 //-------------------------------------------------------
 // UART ROUTINE
@@ -34,7 +36,7 @@ void UART_Init(void)
 
     // 5. PPS Lock Sequence
     __builtin_write_OSCCONL(OSCCON | 0x40); // Set bit 6 to lock PPS
-
+     
     // 6. Baud rate (57600 @ 32MHz Fosc)
     // PIC24F Formula: U1BRG = (Fcy / (16 * Baud)) - 1
     // Fcy = Fosc / 2 = 16,000,000
@@ -94,8 +96,8 @@ uint8_t UART_Rx(void)
     if (U1STAbits.FERR)
     {
         // Read the bad data to clear the error state from the FIFO
-        //uint16_t dummy = U1RXREG;
-        (void)U1RXREG; // Read and intentionally discard the result
+        uint16_t dummy = U1RXREG;
+        //(void)U1RXREG; // Read and intentionally discard the result
     }
 
     // 3. Wait for data to be available in the FIFO

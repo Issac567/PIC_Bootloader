@@ -1,7 +1,7 @@
 /*
  * File:   application.c
  * Author: issac
- * Version: 3.10
+ * Version: 4.01
  * Family: 24F64GA102
  * Created on January 18, 2026, 12:13 PM
  * USE 1.10.375
@@ -139,8 +139,8 @@ int main(void)
         {
             b = UART_Rx();
             
-            // If the handshake byte (0x55 or 0xAA) is detected:
-            if (b == 0x55 || b == 0xAA)             
+            // If the handshake byte (0x55 or 0xAA or 0xBB) is detected:
+            if (b == 0x55 || b == 0xAA || b == 0xBB)           
             {
                 
                 //Timer2_Stop(); // Enable Demo

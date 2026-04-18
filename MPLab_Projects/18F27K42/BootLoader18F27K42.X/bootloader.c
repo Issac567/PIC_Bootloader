@@ -1,6 +1,6 @@
 /*
  * File:   bootloader.c
- * Version: 3.10
+ * Version: 4.01
  * Author: Issac
  * Created on January 19, 2026, 2:50 PM
  * Family: 18F27K42
@@ -14,19 +14,19 @@
 #include "config.h"
 #include "uart.h"
 
-// Note: B4J Expected bytes = 0x1FFFF - 0x00800 = 0x1F800 = 129,024 BYTES!
+// Note: B4J Expected bytes = 0x1FFFF - 0x00900 = 0x1F800 = 128,768 BYTES!
 
-#define FLASH_START 0x00800                 // Flash start address
+#define FLASH_START 0x00900                 // Flash start address (This did not have room at 0x00800 like others 18F)
 #define FLASH_END 0x1FFFF                   // Flash end address
 #define FLASH_ERASE_BLOCK 64                // Runtime can only do 64 Word erase max!
 #define FLASH_WRITE_BLOCK 64                // Can only do 64 Word block write max with PIC 18F24K47! 
-#define MSG_MS_DELAY 150                      // (min 150 for BT latency) Standard pacing delay  
+#define MSG_MS_DELAY 150                    // (min 150 for BT latency) Standard pacing delay   
 
 #define LED_PIN   LATBbits.LATB4            // Use LAT for Output / Bootloader Led Status 
 #define LED_TRIS  TRISBbits.TRISB4          // Output PortB.4 pin
 
 uint16_t flash_packet[FLASH_WRITE_BLOCK];   // 64words, 128 bytes total
-
+bool isBLE = false;                         // BLE Detection uses different verify_flash process
 
 //-------------------------------------------------------
 // INTERNAL OSCILLATOR CLK CONFIG
@@ -133,10 +133,11 @@ void Flash_WriteBlock(uint32_t address, uint16_t *data)
 //-------------------------------------------------------
 // VERIFY FLASH DATA
 //-------------------------------------------------------
-void Verify_Flash(void)
+void Flash_Verify(void)
 {
     uint32_t addr;
-
+    uint8_t ble_counter = 0;
+    
     // Marker sent to host
     UART_TxString("<StartFlashVerify>");
     __delay_ms(MSG_MS_DELAY);
@@ -160,6 +161,21 @@ void Verify_Flash(void)
         {
             UART_Tx(packet[i] & 0xFF);   // Low byte
             UART_Tx(packet[i] >> 8);     // High byte
+      
+            // BLE can only send MTU Limits usually 20 bytes per session
+            
+            if (isBLE) 
+            {
+                ble_counter += 2;
+        
+                // 2. Every 20 bytes, we must pause for the HM-10 radio
+                if (ble_counter >= 20) 
+                {
+                    // Wait for the HM-10 to clear its internal UART-to-BLE buffer
+                    __delay_ms(15);         // Important to keep it min 15 ms! BLE Cant handle less then that!
+                    ble_counter = 0;
+                }
+            }
         }
 
         __delay_ms(1);  // Proven safe pacing for UART/host
@@ -323,7 +339,7 @@ void DoFirmwareUpdate(void)
                 __delay_ms(MSG_MS_DELAY);
 
                 // Perform a CRC or checksum check to ensure data integrity
-                Verify_Flash();
+                Flash_Verify();
                 return;
             }
         }
@@ -364,9 +380,12 @@ void WaitHandshake(void)
         {
             curr = UART_Rx();     
             
-            // PATTERN MATCHING: 0x55 then 0xAA
+            // Expecting 0xAA/0xBB and 0x55 from PC to enter Flash mode
+            // All Devices except BLE  
             if (prev == 0x55 && curr == 0xAA) 
-            {                                               
+            {       
+                isBLE = false;
+                
                 UART_TxString("<InitReceived>");
                 __delay_ms(MSG_MS_DELAY);
                 
@@ -375,7 +394,19 @@ void WaitHandshake(void)
                 
                 return; 
             }
-            
+            // Check for other devices BLE
+            else if (prev == 0x55 && curr == 0xBB)
+            {      
+                isBLE = true;
+
+                UART_TxString("<InitReceived>");
+                __delay_ms(MSG_MS_DELAY);
+                
+                Flash_EraseApplication();  
+                DoFirmwareUpdate();        
+                
+                return;          
+            }               
             prev = curr;
             
             // OPTIONAL: If you want the 3-second window to "refresh" 
@@ -414,8 +445,8 @@ void main(void)
 
     LED_PIN  = 0;                   // LED Off (bootloader led))
     
-    asm("goto 0x800");              // If bootloader is not init from PC, then continue to application
+    asm("goto 0x900");              // If bootloader is not init from PC, then continue to application
     
     
-    // Good news is when bootloader goes to 0x0800 and is invalid, causes pic to reset and main repeated over and over till handshake and flash success!
+    // Good news is when bootloader goes to 0x0900 and is invalid, causes pic to reset and main repeated over and over till handshake and flash success!
 }

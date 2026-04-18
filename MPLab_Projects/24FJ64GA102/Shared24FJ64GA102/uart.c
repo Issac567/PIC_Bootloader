@@ -1,7 +1,7 @@
 /*
  * File:   uart.c
  * Author: issac
- * Version: 3.02
+ * Version: 3.03
  * Created on January 18, 2026, 12:13 PM
  * Family: 24FJ64GA102
  */
@@ -11,6 +11,8 @@
 #include <stdint.h>    // MUST HAVE: Defines "uint8_t"
 #include "uart.h"      // MUST HAVE: Connects the C file to your Header file
 
+#define FCY 16000000UL
+#include <libpic30.h>
 
 //-------------------------------------------------------
 // UART ROUTINE

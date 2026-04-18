@@ -11,6 +11,8 @@
 #include <stdint.h>    // MUST HAVE: Defines "uint8_t"
 #include "uart.h"      // MUST HAVE: Connects the C file to your Header file
 
+#define _XTAL_FREQ 64000000           // HFINTOSC = 64 MHz internal oscillator
+
 //-------------------------------------------------------
 // UART ROUTINE
 //-------------------------------------------------------

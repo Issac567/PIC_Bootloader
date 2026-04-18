@@ -1,7 +1,7 @@
 /*
  * File:   application.c
  * Author: issac
- * Version: 3.10
+ * Version: 4.01
  * Created on January 18, 2026, 12:13 PM
  * Family: 16F18857
  * PACKS: USE 1.29.444
@@ -140,7 +140,8 @@ void main(void) {
         if (PIR3bits.RCIF)              // PIR1bits.RCIF = 1 ? at least one byte in RCREG
         {
             b = UART_Rx();
-            if (b == 0x55 || b == 0xAA)  // This is Handshake byte. In application 0xAA is not needed.  It will reboot then 0x55 and 0xAA will be detected
+            // If the handshake byte (0x55 or 0xAA or 0xBB) is detected:
+            if (b == 0x55 || b == 0xAA || b == 0xBB)
             {
                 //Timer2_Stop();        // Enable Demo For ISR Test
                 

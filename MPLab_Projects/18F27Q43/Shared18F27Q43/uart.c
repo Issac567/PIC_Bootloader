@@ -1,7 +1,7 @@
 /*
  * File:   uart.c
  * Author: issac
- * Version: 3.01
+ * Version: 3.04
  * Created on January 18, 2026, 12:13 PM
  * Family: 18F27Q43
  */
@@ -11,6 +11,7 @@
 #include <stdint.h>    // MUST HAVE: Defines "uint8_t"
 #include "uart.h"      // MUST HAVE: Connects the C file to your Header file
 
+#define _XTAL_FREQ 64000000           // HFINTOSC = 64 MHz internal oscillator
 
 //-------------------------------------------------------
 // UART ROUTINE
