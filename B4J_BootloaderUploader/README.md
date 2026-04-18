@@ -6,6 +6,17 @@
 * [5. AT Command Mode](#hc-05hm-10-at-command-mode)
 * [Libraries & License](#libraries-required)
 
+### ⚡ Flashing Speed Comparison
+The firmware flashing duration varies significantly based on the hardware interface used. For the fastest experience, use a wired connection.
+
+| Interface | Tech | MTU / Bandwidth | Speed Rank |
+| :--- | :--- | :--- | :--- |
+| **TTL USB** | Wired | No MTU Limit (High Baud) | 🚀 **Fastest** |
+| **DT-06** | WiFi | High Throughput | 🟢 Fast |
+| **HC-05** | BT Classic | Continuous Stream | 🟡 Moderate |
+| **HM-10** | BLE 4.0 | **20-byte MTU Limit** | 🔴 **Very Slow** |
+
+> **Note:** BLE flashing is throttled by the mandatory 20-byte packet limit, making it the least efficient method for large binary transfers.
 ---
 
 # Serial COM - TTL USB
