@@ -9,7 +9,7 @@ This project provides software support for **HM-10 Bluetooth modules**, enabling
 ![Wiring diagram](HM10toPIC.jpg)
 
 ## Hardware Setup
-Connect your `HC-08` Bluetooth module to the PIC microcontroller as follows:
+Connect your `HM-10` Bluetooth module to the PIC microcontroller as follows:
 
 - **TX of HM-10 → RX of PIC**  
 - **RX of HM-10 → TX of PIC**  
