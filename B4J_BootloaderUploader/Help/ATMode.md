@@ -1,43 +1,49 @@
-# HC-05/HC-08 AT Command Mode
-> Bootloader Uploader v8.04 now supports AT Command Mode. `DT-06` supports this mode, but use web browser option for simplicity.
+# HC-05/HM-10 AT Command Mode
+> Bootloader Uploader v8.04 now supports AT Command Mode. `DT-06` supports this mode, but use web browser option for simplicity. 
 
-You need to set HC05/HC08 baud to 57600 with Bootloader Uploader, alternative method online or https://www.deshide.com/News-detail_DSDTechTools.html .  The **Command Mode** allows you to configure the HC-05 or HC-08 Bluetooth module, including changing:
+You need to set `HC05/HC08` baud to `57600` with Bootloader Uploader, alternative method online or https://www.deshide.com/News-detail_DSDTechTools.html .  The **Command Mode** allows you to configure the `HC-05` or HC-08 Bluetooth module, including changing:
 
 - Baud rate  
 - Password  
 - Device name  
 - Role (Master/Slave)  
 
-## 🔌 HC-05/08 to TTL USB Diagram
-![Wiring diagram](BTtoTTL.png)
+
+## 🔌 HC-05/HM-10 to TTL USB Diagram
+![Wiring diagram](/BTtoTTL.png)
+
 
 ### Hardware Setup
 Connect your `HC-05/08` Bluetooth module to the **TTL USB** as follows:
 
-- **TX of HC-05/08 → RX of TTL USB**  
-- **RX of HC-05/08 → TX of TTL USB**  
+- **TX of HC-05/HM-10 → RX of TTL USB**  
+- **RX of HC-05/HM-10 → TX of TTL USB**  
 - **GND → GND**  
-- **VCC → 3.3V or 5V** (depending on your `HC-05/08` module)
+- **VCC → 3.3V or 5V** (depending on your HC-05/08 module)
 - **EN** → VCC
+
   
 ### Enabling AT Command Mode
 `2 Ways to connect`
 
 `OPTION 1`
-1. Connect the **EN** pin of `HC-05/08` to **VCC** (Mine was 3.3v).
+1. Connect the **EN** pin of `HC-05` to **VCC** (Mine was 3.3v).
 2. Power on the module.
    
 `OPTION 2`
 1. **EN** pin not needed.  Hold Button Down.
 2. Power on the module and release button after 3 seconds.
 
-`Continue from OPTION 1 or 2`
-1. Should blink very slow.
-2. By default, `HC-05` enters **AT command mode** at **38400 bps** and `HC-08` enters at **9600**.
-3. Use the Bootloader Uploader software or https://www.deshide.com/News-detail_DSDTechTools.html
-4. Change the baud rate to 57600 using the software (Note: AT command mode always uses 38400 `(HC-05)` and 9600 `(HC-08)` and is not affected).
+OPTION 3 HM-10`
+1. **EN** pin not needed or available. 
+2. Power on the module it will enter AT Mode if BLE is not connected.
 
----
+`Continue from OPTION 1, 2 or 3`
+1. Should blink very slow.
+2. By default, `HC-05` enters **AT command mode** at **38400 bps** and `HM-10` enters at **9600**.
+3. Use the Bootloader Uploader or software https://www.deshide.com/News-detail_DSDTechTools.html
+4. Change the baud rate to `57600` using the software (Note: AT command mode always uses 38400 `(HC-05)` and 9600 `(HM-10)` and is not affected).
+
 
 ### Common AT Commands
 | Function | AT Command Example | Notes |
@@ -48,4 +54,4 @@ Connect your `HC-05/08` Bluetooth module to the **TTL USB** as follows:
 | Change password | `AT+PSWD=1234` | Sets pairing password |
 | Set role | `AT+ROLE=0` | `0` = Slave, `1` = Master |
 
-> ⚠️ **Important:** If you change the baud rate, your firmware must match it. So you need to ensure the `HC-05/HC-08` baud matches your program settings.
+> ⚠️ **Important:** If you change the baud rate, your firmware must match it. So you need to ensure the HC-05/HM-10 baud matches your program settings.
