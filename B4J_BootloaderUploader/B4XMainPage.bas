@@ -27,7 +27,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Version As String = "8.51"
+	Private Version As String = "8.52"
 	
 	'---------------------------------------
 	' Map Config Variables
@@ -235,7 +235,7 @@ Sub astream_NewData (Buffer() As Byte)
 	' Note: For Bluetooth reliability, firmware MSG_MS_DELAY should be at least 150 ms.
 	' There must be a high delay between <EndFlashErase> and <StartFlashWrite> or between
 	' 2 proceeding messages from PIC.
-	' At a 50 ms delay with Bluetooth only, both messages were observed in a single poll
+	' At a 50 ms delay with Bluetooth SSP only, both messages were observed in a single poll
 	' (e.g., "<EndFlashErase><St"), and the parser currently cannot handle
 	' concatenated or mixed incoming messages correctly.
 	
@@ -243,10 +243,10 @@ Sub astream_NewData (Buffer() As Byte)
 	'Dim AddHexView As String = BytesToHexString(Buffer).ToUpperCase
 	'LogMessage("Hex", AddHexView)
 	
-	' Append ASCII string for <…> parsing
+	' Buffer for Messages PIC Sends
 	rxBufferString = rxBufferString & BytesToString(Buffer, 0, Buffer.Length, "UTF8") 
 	
-	' Append raw bytes for verfiy firmware (stricktly bytes only!)
+	' Buffer for Verify Bytes PIC Sends (stricktly bytes only!)
 	rxBufferByte = AppendBytes(rxBufferByte, Buffer)' DELETE?? i think appendbytes is not neccessary!
 
 	' PIC sends with > as last byte to confirm end of message or bytes
@@ -319,10 +319,7 @@ Private Sub btHM10_DeviceDisconnected (DeviceId As String)
 	LogMessage("Status", "Bluetooth Disconnected! @ " & DeviceId)
 End Sub
 Private Sub btHM10_CharNotify (Notification As BleakNotification)
-'Private Sub btHM10_CharNotify (CharacteristicUUID As String, Data() As Byte)
-	Dim Buffer() As Byte
-	'Buffer = Data
-	Buffer = Notification.Value
+	Dim Buffer() As Byte = Notification.Value
 
 	' Option display Hex for Debugging!
 	'Dim AddHexView As String = BytesToHexString(Buffer).ToUpperCase
@@ -594,11 +591,9 @@ Private Sub btnConnectHM10_Click
 				LogMessage("Status", "Bluetooth Connected! @ " & address)
 								
 				For Each service As BleakService In bkHM10Client.Services.Values
-					For Each Chara As BleakCharacteristic In service.Characteristics
-						
+					For Each Chara As BleakCharacteristic In service.Characteristics					
 						Log(Chara.Properties)
-						Log(Chara.UUID)
-						
+						Log(Chara.UUID)						
 						If Chara.UUID.ToLowerCase.Contains("ffe1") = True And Chara.Properties.IndexOf("notify") <> -1 Then
 							whatUUID = Chara.UUID
 							Wait For (bkHM10Client.SetNotify(whatUUID)) Complete (Result As PyWrapper)
@@ -607,8 +602,7 @@ Private Sub btnConnectHM10_Click
 							Else
 								LogMessage("Bluetooth", "Notify set @ " & whatUUID)
 							End If
-						End If
-						
+						End If					
 					Next
 				Next
 				
@@ -618,7 +612,6 @@ Private Sub btnConnectHM10_Click
 			Else
 				Log(Py.PyLastException)
 				LogMessage("Status", "Bluetooth Failed! @ " & address)
-				'xui.MsgboxAsync(Py.PyLastException, "failed to connect: " & address)
 			End If
 		Else
 			xui.Msgbox2Async("Please select Bluetooth fom the list!", "Select Bluetooth", "Ok", "", "", Null)
@@ -1183,7 +1176,6 @@ Sub DisableFunction
 	btnSearchHC05.Enabled = False  
 	ListView1HM10.Enabled = False
 	btnStartScanHM10.Enabled = False
-	
 	btnOpenUSBTTL.Enabled = False
 	cmbPortUSBTTL.Enabled = False
 	btnLoadFile.Enabled = False
@@ -1208,10 +1200,10 @@ Sub EnableFunction
 	cmbPortUSBTTL.Enabled = True
 	btnLoadFile.Enabled = True
 	cmbPicList.Enabled = True
-	blnVerifyRequest = False
+	blnVerifyRequest = False		' move to DisableFunction and test!
 	btnFlash.Text = "Flash"
 	blnAppStopQuit = True
-	blnACK = False
+	blnACK = False					' move to DisableFunction and test!
 End Sub
 
 '--------------------------------------------------------
