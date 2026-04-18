@@ -28,6 +28,9 @@ This repository contains a collection of firmware projects for various **PIC mic
 
 ## 🔌 Adaptors Required (Choose any one)
 `Aliexpress can be a hit or miss.  I had few defects with them.  Try Amazon by DSD Tech Bluetooth. I tested HC-05 and HM-10 ok.  They are better.`
+
+* [Amazon - DSD Tech Bluetooth](https://www.amazon.com/stores/page/F410FA30-270A-401B-89BD-0241C6D26886?ingress=2&lp_context_asin=B06WGZB2N4&lp_context_query=dsd%20tech%20bluetooth&visitId=e3431c51-7aae-4b37-84ba-2ab95bdd8037&store_ref=bl_ast_dp_brandlogo_sto&ref_=ast_bln)
+
 * [Aliexpress - USB-to-TTL serial adapter](https://www.aliexpress.us/w/wholesale-USB%2525252dto%2525252dTTL-serial-adapter.html?spm=a2g0o.productlist.search.0)
 * [Aliexpress - HC-05 Bluetooth SSP adapter ](https://www.aliexpress.us/w/wholesale-hc05-bluetooth-module.html?osf=auto_suggest&spm=a2g0n.productlist.header.0)
 * [Aliexpress - HM-10 Bluetooth BLE adapter ](https://www.aliexpress.us/w/wholesale-hM10-bluetooth-module.html?spm=a2g0o.productlist.auto_suggest.2.bf20493bPXGW1g)
