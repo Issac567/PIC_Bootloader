@@ -7,6 +7,6 @@ ModuleBreakpoints2=
 ModuleClosedNodes0=1,2,4,5,6,7
 ModuleClosedNodes1=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18
 ModuleClosedNodes2=
-NavigationStack=ATMode,astream_Terminated,361,0,B4XMainPage,CloseConnection,774,0,B4XMainPage,SendFirmware,1096,6,B4XMainPage,Class_Globals,25,0,B4XMainPage,astream_NewData,231,1,B4XMainPage,btHM10_CharNotify,315,0,B4XMainPage,btnConnectHM10_Click,607,6,B4XMainPage,SendHandshakeLoop,967,0,B4XMainPage,DisableFunction,1166,0,B4XMainPage,EnableFunction,1196,5
+NavigationStack=ATMode,astream_Terminated,361,0,B4XMainPage,CloseConnection,774,0,B4XMainPage,SendFirmware,1096,6,B4XMainPage,Class_Globals,25,0,B4XMainPage,astream_NewData,231,1,B4XMainPage,btHM10_CharNotify,315,0,B4XMainPage,btnConnectHM10_Click,607,6,B4XMainPage,SendHandshakeLoop,967,0,B4XMainPage,DisableFunction,1176,0,B4XMainPage,EnableFunction,1199,5
 SelectedBuild=0
 VisibleModules=2,1

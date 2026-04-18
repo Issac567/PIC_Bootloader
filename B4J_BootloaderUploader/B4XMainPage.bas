@@ -1180,15 +1180,16 @@ Sub DisableFunction
 	cmbPortUSBTTL.Enabled = False
 	btnLoadFile.Enabled = False
 	cmbPicList.Enabled = False
-	cntVerify = 0
-	btnFlash.Text = "Stop"
 	blnAppStopQuit = False
+	btnFlash.Text = "Stop"
+
 	blnHandShakeSuccess = False
 	blnExitTimeoutError = False
 	blnAppExitAstreamError = False
 	blnTimeOut = False
 	txtLog.Text = ""
-	prgBar.Progress = 0						
+	prgBar.Progress = 0		
+	cntVerify = 0
 End Sub
 Sub EnableFunction
 	MenuBar1.Enabled = True
@@ -1200,10 +1201,11 @@ Sub EnableFunction
 	cmbPortUSBTTL.Enabled = True
 	btnLoadFile.Enabled = True
 	cmbPicList.Enabled = True
-	blnVerifyRequest = False		' move to DisableFunction and test!
-	btnFlash.Text = "Flash"
 	blnAppStopQuit = True
-	blnACK = False					' move to DisableFunction and test!
+	btnFlash.Text = "Flash"
+	
+	blnACK = False	
+	blnVerifyRequest = False
 End Sub
 
 '--------------------------------------------------------
