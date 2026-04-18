@@ -39,7 +39,7 @@ Connect your `HM-10` Bluetooth module to the PIC microcontroller as follows:
 1. Open the **B4J Bootloader Uploader** software.
 2. 2. Select **HM-10 Bluetooth** Tab 
 3. **Click Scan** and let it populate the list.
-4. **Select HC08** from the list and click **Connect**.
+4. **Select HM10 Device** from the list and click **Connect**.
 5. Wait for connection successful.
 6. **Select the PIC device** you want to program.
 7. Click **Load Firmware** to select the **firmware file** (.hex) you want to upload.  
