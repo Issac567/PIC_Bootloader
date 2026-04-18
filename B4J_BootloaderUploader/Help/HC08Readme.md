@@ -1,7 +1,7 @@
 # HM-10 Bluetooth BLE
 This project provides software support for **HM-10 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth BLE with Bleak library.
 
-> **Note:** This software communicates via Bluetooth to serial COM ports to PIC. It requires a properly connected **HM-10 Bluetooth adapter** to the PIC target device.
+> **Note:** This software communicates via Bluetooth to serial COM ports to PIC. It requires a properly connected **HM-10 Bluetooth adapter** to the PIC target device.  Due to the 20-byte BLE MTU limit, the firmware flashing process is significantly throttled and may take a long time to complete.
 
 ---
 
