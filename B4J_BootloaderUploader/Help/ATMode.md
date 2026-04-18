@@ -34,7 +34,7 @@ Connect your `HC-05/08` Bluetooth module to the **TTL USB** as follows:
 1. **EN** pin not needed.  Hold Button Down.
 2. Power on the module and release button after 3 seconds.
 
-OPTION 3 HM-10`
+`OPTION 3 HM-10`
 1. **EN** pin not needed or available. 
 2. Power on the module it will enter AT Mode if BLE is not connected.
 
