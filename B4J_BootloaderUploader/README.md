@@ -109,7 +109,7 @@ This project provides software support for **HM-10 Bluetooth modules**, enabling
 
 
 ## 🔌 HM-10 to Microchip Diagram
-![Wiring diagram](./Help/HC08toPIC.png)
+![Wiring diagram](./Help/HM10toPIC.jpg)
 
 
 ## Hardware Setup
