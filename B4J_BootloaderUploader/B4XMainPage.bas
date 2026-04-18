@@ -27,7 +27,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Version As String = "8.50"
+	Private Version As String = "8.51"
 	
 	'---------------------------------------
 	' Map Config Variables
@@ -599,7 +599,7 @@ Private Sub btnConnectHM10_Click
 						Log(Chara.Properties)
 						Log(Chara.UUID)
 						
-						If Chara.UUID.ToLowerCase.Contains("ffe1") = True  And Chara.Properties.IndexOf("notify") <> -1 Then
+						If Chara.UUID.ToLowerCase.Contains("ffe1") = True And Chara.Properties.IndexOf("notify") <> -1 Then
 							whatUUID = Chara.UUID
 							Wait For (bkHM10Client.SetNotify(whatUUID)) Complete (Result As PyWrapper)
 							If Result.IsSuccess = False Then
@@ -1026,7 +1026,7 @@ Sub SendFirmware
 	Dim intBlockSize As Int
 
 	If blnUse4Padding = True Then
-		intBlockSize = intInstructionPacket * 4 ' eg. 64 words = 256 intBlockSize 24FJ64BA102
+		intBlockSize = intInstructionPacket * 4 ' eg. 64 words = 256 intBlockSize 24FJ64GA102
 	Else
 		intBlockSize = intInstructionPacket * 2 ' eg. 4 words = 8 intBlockSize 16F88
 	End If
