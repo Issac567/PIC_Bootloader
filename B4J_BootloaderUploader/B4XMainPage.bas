@@ -27,7 +27,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Version As String = "8.52"
+	Private Version As String = "8.75"
 	
 	'---------------------------------------
 	' Map Config Variables
@@ -110,8 +110,6 @@ Sub Class_Globals
 	Private blnTimeOut As Boolean							' <ISR Timeout>Timeout Detected from PIC
 	
 	Private rxBufferString As String						' Buffer Newdata in string format
-	Private rxBufferByte() As Byte							' Buffer Newdata in byte format 
-
 	Private strLastFilePath As String						' Reloads firmware from FILE when PIC name changed so Firmware array be corrected
 	
 	Private foundDevices As Map								' Bluetooth list for both SSP and BLE		
@@ -246,15 +244,11 @@ Sub astream_NewData (Buffer() As Byte)
 	' Buffer for Messages PIC Sends
 	rxBufferString = rxBufferString & BytesToString(Buffer, 0, Buffer.Length, "UTF8") 
 	
-	' Buffer for Verify Bytes PIC Sends (stricktly bytes only!)
-	rxBufferByte = AppendBytes(rxBufferByte, Buffer)' DELETE?? i think appendbytes is not neccessary!
-
 	' PIC sends with > as last byte to confirm end of message or bytes
 	' When VerifyRequest = true, it does not received ">". Sticktly bytes only!
 	If rxBufferString.Contains(">") Or blnVerifyRequest = True Then
-		HandleMessage(rxBufferString, rxBufferByte)
+		HandleMessage(rxBufferString, Buffer)
 		rxBufferString = ""
-		rxBufferByte = Array As Byte() ' Resets to an empty array (length 0)
 	End If
 	
 End Sub
@@ -333,25 +327,24 @@ Private Sub btHM10_CharNotify (Notification As BleakNotification)
 	'-------------------------------------------------------------------------------------
 	' FILTER: Find the first valid starting bracket
 	' 24F causes bad char at initial power up.  always the first character PIC sends!
-	If rxBufferString.Contains("<") Then
-		Dim StartPos As Int = rxBufferString.IndexOf("<")
-	        
-		' If there is any junk before the "<", discard it immediately
-		If StartPos > 0 Then
-			rxBufferString = rxBufferString.SubString(StartPos)
-		End If
-	End If
+'	If rxBufferString.Contains("<") Then
+'		Dim StartPos As Int = rxBufferString.IndexOf("<")
+'	        
+'		' If there is any junk before the "<", discard it immediately
+'		If StartPos > 0 Then
+'			rxBufferString = rxBufferString.SubString(StartPos)
+'		End If
+'	End If
+	
+	' UPDATE:
+	' I changed HandleMessage routine to handle this by using contain property!
 	'-------------------------------------------------------------------------------------
 	
-	' Buffer for Verify Bytes PIC Sends (stricktly bytes only!)
-	rxBufferByte = AppendBytes(rxBufferByte, Buffer)  ' DELETE?? i think appendbytes is not neccessary!
-
 	' PIC sends with > as last byte to confirm end of message
 	' When VerifyRequest = true, it does not received ">". Sticktly bytes only!
 	If rxBufferString.Contains(">") Or blnVerifyRequest = True Then
-		HandleMessage(rxBufferString, rxBufferByte)
+		HandleMessage(rxBufferString, Buffer)
 		rxBufferString = ""
-		rxBufferByte = Array As Byte() ' Resets to an empty array (length 0)
 	End If
 	
 End Sub
@@ -363,29 +356,6 @@ End Sub
 '--------------------------------------------------------
 ' Handle incomming buffer and messages
 '--------------------------------------------------------
-Sub AppendBytes(OldBuffer() As Byte, NewBuffer() As Byte) As Byte()
-	' Total length = old + new
-	Dim totalLength As Int = OldBuffer.Length + NewBuffer.Length
-	If totalLength = 0 Then Return Array As Byte() ' nothing to append
-
-	' Allocate new array (Old + New total)
-	Dim newArray(totalLength) As Byte
-
-	' Copy old data to newArray()
-	Dim i As Int
-	For i = 0 To OldBuffer.Length - 1
-		newArray(i) = OldBuffer(i)
-	Next
-	
-	Dim StartLen As Int = OldBuffer.Length
-
-	' Copy new data to newArray()
-	For i = 0 To NewBuffer.Length - 1
-		newArray(StartLen + i) = NewBuffer(i)
-	Next
-
-	Return newArray
-End Sub
 Sub HandleMessage(msg As String, buffer() As Byte)
 	
 	' We dont want to log Incoming <ACK> while Firmware upload!
@@ -394,75 +364,75 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 		LogMessage("PIC", msg)
 	End If
 	
-	Select Case msg
+	' This is triggered by <StartFlashVerify> from PIC after Flash Write is completed
+	If blnVerifyRequest = True Then
+		'LogMessage("Incoming", BytesToHexString(buffer))  ' debugging only!!!					
+		For x = 0 To buffer.Length - 1  ' This method is better.  Newdata does not guarantee all block in one event
+			' This array will compare to firmware() which is Converted FILE binary
+			firmwareVerify(cntVerify) = buffer(x)
+										
+			' Update progress bar
+			prgBar.Progress = Min(1, cntVerify / intExpectedFirmwareBytes)
+			cntVerify = cntVerify + 1
+					
+			' Check if we reached the expected firmware size
+			If cntVerify >= intExpectedFirmwareBytes Then
+				' Let <EndFlashVerify> display the status of Verify!
+				' Just enable button here
+				EnableFunction
+				Exit
+			End If
+		Next
+	' This is others excluding blnVerifyRequest!
+	Else
 			' Bootloader firmware confirmed handshake received
-		Case "<InitReceived>"
+		If msg.Contains("<InitReceived>") Then
 			blnHandShakeSuccess = True
 			LogMessage("Status", "Bootloader responded.")
-			' Application firmware confirmed handshake received
-		Case "<InitFromApp>"
-			LogMessage("Status", "App responded. Entering bootloader...")
 			
+			' Application firmware confirmed handshake received
+		Else If msg.Contains("<InitFromApp>") Then
+			LogMessage("Status", "App responded. Entering bootloader...")
+				
 			' 3 ISR timeout = error by PIC
-		Case "<ErrorTimeout>"
+		Else If msg.Contains("<ErrorTimeout>") Then
 			blnExitTimeoutError = True
 			EnableFunction
 			LogMessage("Status", "PIC reported timeout error, try again")
-			
+				
 			' Bootloader start handshake timeout.  if no handshake it will enter application
-		Case "<HandShakeTimeout>"
+		Else If msg.Contains("<HandShakeTimeout>") Then
 			LogMessage("Status", "Timeout exiting bootloader --> entering application.")
-			
+				
 			' Start of verify flash program code
-		Case "<StartFlashVerify>"
+		Else If msg.Contains("<StartFlashVerify>") Then
 			cntVerify = 0
 			blnVerifyRequest = True
 			LogMessage("Status", "Waiting for verification...")
-			
+				
 			' End of verify flash program code
-		Case "<EndFlashVerify>"
+		Else If msg.Contains("<EndFlashVerify>") Then
 			EnableFunction
 			VerifyStatus
-			
+				
 			' End of Erase Flash. When Pic sends this, delay a bit and start the flash upload
-		Case "<EndFlashErase>"
+		Else If msg.Contains("<EndFlashErase>") Then
 			Sleep(200)
 			SendFirmware
-		
+			
 			' B4J expects <ACK> from PIC so B4J sends next packets in Firmware Upload routine
-		Case "<ACK>"
+		Else If msg.Contains("<ACK>") Then
 			blnACK = True
-		
+			
 			' Timeout occurred with Flash Write.  This will attempt a redo send
-		Case "<ISR Timeout>"
+		Else If msg.Contains("<ISR Timeout>") Then
 			blnTimeOut = True
-				
-		Case Else
-			' This is triggered by <StartFlashVerify> from PIC after Flash Write is completed
-			If blnVerifyRequest = True Then
-				'LogMessage("Incoming", BytesToHexString(buffer))  ' debugging only!!!
-								
-				For x = 0 To buffer.Length - 1  ' This method is better.  Newdata does not guarantee all block in one event
-					' This array will compare to firmware() which is Converted FILE binary
-					firmwareVerify(cntVerify) = buffer(x)
-										
-					' Update progress bar
-					prgBar.Progress = Min(1, cntVerify / intExpectedFirmwareBytes)
-					cntVerify = cntVerify + 1
 					
-					' Check if we reached the expected firmware size
-					If cntVerify >= intExpectedFirmwareBytes Then
-						' Let <EndFlashVerify> display the status of Verify!
-						' Just enable button here
-						EnableFunction
-						Exit
-					End If
-				Next
-			End If
-	End Select
+		End If
+	
+	End If
 			
 End Sub
-
 '--------------------------------------------------------
 ' Buttons and Combo Box functions in TabPane
 '--------------------------------------------------------
