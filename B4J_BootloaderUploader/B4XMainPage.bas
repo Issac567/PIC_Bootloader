@@ -241,11 +241,12 @@ Sub astream_NewData (Buffer() As Byte)
 	'Dim AddHexView As String = BytesToHexString(Buffer).ToUpperCase
 	'LogMessage("Hex", AddHexView)
 	
-	' Buffer for Messages PIC Sends
+	' Buffer for Messages, PIC Sends
 	rxBufferString = rxBufferString & BytesToString(Buffer, 0, Buffer.Length, "UTF8") 
 	
 	' PIC sends with > as last byte to confirm end of message or bytes
 	' When VerifyRequest = true, it does not received ">". Sticktly bytes only!
+	' Buffer is meant for Verify Bytes only.
 	If rxBufferString.Contains(">") Or blnVerifyRequest = True Then
 		HandleMessage(rxBufferString, Buffer)
 		rxBufferString = ""
@@ -289,7 +290,7 @@ Private Sub btHC05_DiscoveryFinished
 End Sub
 
 '--------------------------------------------------------
-' HC-08 Bluetooth BLE Routine
+' HM-10 Bluetooth BLE Routine
 '--------------------------------------------------------
 Private Sub btHM10_DeviceFound (Device As BleakDevice)
 	'Log($"${Device.DeviceId}, Name=${Device.Name}, Services=${Device.ServiceUUIDS}, ServiceData=${Device.ServiceData}"$)
@@ -319,11 +320,11 @@ Private Sub btHM10_CharNotify (Notification As BleakNotification)
 	'Dim AddHexView As String = BytesToHexString(Buffer).ToUpperCase
 	'LogMessage("Hex", AddHexView)
 		
-	' Buffer for Messages PIC Sends
+	' Buffer for Messages, PIC Sends
 	rxBufferString = rxBufferString & BytesToString(Buffer, 0, Buffer.Length, "UTF8")
 	
 	'-------------------------------------------------------------------------------------
-	' Temp Workaround until firmware solution (BLE ONLY!)
+	' Temp Workaround until firmware solution (BLE ONLY!) (NOT NEEDED!! Fixed in HandleMessage)
 	'-------------------------------------------------------------------------------------
 	' FILTER: Find the first valid starting bracket
 	' 24F causes bad char at initial power up.  always the first character PIC sends!
@@ -342,6 +343,7 @@ Private Sub btHM10_CharNotify (Notification As BleakNotification)
 	
 	' PIC sends with > as last byte to confirm end of message
 	' When VerifyRequest = true, it does not received ">". Sticktly bytes only!
+	' Buffer is meant for Verify Bytes only.
 	If rxBufferString.Contains(">") Or blnVerifyRequest = True Then
 		HandleMessage(rxBufferString, Buffer)
 		rxBufferString = ""
