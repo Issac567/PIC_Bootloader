@@ -27,7 +27,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Version As String = "9.01"
+	Private Version As String = "9.02"
 	
 	'---------------------------------------
 	' Map Config Variables
@@ -544,6 +544,7 @@ Private Sub btnConnectHM10_Click
 				Return
 			End If
 			
+			' Close any open connections
 			CloseConnection(False, True, True, True)
 			
 			BLE_useUUID = ""
@@ -1057,7 +1058,7 @@ Sub SendFirmware
 				Dim b(1) As Byte
 				b(0) = block(x)
 				'------------------------------------------------------------------------
-				' BLE
+				' BLE (Never configure .map to use this!
 				'------------------------------------------------------------------------
 				If btnConnectHM10.Text = "Disconnect" Then
 					rs = bkHM10Client.Write(BLE_useUUID, b)
@@ -1072,23 +1073,23 @@ Sub SendFirmware
 				Sleep(intPacketDelayMS)
 				
 			Next
-			'-----------------------------------------------------------------------------
+		'-----------------------------------------------------------------------------
 		' Burst = True (Common)
-			'-----------------------------------------------------------------------------
+		'-----------------------------------------------------------------------------
 		Else
 			'-----------------------------------------------------------------------------
 			' BLE
 			'-----------------------------------------------------------------------------
 			If btnConnectHM10.Text = "Disconnect" Then
+				' BLE Flash Write is supported by MTU Size requested
 				' Need to test HM-20 supports over 400 mtu size!  
 				' HM-10 tested at 20 mtu really sucks!
-				' BLE Flash Write is supported by MTU Size requested 
 				' FLash_Verify MTU Size currently at 20 bytes in firmware.  Future, will improve Verify_Flash	
 				Dim bc As ByteConverter
 				Dim chunkSize As Int = Max(20, BLE_useMTUSize)
 
 				If intBlockSize <= chunkSize Then
-					' Send everything at once if it fits
+					' Send block at once if it fits within MTU Size limits
 					rs = bkHM10Client.Write(BLE_useUUID, block)
 					Wait For (rs) Complete (Result2 As PyWrapper)
 				Else
@@ -1104,9 +1105,9 @@ Sub SendFirmware
 						' No delay required. Tested successfully!
 					Next
 				End If
-				'-------------------------------------------------------------------------
+			'-------------------------------------------------------------------------
 			' OTHERS (SSP, WIFI and TTL USB)
-				'-------------------------------------------------------------------------
+			'-------------------------------------------------------------------------
 			Else
 				If astream.IsInitialized Then astream.Write(block)
 			End If
