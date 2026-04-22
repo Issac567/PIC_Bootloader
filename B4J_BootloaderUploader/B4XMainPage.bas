@@ -27,7 +27,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Version As String = "8.75"
+	Private Version As String = "9.01"
 	
 	'---------------------------------------
 	' Map Config Variables
@@ -46,7 +46,7 @@ Sub Class_Globals
 	Private blnUse4Padding As Boolean						' 24 Bit need step 4, others step 2. Used with Intel Hex Conversion
 	
 	'---------------------------------------
-	' jBluetooth and Serial Library + Astream
+	' BLE (Bleak), jBluetooth and Serial Library + Astream
 	'---------------------------------------
 	Private btHC05 As Bluetooth								' SSP Bluetooth
 	Private btHC05Connection As BluetoothConnection			' SSP Bluetooth Connection
@@ -54,7 +54,6 @@ Sub Class_Globals
 	Private WIFIClient As Socket							' WIFI Socket
 	Private astream As AsyncStreams							' Read/Write Stream
 	
-
 	Public Py As PyBridge
 	Private btHM10 As Bleak									' BLE Bluetooth
 	Private bkHM10Client As BleakClient
@@ -109,11 +108,12 @@ Sub Class_Globals
 	Private blnACK As Boolean								' <ACK> from PIC used in Firmware Upload.  Needs this <ACK> from PIC to continue next Block Write bytes
 	Private blnTimeOut As Boolean							' <ISR Timeout>Timeout Detected from PIC
 	
-	Private rxBufferString As String						' Buffer Newdata in string format
+	Private rxBufferString As String						' Buffer Newdata in string format PIC Message only
 	Private strLastFilePath As String						' Reloads firmware from FILE when PIC name changed so Firmware array be corrected
 	
 	Private foundDevices As Map								' Bluetooth list for both SSP and BLE		
-	Private whatUUID As String								' What Characteristic for BLE
+	Private BLE_useUUID As String							' What Characteristic for BLE
+	Private BLE_useMTUSize As Int = 20						' Write Flash support, Verify Flash in firmware will default at 20 now!
 	
 End Sub
 
@@ -359,7 +359,7 @@ End Sub
 Sub HandleMessage(msg As String, buffer() As Byte)
 	
 	' We dont want to log Incoming <ACK> while Firmware upload!
-	' We dont want to log Incoming PIC bytes for verify
+	' We dont want to log Incoming PIC VERIFY bytes
 	If blnVerifyRequest <> True And msg <> "<ACK>" Then
 		LogMessage("PIC", msg)
 	End If
@@ -383,7 +383,7 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 				Exit
 			End If
 		Next
-	' This is others excluding blnVerifyRequest!
+	' This is PIC MESSAGES excluding blnVerifyRequest (Verify bytes)!
 	Else
 			' Bootloader firmware confirmed handshake received
 		If msg.Contains("<InitReceived>") Then
@@ -433,6 +433,7 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 	End If
 			
 End Sub
+
 '--------------------------------------------------------
 ' Buttons and Combo Box functions in TabPane
 '--------------------------------------------------------
@@ -452,7 +453,6 @@ Private Sub btnSearchHC05_Click
 		xui.Msgbox2Async("Bluetooth is disabled. Please turn it on!", "Bluetooth", "Ok", "", "", Null)
 	End If
 End Sub
-
 Private Sub btnConnectHC05_Click
 	' USE (57600 Baud) from HC05 to PIC
 	If btnConnectHC05.Text = "Connect" Then
@@ -527,7 +527,6 @@ Private Sub btnStartScanHM10_Click
 		xui.Msgbox2Async("Bluetooth is disabled. Please turn it on!", "Bluetooth", "Ok", "", "", Null)		
 	End If
 End Sub
-
 Private Sub btnStopScanHM10_Click
 	btnStartScanHM10.Enabled = True
 	btnStopScanHM10.Enabled = False
@@ -536,7 +535,6 @@ Private Sub btnStopScanHM10_Click
 		LogMessage("Bluetooth", "Scan has stopped")
 	End If
 End Sub
-
 Private Sub btnConnectHM10_Click
 	' USE (57600 Baud) from HM10 to PIC
 	If btnConnectHM10.Text = "Connect" Then
@@ -548,7 +546,7 @@ Private Sub btnConnectHM10_Click
 			
 			CloseConnection(False, True, True, True)
 			
-			whatUUID = ""
+			BLE_useUUID = ""
 			
 			' Connect Bluetooth with Address selected from listview
 			Dim address As String = ListView1HM10.SelectedItem
@@ -556,29 +554,48 @@ Private Sub btnConnectHM10_Click
 			LogMessage("Status", "Connecting to " & ListView1HM10.SelectedItem & "...")
 			Wait For (bkHM10Client.Connect) Complete (Success As Boolean)
 			If Success Then
+				
+				'----------------------------------------------------------------
+				' Check MTU amount allowed
+				Dim mtu As PyWrapper = bkHM10Client.client.GetField("mtu_size")
+				Wait For (mtu.Fetch) Complete (mtu As PyWrapper)
+				' Step 1: Get MTU Size
+				Dim RawMTU As Int = mtu.Value
+				' Step 2: Remove ATT header
+				Dim PayloadMTU As Int = RawMTU - 3
+				' Step 3: Align for PIC (multiple of 4 and compatible with 2 in Verify_Flash Firmware (Future reserved))
+				Dim UniversalMTU As Int = Bit.And(PayloadMTU, 0xFFFC)
+				If UniversalMTU > 0 Then
+					BLE_useMTUSize = UniversalMTU
+				End If
+				Log("Negotiated MTU: " & RawMTU)
+				Log("Payload MTU (MTU-3): " & PayloadMTU)
+				Log("Universal MTU for PIC: " & UniversalMTU)
+				'-----------------------------------------------------------------
+				
 				btnConnectHM10.Text = "Disconnect"
 				btnStopScanHM10_Click
-				LogMessage("Status", "Bluetooth Connected! @ " & address)
-								
+				LogMessage("Status", "Bluetooth Connected! @ " & address)					
 				For Each service As BleakService In bkHM10Client.Services.Values
 					For Each Chara As BleakCharacteristic In service.Characteristics					
 						Log(Chara.Properties)
 						Log(Chara.UUID)						
 						If Chara.UUID.ToLowerCase.Contains("ffe1") = True And Chara.Properties.IndexOf("notify") <> -1 Then
-							whatUUID = Chara.UUID
-							Wait For (bkHM10Client.SetNotify(whatUUID)) Complete (Result As PyWrapper)
+							BLE_useUUID = Chara.UUID
+							Wait For (bkHM10Client.SetNotify(BLE_useUUID)) Complete (Result As PyWrapper)
 							If Result.IsSuccess = False Then
 								LogMessage("Bluetooth", "Failed to set notify!")
 							Else
-								LogMessage("Bluetooth", "Notify set @ " & whatUUID)
+								LogMessage("Bluetooth", "Notify set @ " & BLE_useUUID)
 							End If
 						End If					
 					Next
 				Next
 				
-				If whatUUID = "" Then
+				If BLE_useUUID = "" Then
 					LogMessage("Bluetooth", "Characteristic UUID not found!")
 				End If
+				LogMessage("Bluetooth", "MTU Size = " & UniversalMTU)
 			Else
 				Log(Py.PyLastException)
 				LogMessage("Status", "Bluetooth Failed! @ " & address)
@@ -671,13 +688,11 @@ Private Sub btnOpenUSBTTL_Click
 		LogMessage("Status", "Serial COM closed")
 	End If
 End Sub
-
 Private Sub btnRefreshComUSBTTL_Click
 	' Load all available COM Ports
 	cmbPortUSBTTL.Items.Clear
 	cmbPortUSBTTL.Items.AddAll(serialUSBTTL.ListPorts)
 End Sub
-
 Private Sub cmbPortUSBTTL_SelectedIndexChanged(Index As Int, Value As Object)
 	btnOpenUSBTTL.Enabled = Index > -1 'enable the button if there is a selected item
 End Sub
@@ -935,7 +950,7 @@ Sub SendHandshakeLoop
 	If btnConnectHM10.Text = "Disconnect" Then
 		Dim b() As Byte = Array As Byte(0x55)
 		Dim b2() As Byte = Array As Byte(0xBB)
-	' OTHERS
+	' OTHERS (SSP, WIFI and TTL USB)
 	Else
 		Dim b() As Byte = Array As Byte(0x55)
 		Dim b2() As Byte = Array As Byte(0xAA)
@@ -954,9 +969,9 @@ Sub SendHandshakeLoop
 			If blnToggle = False Then
 				' BLE
 				If btnConnectHM10.Text = "Disconnect" Then
-					rs = bkHM10Client.Write(whatUUID, b)
+					rs = bkHM10Client.Write(BLE_useUUID, b)
 					Wait For (rs) Complete (Result2 As PyWrapper)
-				' OTHERS
+				' OTHERS (SSP, WIFI and TTL USB)
 				Else
 					If astream.IsInitialized Then astream.Write(b)
 				End If
@@ -964,9 +979,9 @@ Sub SendHandshakeLoop
 			Else
 				' BLE
 				If btnConnectHM10.Text = "Disconnect" Then
-					rs = bkHM10Client.Write(whatUUID, b2)
+					rs = bkHM10Client.Write(BLE_useUUID, b2)
 					Wait For (rs) Complete (Result2 As PyWrapper)
-				' OTHERS	
+				' OTHERS (SSP, WIFI and TTL USB)
 				Else
 					If astream.IsInitialized Then astream.Write(b2)
 				End If
@@ -1000,6 +1015,7 @@ Sub SendFirmware
 	
 	LogMessage("FirmwareUpload", "Firmware size: " & firmwareFile.Length & " bytes, total blocks: " & totalBlocks & ", bytes/block: " & intBlockSize)
 	
+	' Loop through file buffer and send them to PIC
 	Dim i As Int = 0
 	Do While i <= firmwareFile.Length
 
@@ -1010,7 +1026,7 @@ Sub SendFirmware
 			If j < currentBlockSize Then
 				block(j) = firmwareFile(i + j)
 			Else
-				block(j) = 0xFF   ' padding (Should never trigger here! problems if it does?)
+				block(j) = 0xFF   ' padding (Should never trigger here! cause problems if it does?)
 			End If
 		Next
 
@@ -1033,17 +1049,22 @@ Sub SendFirmware
 		' Reset ACK for next block
 		blnACK = False
 		
-		' Send delay in between
+		'--------------------------------------------------------------------------------
+		' Burst = False
+		'--------------------------------------------------------------------------------
 		If blnUseWriteBurst = False Then
 			For x = 0 To intBlockSize - 1
 				Dim b(1) As Byte
 				b(0) = block(x)
-				
+				'------------------------------------------------------------------------
 				' BLE
+				'------------------------------------------------------------------------
 				If btnConnectHM10.Text = "Disconnect" Then
-					rs = bkHM10Client.Write(whatUUID, b)
+					rs = bkHM10Client.Write(BLE_useUUID, b)
 					Wait For (rs) Complete (Result2 As PyWrapper)
-				' OTHERS
+				'------------------------------------------------------------------------
+				' OTHERS (SSP, WIFI and TTL USB)
+				'------------------------------------------------------------------------
 				Else
 					If astream.IsInitialized Then astream.Write(b)
 				End If
@@ -1051,26 +1072,41 @@ Sub SendFirmware
 				Sleep(intPacketDelayMS)
 				
 			Next
-		' Send Burst!
+			'-----------------------------------------------------------------------------
+		' Burst = True (Common)
+			'-----------------------------------------------------------------------------
 		Else
+			'-----------------------------------------------------------------------------
 			' BLE
+			'-----------------------------------------------------------------------------
 			If btnConnectHM10.Text = "Disconnect" Then
-				' Send block in 20-byte chunks for BLE due to MTU Limits!
+				' Need to test HM-20 supports over 400 mtu size!  
+				' HM-10 tested at 20 mtu really sucks!
+				' BLE Flash Write is supported by MTU Size requested 
+				' FLash_Verify MTU Size currently at 20 bytes in firmware.  Future, will improve Verify_Flash	
 				Dim bc As ByteConverter
-				Dim chunkSize As Int = 20
-				For x = 0 To intBlockSize - 1 Step chunkSize
-					Dim currentChunkSize As Int = Min(chunkSize, intBlockSize - x)
-					Dim tempChunk(currentChunkSize) As Byte
-    
-					' Copy 20 bytes from the large block into a temporary chunk
-					bc.ArrayCopy(block, x, tempChunk, 0, currentChunkSize)
-    
-					rs = bkHM10Client.Write(whatUUID, tempChunk)
+				Dim chunkSize As Int = Max(20, BLE_useMTUSize)
+
+				If intBlockSize <= chunkSize Then
+					' Send everything at once if it fits
+					rs = bkHM10Client.Write(BLE_useUUID, block)
 					Wait For (rs) Complete (Result2 As PyWrapper)
-					
-					' No delay required. Tested successfully!
-				Next
-			' OTHERS
+				Else
+					' Fragment the block because its larger than the MTU Size
+					For x = 0 To intBlockSize - 1 Step chunkSize
+						Dim currentChunkSize As Int = Min(chunkSize, intBlockSize - x)
+						Dim tempChunk(currentChunkSize) As Byte
+						bc.ArrayCopy(block, x, tempChunk, 0, currentChunkSize)
+        
+						rs = bkHM10Client.Write(BLE_useUUID, tempChunk)
+						Wait For (rs) Complete (Result2 As PyWrapper)
+						
+						' No delay required. Tested successfully!
+					Next
+				End If
+				'-------------------------------------------------------------------------
+			' OTHERS (SSP, WIFI and TTL USB)
+				'-------------------------------------------------------------------------
 			Else
 				If astream.IsInitialized Then astream.Write(block)
 			End If
