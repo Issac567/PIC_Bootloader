@@ -986,7 +986,7 @@ Sub SendHandshakeLoop
 				Else
 					If astream.IsInitialized Then astream.Write(b)
 				End If
-				LogMessage("HANDSHAKE", "Sending byte: 0x55")
+				LogMessage("HANDSHAKE", "Sending: 0x55")
 			Else
 				' BLE
 				If btnConnectHM10.Text = "Disconnect" Then
@@ -997,7 +997,7 @@ Sub SendHandshakeLoop
 					If astream.IsInitialized Then astream.Write(b2)
 				End If
 
-				LogMessage("HANDSHAKE", "Sending byte: 0xAA")
+				LogMessage("HANDSHAKE", "Sending: 0xAA")
 			End If
 		End If
 				
@@ -1042,7 +1042,7 @@ Sub SendConfigBytes
 		Else
 			If astream.IsInitialized Then astream.Write(config)
 		End If
-		LogMessage("CFG BYTES", "0x" & Bit.ToHexString(byteONE).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTWO).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTHREE).ToUpperCase)
+		LogMessage("CFG BYTES", "Sending: 0x" & Bit.ToHexString(byteONE).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTWO).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTHREE).ToUpperCase)
 					
 		' Avoid flooding UART
 		Sleep(500)
