@@ -27,7 +27,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Version As String = "8.50"
+	Private Version As String = "10.03"
 	
 	'---------------------------------------
 	' Map Config Variables
@@ -46,7 +46,7 @@ Sub Class_Globals
 	Private blnUse4Padding As Boolean						' 24 Bit need step 4, others step 2. Used with Intel Hex Conversion
 	
 	'---------------------------------------
-	' jBluetooth and Serial Library + Astream
+	' BLE (Bleak), jBluetooth and Serial Library + Astream
 	'---------------------------------------
 	Private btHC05 As Bluetooth								' SSP Bluetooth
 	Private btHC05Connection As BluetoothConnection			' SSP Bluetooth Connection
@@ -54,7 +54,6 @@ Sub Class_Globals
 	Private WIFIClient As Socket							' WIFI Socket
 	Private astream As AsyncStreams							' Read/Write Stream
 	
-
 	Public Py As PyBridge
 	Private btHM10 As Bleak									' BLE Bluetooth
 	Private bkHM10Client As BleakClient
@@ -107,15 +106,16 @@ Sub Class_Globals
 	Private blnAppExitAstreamError	As Boolean				' Astream error exit loop from app
 	Private blnAppStopQuit As Boolean						' Exit loop for Stop and Quit from app
 	Private blnACK As Boolean								' <ACK> from PIC used in Firmware Upload.  Needs this <ACK> from PIC to continue next Block Write bytes
-	Private blnTimeOut As Boolean							' <ISR Timeout>Timeout Detected from PIC
+	Private blnTimeOut As Boolean							' <ISR Timeout> Timeout Detected from PIC
+	Private blnConfigOK As Boolean							' <ConfigOK> from PIC exit function (Success bytes received)
 	
-	Private rxBufferString As String						' Buffer Newdata in string format
-	Private rxBufferByte() As Byte							' Buffer Newdata in byte format 
-
+	Private rxBufferString As String						' Buffer Newdata in string format PIC Message only
 	Private strLastFilePath As String						' Reloads firmware from FILE when PIC name changed so Firmware array be corrected
 	
 	Private foundDevices As Map								' Bluetooth list for both SSP and BLE		
-	Private whatUUID As String								' What Characteristic for BLE
+	Private BLE_useUUID As String							' What Characteristic for BLE
+	Private BLE_useMTUSize As Int = 20						' Write Flash support, Verify Flash in firmware will default at 20 now!
+	
 	
 End Sub
 
@@ -178,7 +178,7 @@ Private Sub B4XPage_Created (Root1 As B4XView)
 	Dim jo As JavaObject = cmbPortUSBTTL
 	jo.RunMethod("setPromptText", Array("Choose Port"))
 	Dim jo As JavaObject = cmbPicList
-	jo.RunMethod("setPromptText", Array("PIC List"))	
+	jo.RunMethod("setPromptText", Array("PIC List"))
 End Sub
 Private Sub B4XPage_CloseRequest As ResumableSub
 	
@@ -235,31 +235,28 @@ Sub astream_NewData (Buffer() As Byte)
 	' Note: For Bluetooth reliability, firmware MSG_MS_DELAY should be at least 150 ms.
 	' There must be a high delay between <EndFlashErase> and <StartFlashWrite> or between
 	' 2 proceeding messages from PIC.
-	' At a 50 ms delay with Bluetooth only, both messages were observed in a single poll
+	' At a 50 ms delay with Bluetooth SSP only, both messages were observed in a single poll
 	' (e.g., "<EndFlashErase><St"), and the parser currently cannot handle
 	' concatenated or mixed incoming messages correctly.
 	
 	' Option display Hex for Debugging!
 	'Dim AddHexView As String = BytesToHexString(Buffer).ToUpperCase
-	'LogMessage("Hex", AddHexView)
+	'LogMessage("HEX", AddHexView)
 	
-	' Append ASCII string for <…> parsing
+	' Buffer for Messages, PIC Sends
 	rxBufferString = rxBufferString & BytesToString(Buffer, 0, Buffer.Length, "UTF8") 
 	
-	' Append raw bytes for verfiy firmware (stricktly bytes only!)
-	rxBufferByte = AppendBytes(rxBufferByte, Buffer)' DELETE?? i think appendbytes is not neccessary!
-
 	' PIC sends with > as last byte to confirm end of message or bytes
 	' When VerifyRequest = true, it does not received ">". Sticktly bytes only!
+	' Buffer is meant for Verify Bytes only.
 	If rxBufferString.Contains(">") Or blnVerifyRequest = True Then
-		HandleMessage(rxBufferString, rxBufferByte)
+		HandleMessage(rxBufferString, Buffer)
 		rxBufferString = ""
-		rxBufferByte = Array As Byte() ' Resets to an empty array (length 0)
 	End If
 	
 End Sub
 Sub astream_Error
-	LogMessage("Status", "Error: " & LastException)
+	LogMessage("STATUS", "Error: " & LastException)
 	astream_Terminated
 End Sub
 Sub astream_Terminated
@@ -277,7 +274,7 @@ Sub astream_Terminated
 		btnConnectWIFI.Text = "Connect"
 	End If
 	EnableFunction
-	LogMessage("Status", "Connection is terminated!")
+	LogMessage("STATUS", "Connection is terminated!")
 End Sub
 
 '--------------------------------------------------------
@@ -291,11 +288,11 @@ End Sub
 Private Sub btHC05_DiscoveryFinished
 	btnSearchHC05.Enabled = True
 	If ListView1HC05.Items.Size > 0 Then btnConnectHC05.Enabled = True
-	LogMessage("Bluetooth", "Discovery completed")
+	LogMessage("BLUETOOTH", "Discovery completed")
 End Sub
 
 '--------------------------------------------------------
-' HC-08 Bluetooth BLE Routine
+' HM-10 Bluetooth BLE Routine
 '--------------------------------------------------------
 Private Sub btHM10_DeviceFound (Device As BleakDevice)
 	'Log($"${Device.DeviceId}, Name=${Device.Name}, Services=${Device.ServiceUUIDS}, ServiceData=${Device.ServiceData}"$)
@@ -316,45 +313,42 @@ End Sub
 Private Sub btHM10_DeviceDisconnected (DeviceId As String)
 	btnConnectHM10.Text = "Connect"
 	EnableFunction
-	LogMessage("Status", "Bluetooth Disconnected! @ " & DeviceId)
+	LogMessage("STATUS", "Bluetooth Disconnected! @ " & DeviceId)
 End Sub
 Private Sub btHM10_CharNotify (Notification As BleakNotification)
-'Private Sub btHM10_CharNotify (CharacteristicUUID As String, Data() As Byte)
-	Dim Buffer() As Byte
-	'Buffer = Data
-	Buffer = Notification.Value
+	Dim Buffer() As Byte = Notification.Value
 
 	' Option display Hex for Debugging!
 	'Dim AddHexView As String = BytesToHexString(Buffer).ToUpperCase
-	'LogMessage("Hex", AddHexView)
+	'LogMessage("HEX", AddHexView)
 		
-	' Buffer for Messages PIC Sends
+	' Buffer for Messages, PIC Sends
 	rxBufferString = rxBufferString & BytesToString(Buffer, 0, Buffer.Length, "UTF8")
 	
 	'-------------------------------------------------------------------------------------
-	' Temp Workaround until firmware solution (BLE ONLY!)
+	' Temp Workaround until firmware solution (BLE ONLY!) (NOT NEEDED!! Fixed in HandleMessage)
 	'-------------------------------------------------------------------------------------
 	' FILTER: Find the first valid starting bracket
 	' 24F causes bad char at initial power up.  always the first character PIC sends!
-	If rxBufferString.Contains("<") Then
-		Dim StartPos As Int = rxBufferString.IndexOf("<")
-	        
-		' If there is any junk before the "<", discard it immediately
-		If StartPos > 0 Then
-			rxBufferString = rxBufferString.SubString(StartPos)
-		End If
-	End If
+'	If rxBufferString.Contains("<") Then
+'		Dim StartPos As Int = rxBufferString.IndexOf("<")
+'	        
+'		' If there is any junk before the "<", discard it immediately
+'		If StartPos > 0 Then
+'			rxBufferString = rxBufferString.SubString(StartPos)
+'		End If
+'	End If
+	
+	' UPDATE:
+	' I changed HandleMessage routine to handle this by using contain property!
 	'-------------------------------------------------------------------------------------
 	
-	' Buffer for Verify Bytes PIC Sends (stricktly bytes only!)
-	rxBufferByte = AppendBytes(rxBufferByte, Buffer)  ' DELETE?? i think appendbytes is not neccessary!
-
 	' PIC sends with > as last byte to confirm end of message
 	' When VerifyRequest = true, it does not received ">". Sticktly bytes only!
+	' Buffer is meant for Verify Bytes only.
 	If rxBufferString.Contains(">") Or blnVerifyRequest = True Then
-		HandleMessage(rxBufferString, rxBufferByte)
+		HandleMessage(rxBufferString, Buffer)
 		rxBufferString = ""
-		rxBufferByte = Array As Byte() ' Resets to an empty array (length 0)
 	End If
 	
 End Sub
@@ -366,103 +360,89 @@ End Sub
 '--------------------------------------------------------
 ' Handle incomming buffer and messages
 '--------------------------------------------------------
-Sub AppendBytes(OldBuffer() As Byte, NewBuffer() As Byte) As Byte()
-	' Total length = old + new
-	Dim totalLength As Int = OldBuffer.Length + NewBuffer.Length
-	If totalLength = 0 Then Return Array As Byte() ' nothing to append
-
-	' Allocate new array (Old + New total)
-	Dim newArray(totalLength) As Byte
-
-	' Copy old data to newArray()
-	Dim i As Int
-	For i = 0 To OldBuffer.Length - 1
-		newArray(i) = OldBuffer(i)
-	Next
-	
-	Dim StartLen As Int = OldBuffer.Length
-
-	' Copy new data to newArray()
-	For i = 0 To NewBuffer.Length - 1
-		newArray(StartLen + i) = NewBuffer(i)
-	Next
-
-	Return newArray
-End Sub
 Sub HandleMessage(msg As String, buffer() As Byte)
 	
 	' We dont want to log Incoming <ACK> while Firmware upload!
-	' We dont want to log Incoming PIC bytes for verify
+	' We dont want to log Incoming PIC VERIFY bytes
 	If blnVerifyRequest <> True And msg <> "<ACK>" Then
 		LogMessage("PIC", msg)
 	End If
 	
-	Select Case msg
+	' This is triggered by <StartFlashVerify> from PIC after Flash Write is completed
+	If blnVerifyRequest = True Then
+		'LogMessage("INCOMMING", BytesToHexString(buffer))  ' debugging only!!!					
+		For x = 0 To buffer.Length - 1  ' This method is better.  Newdata does not guarantee all block in one event
+			' This array will compare to firmware() which is Converted FILE binary
+			firmwareVerify(cntVerify) = buffer(x)
+										
+			' Update progress bar
+			prgBar.Progress = Min(1, cntVerify / intExpectedFirmwareBytes)
+			cntVerify = cntVerify + 1
+					
+			' Check if we reached the expected firmware size
+			If cntVerify >= intExpectedFirmwareBytes Then
+				' Let <EndFlashVerify> display the status of Verify!
+				' Just enable button here
+				EnableFunction
+				Exit
+			End If
+			Next
+	' This is PIC MESSAGES excluding blnVerifyRequest (Verify bytes)!
+	Else
 			' Bootloader firmware confirmed handshake received
-		Case "<InitReceived>"
-			blnHandShakeSuccess = True
-			LogMessage("Status", "Bootloader responded.")
+		If msg.Contains("<HandShakeTimeout>") Then
+			LogMessage("STATUS", "Timeout exiting bootloader --> Entering application...")
+
 			' Application firmware confirmed handshake received
-		Case "<InitFromApp>"
-			LogMessage("Status", "App responded. Entering bootloader...")
-			
-			' 3 ISR timeout = error by PIC
-		Case "<ErrorTimeout>"
-			blnExitTimeoutError = True
-			EnableFunction
-			LogMessage("Status", "PIC reported timeout error, try again")
+		Else If msg.Contains("<InitFromApp>") Then
+			LogMessage("STATUS", "App responded --> Entering bootloader...")
 			
 			' Bootloader start handshake timeout.  if no handshake it will enter application
-		Case "<HandShakeTimeout>"
-			LogMessage("Status", "Timeout exiting bootloader --> entering application.")
+		Else If msg.Contains("<InitReceived>") Then
+			blnHandShakeSuccess = True	' Must do this first. Exit handshake no more 0x55 0xAA. 
+			LogMessage("STATUS", "Bootloader responded.")
 			
+		Else If msg.Contains("<ConfigTimeout>") Then
+			blnExitTimeoutError = True
+			EnableFunction
+			LogMessage("STATUS", "PIC reported timeout error, try again")
+			
+		Else If msg.Contains("<ConfigOK>") Then
+			blnConfigOK = True
+								
+			' End of Erase Flash. When Pic sends this, delay a bit and start the flash upload
+		Else If msg.Contains("<EndFlashErase>") Then
+			Sleep(300)
+			SendFirmware
+			
+			' B4J expects <ACK> from PIC so B4J sends next packets in Firmware Upload routine
+		Else If msg.Contains("<ACK>") Then
+			blnACK = True
+
+			' Timeout occurred with Flash Write.  This will attempt a redo send
+		Else If msg.Contains("<ISR Timeout>") Then
+			blnTimeOut = True
+			
+			' 3 ISR timeout = error by PIC
+		Else If msg.Contains("<ErrorTimeout>") Then
+			blnExitTimeoutError = True
+			EnableFunction
+			LogMessage("STATUS", "PIC reported timeout error, try again")
+
 			' Start of verify flash program code
-		Case "<StartFlashVerify>"
+		Else If msg.Contains("<StartFlashVerify>") Then
 			cntVerify = 0
 			blnVerifyRequest = True
-			LogMessage("Status", "Waiting for verification...")
-			
+			LogMessage("STATUS", "Waiting for verification...")
+				
 			' End of verify flash program code
-		Case "<EndFlashVerify>"
+		Else If msg.Contains("<EndFlashVerify>") Then
 			EnableFunction
 			VerifyStatus
 			
-			' End of Erase Flash. When Pic sends this, delay a bit and start the flash upload
-		Case "<EndFlashErase>"
-			Sleep(200)
-			SendFirmware
-		
-			' B4J expects <ACK> from PIC so B4J sends next packets in Firmware Upload routine
-		Case "<ACK>"
-			blnACK = True
-		
-			' Timeout occurred with Flash Write.  This will attempt a redo send
-		Case "<ISR Timeout>"
-			blnTimeOut = True
-				
-		Case Else
-			' This is triggered by <StartFlashVerify> from PIC after Flash Write is completed
-			If blnVerifyRequest = True Then
-				'LogMessage("Incoming", BytesToHexString(buffer))  ' debugging only!!!
-								
-				For x = 0 To buffer.Length - 1  ' This method is better.  Newdata does not guarantee all block in one event
-					' This array will compare to firmware() which is Converted FILE binary
-					firmwareVerify(cntVerify) = buffer(x)
-										
-					' Update progress bar
-					prgBar.Progress = Min(1, cntVerify / intExpectedFirmwareBytes)
-					cntVerify = cntVerify + 1
-					
-					' Check if we reached the expected firmware size
-					If cntVerify >= intExpectedFirmwareBytes Then
-						' Let <EndFlashVerify> display the status of Verify!
-						' Just enable button here
-						EnableFunction
-						Exit
-					End If
-				Next
-			End If
-	End Select
+		End If
+	
+	End If
 			
 End Sub
 
@@ -477,7 +457,7 @@ Private Sub btnSearchHC05_Click
 			foundDevices.Clear
 			btnSearchHC05.Enabled = False
 			btnConnectHC05.Enabled = False
-			LogMessage("Bluetooth", "Searching, please wait...")
+			LogMessage("BLUETOOTH", "Searching, please wait...")
 		Else
 			Log("Error starting discovery")
 		End If
@@ -485,7 +465,6 @@ Private Sub btnSearchHC05_Click
 		xui.Msgbox2Async("Bluetooth is disabled. Please turn it on!", "Bluetooth", "Ok", "", "", Null)
 	End If
 End Sub
-
 Private Sub btnConnectHC05_Click
 	' USE (57600 Baud) from HC05 to PIC
 	If btnConnectHC05.Text = "Connect" Then
@@ -502,16 +481,16 @@ Private Sub btnConnectHC05_Click
 			' Connect Bluetooth with Address selected from listview
 			Dim address As String = foundDevices.Get(ListView1HC05.SelectedItem)
 			btHC05.Connect(address)
-			LogMessage("Status", "Connecting to " & ListView1HC05.SelectedItem & "...")
+			LogMessage("STATUS", "Connecting to " & ListView1HC05.SelectedItem & "...")
 			wait for btHC05_Connected (Success As Boolean, connection As BluetoothConnection)
 			btHC05Connection = connection
 			If Success Then
 				If astream.IsInitialized Then astream.Close
 				astream.Initialize(connection.InputStream, connection.OutputStream, "astream")
 				btnConnectHC05.Text = "Disconnect"
-				LogMessage("Status", "Bluetooth Connected! @ " & address)
+				LogMessage("STATUS", "Bluetooth Connected! @ " & address)
 			Else
-				LogMessage("Status", "Bluetooth Failed! @ " & address)
+				LogMessage("STATUS", "Bluetooth Failed! @ " & address)
 			End If
 		Else
 			xui.Msgbox2Async("Please select Bluetooth fom the list!", "Select Bluetooth", "Ok", "", "", Null)
@@ -523,14 +502,14 @@ Private Sub btnConnectHC05_Click
 			Dim sf3 As Object = xui.Msgbox2Async("Flash in progress! Do you want to stop?", "Flashing", "Yes", "", "No", Null)
 			Wait For (sf3) Msgbox_Result(ret2 As Int)
 			If ret2 = xui.DialogResponse_Positive Then
-				LogMessage("Status", "User stop flash!")
+				LogMessage("STATUS", "User stop flash!")
 				EnableFunction
 			Else
 				Return
 			End If
 		End If
 		
-		LogMessage("Status", "Disconnect called")
+		LogMessage("STATUS", "Disconnect called")
 		
 		' close Astream
 		If astream.IsInitialized Then
@@ -552,7 +531,7 @@ Private Sub btnStartScanHM10_Click
 			foundDevices.Clear
 			btnStartScanHM10.Enabled = False
 			btnStopScanHM10.Enabled = True
-			LogMessage("Bluetooth", "Searching, please wait...")
+			LogMessage("BLUETOOTH", "Searching, please wait...")
 		Else
 			LogMessage("Python", Py.PyLastException)
 		End If
@@ -560,16 +539,14 @@ Private Sub btnStartScanHM10_Click
 		xui.Msgbox2Async("Bluetooth is disabled. Please turn it on!", "Bluetooth", "Ok", "", "", Null)		
 	End If
 End Sub
-
 Private Sub btnStopScanHM10_Click
 	btnStartScanHM10.Enabled = True
 	btnStopScanHM10.Enabled = False
 	If btHM10.IsScanning = True Then
 		btHM10.StopScan
-		LogMessage("Bluetooth", "Scan has stopped")
+		LogMessage("BLUETOOTH", "Scan has stopped")
 	End If
 End Sub
-
 Private Sub btnConnectHM10_Click
 	' USE (57600 Baud) from HM10 to PIC
 	If btnConnectHM10.Text = "Connect" Then
@@ -579,46 +556,64 @@ Private Sub btnConnectHM10_Click
 				Return
 			End If
 			
+			' Close any open connections
 			CloseConnection(False, True, True, True)
 			
-			whatUUID = ""
+			BLE_useUUID = ""
 			
 			' Connect Bluetooth with Address selected from listview
 			Dim address As String = ListView1HM10.SelectedItem
 			bkHM10Client = btHM10.CreateClient(foundDevices.Get(address))
-			LogMessage("Status", "Connecting to " & ListView1HM10.SelectedItem & "...")
+			LogMessage("STATUS", "Connecting to " & ListView1HM10.SelectedItem & "...")
 			Wait For (bkHM10Client.Connect) Complete (Success As Boolean)
 			If Success Then
+				
+				'----------------------------------------------------------------
+				' Check MTU amount allowed
+				Dim mtu As PyWrapper = bkHM10Client.client.GetField("mtu_size")
+				Wait For (mtu.Fetch) Complete (mtu As PyWrapper)
+				' Step 1: Get MTU Size
+				Dim RawMTU As Int = mtu.Value
+				' Step 2: Remove ATT header
+				Dim PayloadMTU As Int = RawMTU - 3
+				' Step 3: Align for PIC (multiple of 4 and compatible with 2 in Verify_Flash Firmware (Future reserved))
+				Dim UniversalMTU As Int = Bit.And(PayloadMTU, 0xFFFC)
+				If UniversalMTU > 0 Then
+					BLE_useMTUSize = UniversalMTU
+				End If
+				Log("Negotiated MTU: " & RawMTU)
+				Log("Payload MTU (MTU-3): " & PayloadMTU)
+				Log("Universal MTU for PIC: " & UniversalMTU)
+				'-----------------------------------------------------------------
+				
 				btnConnectHM10.Text = "Disconnect"
 				btnStopScanHM10_Click
-				LogMessage("Status", "Bluetooth Connected! @ " & address)
-								
+				LogMessage("STATUS", "Bluetooth Connected! @ " & address)
 				For Each service As BleakService In bkHM10Client.Services.Values
-					For Each Chara As BleakCharacteristic In service.Characteristics
-						
+					Log("---------------------------------")
+					Log("Service: " & service.UUID)
+					For Each Chara As BleakCharacteristic In service.Characteristics					
 						Log(Chara.Properties)
-						Log(Chara.UUID)
-						
-						If Chara.UUID.ToLowerCase.Contains("ffe1") = True  And Chara.Properties.IndexOf("notify") <> -1 Then
-							whatUUID = Chara.UUID
-							Wait For (bkHM10Client.SetNotify(whatUUID)) Complete (Result As PyWrapper)
+						Log(Chara.UUID)						
+						If Chara.UUID.ToLowerCase.Contains("ffe1") = True And Chara.Properties.IndexOf("notify") <> -1 Then
+							BLE_useUUID = Chara.UUID
+							Wait For (bkHM10Client.SetNotify(BLE_useUUID)) Complete (Result As PyWrapper)
 							If Result.IsSuccess = False Then
-								LogMessage("Bluetooth", "Failed to set notify!")
+								LogMessage("BLUETOOTH", "Failed to set notify!")
 							Else
-								LogMessage("Bluetooth", "Notify set @ " & whatUUID)
+								LogMessage("BLUETOOTH", "Notify set @ " & BLE_useUUID)
 							End If
-						End If
-						
+						End If					
 					Next
 				Next
 				
-				If whatUUID = "" Then
-					LogMessage("Bluetooth", "Characteristic UUID not found!")
+				If BLE_useUUID = "" Then
+					LogMessage("BLUETOOTH", "Characteristic UUID not found!")
 				End If
+				LogMessage("BLUETOOTH", "MTU Size = " & UniversalMTU)
 			Else
 				Log(Py.PyLastException)
-				LogMessage("Status", "Bluetooth Failed! @ " & address)
-				'xui.MsgboxAsync(Py.PyLastException, "failed to connect: " & address)
+				LogMessage("STATUS", "Bluetooth Failed! @ " & address)
 			End If
 		Else
 			xui.Msgbox2Async("Please select Bluetooth fom the list!", "Select Bluetooth", "Ok", "", "", Null)
@@ -630,14 +625,14 @@ Private Sub btnConnectHM10_Click
 			Dim sf3 As Object = xui.Msgbox2Async("Flash in progress! Do you want to stop?", "Flashing", "Yes", "", "No", Null)
 			Wait For (sf3) Msgbox_Result(ret2 As Int)
 			If ret2 = xui.DialogResponse_Positive Then
-				LogMessage("Status", "User stop flash!")
+				LogMessage("STATUS", "User stop flash!")
 				EnableFunction
 			Else
 				Return
 			End If
 		End If
 		
-		LogMessage("Status", "Disconnect called")	
+		LogMessage("STATUS", "Disconnect called")
 		bkHM10Client.Disconnect
 		btnConnectHM10.Text = "Connect"
 	End If
@@ -652,18 +647,18 @@ Private Sub btnConnectWIFI_Click
 		Dim c As Socket
 		c.Initialize("client")
 		c.Connect(txtHostIPWIFI.text, txtPortWIFI.text, 5000)
-		LogMessage("Status", "Connecting @ " & txtHostIPWIFI.Text & ":" & txtPortWIFI.Text)
+		LogMessage("STATUS", "Connecting @ " & txtHostIPWIFI.Text & ":" & txtPortWIFI.Text)
 		Wait For client_Connected (Successful As Boolean)
 		If Successful Then
 			WIFIClient = c
 			astream.Initialize(WIFIClient.InputStream, WIFIClient.OutputStream, "astream")
 			btnConnectWIFI.Text = "Disconnect"
-			LogMessage("Status", "WIFI connected!")
+			LogMessage("STATUS", "WIFI connected!")
 		Else
-			LogMessage("Status", "WIFI connection failed!")
+			LogMessage("STATUS", "WIFI connection failed!")
 		End If
 	Else
-		LogMessage("Status", "Disconnect called")
+		LogMessage("STATUS", "Disconnect called")
 		If astream.IsInitialized Then
 			astream.Close
 			If WIFIClient.Connected = True Then 
@@ -690,12 +685,12 @@ Private Sub btnOpenUSBTTL_Click
 			astream.Initialize(serial1.GetInputStream, serial1.GetOutputStream, "astream")
 			serialUSBTTL = serial1
 		Catch
-			LogMessage("Status", "Error opening port" & LastException)
+			LogMessage("STATUS", "Error opening port" & LastException)
 			Return
 		End Try
 		btnOpenUSBTTL.Text = "Close Port"
 		btnRefreshComUSBTTL.Enabled = False
-		LogMessage("Status", "Serial COM opened")
+		LogMessage("STATUS", "Serial COM opened")
 		
 		' Close Port
 	Else
@@ -705,23 +700,21 @@ Private Sub btnOpenUSBTTL_Click
 		End If
 		btnOpenUSBTTL.Text = "Open Port"
 		btnRefreshComUSBTTL.Enabled = True
-		LogMessage("Status", "Serial COM closed")
+		LogMessage("STATUS", "Serial COM closed")
 	End If
 End Sub
-
 Private Sub btnRefreshComUSBTTL_Click
 	' Load all available COM Ports
 	cmbPortUSBTTL.Items.Clear
 	cmbPortUSBTTL.Items.AddAll(serialUSBTTL.ListPorts)
 End Sub
-
 Private Sub cmbPortUSBTTL_SelectedIndexChanged(Index As Int, Value As Object)
 	btnOpenUSBTTL.Enabled = Index > -1 'enable the button if there is a selected item
 End Sub
 
 Private Sub cmbPicList_SelectedIndexChanged(Index As Int, Value As Object)
 	If LoadConfiguration(Value) = False Then
-		LogMessage("Config", "Error loading configuration for " & Value)
+		LogMessage("STATUS", "Error loading configuration for " & Value)
 	End If
 End Sub
 
@@ -819,11 +812,11 @@ Private Sub btnLoadFile_Click
    
 	If filepath <> "" Then
 		strLastFilePath = filepath
-		LogMessage("Status", "File Path: " & filepath)	
+		LogMessage("STATUS", "File Path: " & filepath)
 		firmwareFile = ConvertHexIntelToBinaryRange(filepath, intStartAddrFlash, intEndAddrFlash)
 	Else
 		strLastFilePath = ""
-		LogMessage("Status", "No file selected.")
+		LogMessage("STATUS", "No file selected.")
 	End If
 End Sub
 Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr As Int) As Byte()
@@ -919,16 +912,16 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
         
 		If blnDetectRecord Then
 			btnFlash.Enabled = True
-			LogMessage("Status", "Conversion success.")
+			LogMessage("STATUS", "Conversion success.")
 		Else
 			btnFlash.Enabled = False
-			LogMessage("Status", "Error: No valid data found above start address.")
+			LogMessage("STATUS", "Error: No valid data found above start address.")
 		End If
         
 		Return firmwareData
         
 	Catch
-		LogMessage("Status", "Error:  " & LastException & " in ConvertHexIntelToBinaryRange")
+		LogMessage("STATUS", "Error:  " & LastException & " in ConvertHexIntelToBinaryRange")
 		Dim EmptyArr() As Byte = Array As Byte()
 		Return EmptyArr
 	End Try
@@ -958,25 +951,16 @@ Private Sub btnFlash_Click
 		Dim sf3 As Object = xui.Msgbox2Async("Flash in progress! Do you want to stop?", "Flashing", "Yes", "", "No", Null)
 		Wait For (sf3) Msgbox_Result(ret2 As Int)		
 		If ret2 = xui.DialogResponse_Positive Then
-			LogMessage("Status", "User stop flash!")
+			LogMessage("STATUS", "User stop flash!")
 			EnableFunction
 		End If
 	End If
-
 End Sub
 Sub SendHandshakeLoop
 	Dim rs As Object
 	Dim blnToggle As Boolean
-	
-	' BLE
-	If btnConnectHM10.Text = "Disconnect" Then
-		Dim b() As Byte = Array As Byte(0x55)
-		Dim b2() As Byte = Array As Byte(0xBB)
-	' OTHERS
-	Else
-		Dim b() As Byte = Array As Byte(0x55)
-		Dim b2() As Byte = Array As Byte(0xAA)
-	End If
+	Dim b() As Byte = Array As Byte(0x55)
+	Dim b2() As Byte = Array As Byte(0xAA)
 	
 	DisableFunction
 		
@@ -984,49 +968,88 @@ Sub SendHandshakeLoop
 		' Status boolean
 		If GetBooleanStatus = True Then Return
 		
-		' Exit and Start firmware upload if PIC signals handshake success
+		' Exit and Start Config upload
 		If blnHandShakeSuccess = True Then
+			Sleep(300) ' give firmware time to call ReceiveConfig.
+			SendConfigBytes
 			Return
 		Else
 			If blnToggle = False Then
 				' BLE
 				If btnConnectHM10.Text = "Disconnect" Then
-					rs = bkHM10Client.Write(whatUUID, b)
+					rs = bkHM10Client.Write(BLE_useUUID, b)
 					Wait For (rs) Complete (Result2 As PyWrapper)
-				' OTHERS
+				' OTHERS (SSP, WIFI and TTL USB)
 				Else
 					If astream.IsInitialized Then astream.Write(b)
 				End If
-				LogMessage("Handshake", "Sending byte: 0x55")
+				LogMessage("HANDSHAKE", "Sending: 0x55")
 			Else
 				' BLE
 				If btnConnectHM10.Text = "Disconnect" Then
-					rs = bkHM10Client.Write(whatUUID, b2)
+					rs = bkHM10Client.Write(BLE_useUUID, b2)
 					Wait For (rs) Complete (Result2 As PyWrapper)
-				' OTHERS	
+				' OTHERS (SSP, WIFI and TTL USB)
 				Else
 					If astream.IsInitialized Then astream.Write(b2)
 				End If
-				If btnConnectHM10.Text = "Disconnect" Then
-					LogMessage("Handshake", "Sending byte: 0xBB")
-				Else
-					LogMessage("Handshake", "Sending byte: 0xAA")
-				End If
+
+				LogMessage("HANDSHAKE", "Sending: 0xAA")
 			End If
 		End If
 				
 		' Avoid flooding UART
-		Sleep(intHandShakeDelayMS)
+		Sleep(intHandShakeDelayMS)		' Recommend 200 ms minimum in .map file
 		
 		blnToggle = Not(blnToggle)
 	Loop
+End Sub
+Sub SendConfigBytes
+	' One time shot. The PIC will be ready to poll!
+	
+	Dim rs As Object
+	Dim byteONE, byteTWO, byteTHREE As Byte
+
+	' 1. Set the BLE Flag
+	If btnConnectHM10.Text = "Disconnect" Then
+		byteONE = 0x01	'BLE
+	Else
+		byteONE = 0x00  'OTHERS
+	End If
+
+	' 2. Extract High Byte (Most Significant Byte)
+	' Shift right by 8 bits to move the top 8 bits into the bottom 8 bits
+	byteTWO = Bit.ShiftRight(Bit.And(BLE_useMTUSize, 0xFF00), 8)
+
+	' 3. Extract Low Byte (Least Significant Byte)
+	' Use a mask to keep only the bottom 8 bits
+	byteTHREE = Bit.And(BLE_useMTUSize, 0xFF)
+
+	' 4. Send to PIC
+	Dim config() As Byte = Array As Byte(byteONE, byteTWO, byteTHREE)
+
+	' BLE
+	If btnConnectHM10.Text = "Disconnect" Then
+		rs = bkHM10Client.Write(BLE_useUUID, config)
+		Wait For (rs) Complete (Result2 As PyWrapper)
+	' OTHERS (SSP, WIFI and TTL USB)
+	Else
+		If astream.IsInitialized Then astream.Write(config)
+	End If
+	LogMessage("CFG BYTES", "Sending: 0x" & Bit.ToHexString(byteONE).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTWO).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTHREE).ToUpperCase)
+					
+	Do While blnConfigOK = False
+		If GetBooleanStatus = True Then Return
+		Sleep(50)
+	Loop
+		
 End Sub
 Sub SendFirmware
 	' Firmware Binary file must include all flash data including empty addresses!
 	Dim intBlockSize As Int
 
 	If blnUse4Padding = True Then
-		intBlockSize = intInstructionPacket * 4 ' eg. 64 words = 256 intBlockSize 24FJ64BA102
+		intBlockSize = intInstructionPacket * 4 ' eg. 64 words = 256 intBlockSize 24FJ64GA102
 	Else
 		intBlockSize = intInstructionPacket * 2 ' eg. 4 words = 8 intBlockSize 16F88
 	End If
@@ -1035,8 +1058,9 @@ Sub SendFirmware
 	Dim totalBlocks As Int = Ceil(firmwareFile.Length / intBlockSize)
 	Dim rs As Object
 	
-	LogMessage("FirmwareUpload", "Firmware size: " & firmwareFile.Length & " bytes, total blocks: " & totalBlocks & ", bytes/block: " & intBlockSize)
+	LogMessage("FIRMWAREUPLOAD", "Firmware size: " & firmwareFile.Length & " bytes, total blocks: " & totalBlocks & ", bytes/block: " & intBlockSize)
 	
+	' Loop through file buffer and send them to PIC
 	Dim i As Int = 0
 	Do While i <= firmwareFile.Length
 
@@ -1047,7 +1071,7 @@ Sub SendFirmware
 			If j < currentBlockSize Then
 				block(j) = firmwareFile(i + j)
 			Else
-				block(j) = 0xFF   ' padding (Should never trigger here! problems if it does?)
+				block(j) = 0xFF   ' padding (Should never trigger here! cause problems if it does?)
 			End If
 		Next
 
@@ -1059,7 +1083,7 @@ Sub SendFirmware
 			If GetBooleanStatus = True Then Return
 
 			If blnTimeOut = True Then
-				LogMessage("FirmwareUpload", "Timeout detected, retrying at byte #" & i)
+				LogMessage("FIRMWAREUPLOAD", "Timeout detected, retrying at byte #" & i)
 				blnTimeOut = False
 				Continue    ' retry immediately
 			End If
@@ -1070,17 +1094,22 @@ Sub SendFirmware
 		' Reset ACK for next block
 		blnACK = False
 		
-		' Send delay in between
+		'--------------------------------------------------------------------------------
+		' Burst = False
+		'--------------------------------------------------------------------------------
 		If blnUseWriteBurst = False Then
 			For x = 0 To intBlockSize - 1
 				Dim b(1) As Byte
 				b(0) = block(x)
-				
-				' BLE
+				'------------------------------------------------------------------------
+				' BLE (Never configure .map to use this!
+				'------------------------------------------------------------------------
 				If btnConnectHM10.Text = "Disconnect" Then
-					rs = bkHM10Client.Write(whatUUID, b)
+					rs = bkHM10Client.Write(BLE_useUUID, b)
 					Wait For (rs) Complete (Result2 As PyWrapper)
-				' OTHERS
+				'------------------------------------------------------------------------
+				' OTHERS (SSP, WIFI and TTL USB)
+				'------------------------------------------------------------------------
 				Else
 					If astream.IsInitialized Then astream.Write(b)
 				End If
@@ -1088,26 +1117,41 @@ Sub SendFirmware
 				Sleep(intPacketDelayMS)
 				
 			Next
-		' Send Burst!
+		'-----------------------------------------------------------------------------
+		' Burst = True (Common)
+		'-----------------------------------------------------------------------------
 		Else
+			'-----------------------------------------------------------------------------
 			' BLE
+			'-----------------------------------------------------------------------------
 			If btnConnectHM10.Text = "Disconnect" Then
-				' Send block in 20-byte chunks for BLE due to MTU Limits!
+				' BLE Flash Write is supported by MTU Size requested
+				' Need to test HM-20 supports over 400 mtu size!  
+				' HM-10 tested at 20 mtu really sucks!
+				' FLash_Verify MTU Size currently at 20 bytes in firmware.  Future, will improve Verify_Flash	
 				Dim bc As ByteConverter
-				Dim chunkSize As Int = 20
-				For x = 0 To intBlockSize - 1 Step chunkSize
-					Dim currentChunkSize As Int = Min(chunkSize, intBlockSize - x)
-					Dim tempChunk(currentChunkSize) As Byte
-    
-					' Copy 20 bytes from the large block into a temporary chunk
-					bc.ArrayCopy(block, x, tempChunk, 0, currentChunkSize)
-    
-					rs = bkHM10Client.Write(whatUUID, tempChunk)
+				Dim chunkSize As Int = Max(20, BLE_useMTUSize)
+
+				If intBlockSize <= chunkSize Then
+					' Send block at once if it fits within MTU Size limits
+					rs = bkHM10Client.Write(BLE_useUUID, block)
 					Wait For (rs) Complete (Result2 As PyWrapper)
-					
-					' No delay required. Tested successfully!
-				Next
-			' OTHERS
+				Else
+					' Fragment the block because its larger than the MTU Size
+					For x = 0 To intBlockSize - 1 Step chunkSize
+						Dim currentChunkSize As Int = Min(chunkSize, intBlockSize - x)
+						Dim tempChunk(currentChunkSize) As Byte
+						bc.ArrayCopy(block, x, tempChunk, 0, currentChunkSize)
+        
+						rs = bkHM10Client.Write(BLE_useUUID, tempChunk)
+						Wait For (rs) Complete (Result2 As PyWrapper)
+						
+						' No delay required. Tested successfully!
+					Next
+				End If
+			'-------------------------------------------------------------------------
+			' OTHERS (SSP, WIFI and TTL USB)
+			'-------------------------------------------------------------------------
 			Else
 				If astream.IsInitialized Then astream.Write(block)
 			End If
@@ -1123,7 +1167,7 @@ Sub SendFirmware
 		i = i + intBlockSize
 	Loop
 
-	LogMessage("FirmwareUpload", "Firmware upload completed!")
+	LogMessage("FIRMWAREUPLOAD", "Firmware upload completed!")
 End Sub
 Sub GetBooleanStatus As Boolean
 	' PIC reported timeout error (Handshake does not have this!)
@@ -1149,9 +1193,9 @@ End Sub
 '--------------------------------------------------------
 Sub VerifyStatus
 	If VerifyFirmware = True Then
-		LogMessage("Status", "Programming/Verify Success")
+		LogMessage("STATUS", "Programming/Verify Success")
 	Else
-		LogMessage("Status", "Programming/Verify Failed!")
+		LogMessage("STATUS", "Programming/Verify Failed!")
 	End If
 End Sub
 Sub VerifyFirmware() As Boolean
@@ -1163,7 +1207,7 @@ Sub VerifyFirmware() As Boolean
 	' Compare byte by byte
 	For i = 0 To firmwareFile.Length - 1
 		If firmwareFile(i) <> firmwareVerify(i) Then
-			LogMessage("Status", "Mismatch at byte " & i & _
+			LogMessage("STATUS", "Mismatch at byte " & i & _
                        ": firmware file = " & BytesToHexString2(firmwareFile(i)) & _
                        " vs firmware verify = " & BytesToHexString2(firmwareVerify(i)))
 			Return False
@@ -1183,20 +1227,21 @@ Sub DisableFunction
 	btnSearchHC05.Enabled = False  
 	ListView1HM10.Enabled = False
 	btnStartScanHM10.Enabled = False
-	
 	btnOpenUSBTTL.Enabled = False
 	cmbPortUSBTTL.Enabled = False
 	btnLoadFile.Enabled = False
 	cmbPicList.Enabled = False
-	cntVerify = 0
-	btnFlash.Text = "Stop"
 	blnAppStopQuit = False
+	btnFlash.Text = "Stop"
+
 	blnHandShakeSuccess = False
 	blnExitTimeoutError = False
 	blnAppExitAstreamError = False
 	blnTimeOut = False
+	blnConfigOK = False
 	txtLog.Text = ""
-	prgBar.Progress = 0						
+	prgBar.Progress = 0		
+	cntVerify = 0
 End Sub
 Sub EnableFunction
 	MenuBar1.Enabled = True
@@ -1208,10 +1253,13 @@ Sub EnableFunction
 	cmbPortUSBTTL.Enabled = True
 	btnLoadFile.Enabled = True
 	cmbPicList.Enabled = True
-	blnVerifyRequest = False
-	btnFlash.Text = "Flash"
 	blnAppStopQuit = True
-	blnACK = False
+	btnFlash.Text = "Flash"
+	
+	blnACK = False	
+	blnVerifyRequest = False
+	
+	
 End Sub
 
 '--------------------------------------------------------
@@ -1223,7 +1271,7 @@ Sub LoadAllPicNames() As List
     
 	' Make sure folder exists
 	If File.Exists(File.DirApp, "configs") = False Then
-		LogMessage("Config", "Missing configs directory, creating one!")
+		LogMessage("STATUS", "Missing configs directory, creating one!")
 		File.MakeDir(File.DirApp, "configs")
 		Return picList ' empty list
 	End If
@@ -1240,7 +1288,7 @@ Sub LoadAllPicNames() As List
 					picList.Add(cfg.Get("PicName"))
 				Else
 					' fallback to filename if PicName missing
-					LogMessage("Config", "Missing Pic Name - " & f)
+					LogMessage("STATUS", "Missing Pic Name - " & f)
 				End If
 			Catch
 				' skip files that fail to load
