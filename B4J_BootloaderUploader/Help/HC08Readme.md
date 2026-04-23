@@ -9,7 +9,7 @@ This project provides software support for **HM-10 Bluetooth modules**, enabling
 ![Wiring diagram](HM10toPIC.jpg)
 
 ## Hardware Setup
-Connect your `HM-10` Bluetooth module to the PIC microcontroller as follows:
+Connect your `HC-08` Bluetooth module to the PIC microcontroller as follows:
 
 - **TX of HM-10 → RX of PIC**  
 - **RX of HM-10 → TX of PIC**  
@@ -17,7 +17,7 @@ Connect your `HM-10` Bluetooth module to the PIC microcontroller as follows:
 - **VCC → 3.0V to 3.6** (depending on your HM-10 module)
 - **EN** pin - Do not connect to VCC. It puts it in AT Mode on mine.
   
-> ⚠️ Ensure voltage compatibility. Most `HM-10` breakout boards accept **5V on VCC**, but logic levels are typically **3.3V**.
+> ⚠️ Ensure voltage compatibility. Most `HC-08` breakout boards accept **5V on VCC**, but logic levels are typically **3.3V**.
 
 ---
 
@@ -39,7 +39,7 @@ Connect your `HM-10` Bluetooth module to the PIC microcontroller as follows:
 1. Open the **B4J Bootloader Uploader** software.
 2. 2. Select **HM-10 Bluetooth** Tab 
 3. **Click Scan** and let it populate the list.
-4. **Select HM10 Device** from the list and click **Connect**.
+4. **Select HC08** from the list and click **Connect**.
 5. Wait for connection successful.
 6. **Select the PIC device** you want to program.
 7. Click **Load Firmware** to select the **firmware file** (.hex) you want to upload.  

@@ -6,7 +6,7 @@ This software is a **simple and reliable PIC microcontroller firmware uploader**
 ---
 
 ## 🔌 TTL USB to Microchip Diagram
-![Wiring diagram](TTLtoPIC.png)
+![Wiring diagram](TTLtoPIC.jpg)
 
 ## Hardware Setup  
 1. Connect your **TTL-to-USB adapter** to the PIC:  

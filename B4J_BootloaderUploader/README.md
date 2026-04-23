@@ -1,9 +1,3 @@
-## Screenshot
-![Wiring diagram](./Help/MainScreen.jpg)
-![Wiring diagram](./Help/ATModeScreen.jpg)
-
----
-
 ## 📋 Table of Contents
 * [1. USB TTL (Serial COM)](#serial-com---ttl-usb)
 * [2. HC-05 Bluetooth (SPP)](#hc-05-bluetooth-ssp)
@@ -21,7 +15,7 @@ This software is a **simple and reliable PIC microcontroller firmware uploader**
 
 
 ## 🔌 TTL USB to Microchip Diagram
-![Wiring diagram](./Help/TTLtoPIC.png)
+![Wiring diagram](./Help/TTLtoPIC.jpg)
 
 
 ## Hardware Setup  
@@ -119,7 +113,7 @@ This project provides software support for **HM-10 Bluetooth modules**, enabling
 
 
 ## Hardware Setup
-Connect your `HM-10` Bluetooth module to the PIC microcontroller as follows:
+Connect your `HC-08` Bluetooth module to the PIC microcontroller as follows:
 
 - **TX of HM-10 → RX of PIC**  
 - **RX of HM-10→ TX of PIC**  
@@ -145,7 +139,7 @@ Connect your `HM-10` Bluetooth module to the PIC microcontroller as follows:
 ## How to Use  
 1. Open the **B4J Bootloader Uploader** software.  
 2. **Click Scan** and let it populate the list.
-3. **Select HM-10 Device** from the list and click **Connect**.
+3. **Select HM-10** from the list and click **Connect**.
 4. Wait for connection successful.
 5. **Select the PIC device** you want to program.
 6. Click **Load Firmware** to select the **firmware file** (.hex) you want to upload.  

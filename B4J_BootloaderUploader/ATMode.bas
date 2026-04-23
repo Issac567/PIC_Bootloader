@@ -334,11 +334,11 @@ Private Sub btnSend_Click
 	Dim DataOut As String 
 	
 	If optHC05.Selected = True Then
-		DataOut = txtCommand.Text & Chr(13) & Chr(10)	' With CRLF
+		DataOut = txtCommand.Text & Chr(13) & Chr(10)
 	Else
 		txtLog.Text = txtLog.Text & Chr(10) & Chr(13) & Chr(10) & Chr(13)
 		txtLog.SetSelection(txtLog.Text.Length, txtLog.Text.Length)
-		DataOut = txtCommand.Text						' Without CRLF
+		DataOut = txtCommand.Text
 	End If
 	astream.Write(DataOut.GetBytes("utf8"))
 	LogMessage("Send", txtCommand.Text)
