@@ -27,7 +27,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Version As String = "9.02"
+	Private Version As String = "10.01"
 	
 	'---------------------------------------
 	' Map Config Variables
@@ -115,6 +115,9 @@ Sub Class_Globals
 	Private BLE_useUUID As String							' What Characteristic for BLE
 	Private BLE_useMTUSize As Int = 20						' Write Flash support, Verify Flash in firmware will default at 20 now!
 	
+	
+	Private blnConfigOK As Boolean
+	
 End Sub
 
 Public Sub Initialize
@@ -176,7 +179,7 @@ Private Sub B4XPage_Created (Root1 As B4XView)
 	Dim jo As JavaObject = cmbPortUSBTTL
 	jo.RunMethod("setPromptText", Array("Choose Port"))
 	Dim jo As JavaObject = cmbPicList
-	jo.RunMethod("setPromptText", Array("PIC List"))	
+	jo.RunMethod("setPromptText", Array("PIC List"))
 End Sub
 Private Sub B4XPage_CloseRequest As ResumableSub
 	
@@ -389,6 +392,7 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 	Else
 			' Bootloader firmware confirmed handshake received
 		If msg.Contains("<InitReceived>") Then
+			Sleep(300)		' give firmware time to call ReceiveConfig.  There is 150ms delay after <InitReceived>.
 			blnHandShakeSuccess = True
 			LogMessage("Status", "Bootloader responded.")
 			
@@ -429,6 +433,13 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 			' Timeout occurred with Flash Write.  This will attempt a redo send
 		Else If msg.Contains("<ISR Timeout>") Then
 			blnTimeOut = True
+			
+		Else If msg.Contains("<ConfigTimeout>") Then
+			blnExitTimeoutError = True
+			EnableFunction
+			
+		Else If msg.Contains("<ConfigOK>") Then
+			blnConfigOK = True 
 					
 		End If
 	
@@ -580,6 +591,8 @@ Private Sub btnConnectHM10_Click
 				btnStopScanHM10_Click
 				LogMessage("Status", "Bluetooth Connected! @ " & address)					
 				For Each service As BleakService In bkHM10Client.Services.Values
+					Log("---------------------------------")
+					Log("Service: " & service.UUID)
 					For Each Chara As BleakCharacteristic In service.Characteristics					
 						Log(Chara.Properties)
 						Log(Chara.UUID)						
@@ -943,21 +956,12 @@ Private Sub btnFlash_Click
 			EnableFunction
 		End If
 	End If
-
 End Sub
 Sub SendHandshakeLoop
 	Dim rs As Object
 	Dim blnToggle As Boolean
-	
-	' BLE
-	If btnConnectHM10.Text = "Disconnect" Then
-		Dim b() As Byte = Array As Byte(0x55)
-		Dim b2() As Byte = Array As Byte(0xBB)
-	' OTHERS (SSP, WIFI and TTL USB)
-	Else
-		Dim b() As Byte = Array As Byte(0x55)
-		Dim b2() As Byte = Array As Byte(0xAA)
-	End If
+	Dim b() As Byte = Array As Byte(0x55)
+	Dim b2() As Byte = Array As Byte(0xAA)
 	
 	DisableFunction
 		
@@ -965,8 +969,12 @@ Sub SendHandshakeLoop
 		' Status boolean
 		If GetBooleanStatus = True Then Return
 		
-		' Exit and Start firmware upload if PIC signals handshake success
+		' Exit and Start Config upload
 		If blnHandShakeSuccess = True Then
+			' Will send 3 bytes config = 01, 00 14
+			' 01 = Ble type, 00 14 = mtu size (20)
+			Sleep(200)
+			SendConfigBytes
 			Return
 		Else
 			If blnToggle = False Then
@@ -988,11 +996,8 @@ Sub SendHandshakeLoop
 				Else
 					If astream.IsInitialized Then astream.Write(b2)
 				End If
-				If btnConnectHM10.Text = "Disconnect" Then
-					LogMessage("Handshake", "Sending byte: 0xBB")
-				Else
-					LogMessage("Handshake", "Sending byte: 0xAA")
-				End If
+
+				LogMessage("Handshake", "Sending byte: 0xAA")
 			End If
 		End If
 				
@@ -1001,6 +1006,48 @@ Sub SendHandshakeLoop
 		
 		blnToggle = Not(blnToggle)
 	Loop
+End Sub
+Sub SendConfigBytes
+	Dim rs As Object
+	Dim byteONE, byteTWO, byteTHREE As Byte
+
+	' 1. Set the BLE Flag
+	If btnConnectHM10.Text = "Disconnect" Then
+		byteONE = 0x01
+	Else
+		byteONE = 0x00
+	End If
+
+	' 2. Extract High Byte (Most Significant Byte)
+	' Shift right by 8 bits to move the top 8 bits into the bottom 8 bits
+	byteTWO = Bit.ShiftRight(Bit.And(BLE_useMTUSize, 0xFF00), 8)
+
+	' 3. Extract Low Byte (Least Significant Byte)
+	' Use a mask to keep only the bottom 8 bits
+	byteTHREE = Bit.And(BLE_useMTUSize, 0xFF)
+
+	' 4. Send to PIC
+	Dim config() As Byte = Array As Byte(byteONE, byteTWO, byteTHREE)
+	
+	Do While True
+		' Status boolean
+		If GetBooleanStatus = True Then Return
+		If blnConfigOK = True Then Return
+		
+		' BLE
+		If btnConnectHM10.Text = "Disconnect" Then
+			rs = bkHM10Client.Write(BLE_useUUID, config)
+			Wait For (rs) Complete (Result2 As PyWrapper)
+		' OTHERS (SSP, WIFI and TTL USB)
+		Else
+			If astream.IsInitialized Then astream.Write(config)
+		End If
+		LogMessage("Cfg Bytes", "0x" & Bit.ToHexString(byteONE).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTWO).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTHREE).ToUpperCase)
+					
+		' Avoid flooding UART
+		Sleep(500)
+	Loop
+		
 End Sub
 Sub SendFirmware
 	' Firmware Binary file must include all flash data including empty addresses!
@@ -1199,6 +1246,8 @@ Sub DisableFunction
 	txtLog.Text = ""
 	prgBar.Progress = 0		
 	cntVerify = 0
+	
+	blnConfigOK = False
 End Sub
 Sub EnableFunction
 	MenuBar1.Enabled = True
@@ -1215,6 +1264,8 @@ Sub EnableFunction
 	
 	blnACK = False	
 	blnVerifyRequest = False
+	
+	
 End Sub
 
 '--------------------------------------------------------
