@@ -1,6 +1,6 @@
 /*
  * File:   bootloader.c
- * Version: 4.02
+ * Version: 4.01
  * Author: Issac
  * Created on January 19, 2026, 2:50 PM
  * Family: 16F13145
@@ -28,7 +28,6 @@
 
 uint16_t flash_packet[FLASH_WRITE_BLOCK];   // 32 words, 64 bytes total
 bool isBLE = false;                         // BLE Detection uses different verify_flash process
-uint16_t BLE_MTU_Size = 20;                 // BLE MTU Size (B4J sends the value from configuration function)
 
 //-------------------------------------------------------
 // INTERNAL OSCILLATOR CLK CONFIG
@@ -170,7 +169,7 @@ void Flash_Verify(void)
                 ble_counter += 2;
         
                 // 2. Every 20 bytes, we must pause for the HM-10 radio
-                if (ble_counter >= BLE_MTU_Size) 
+                if (ble_counter >= 20) 
                 {
                     // Wait for the HM-10 to clear its internal UART-to-BLE buffer
                     __delay_ms(15);         // Important to keep it min 15 ms! BLE Cant handle less then that!
@@ -337,55 +336,6 @@ void DoFirmwareUpdate(void)
 }
 
 
-void ReceiveConfig(void)
-{
-    // First Byte = 0x01 = BLE, 0x00 <> BLE
-    // Second and Third Byte = MTU Size
-    
-    uint8_t temp[3];  
-    uint16_t byteCount = 0;
-    uint32_t timeoutCounter = 0;
-    
-    const uint32_t TIMEOUT_MAX = 1000000; 
-    
-    while (byteCount < 3)
-    {
-        if(PIR4bits.RC1IF)
-        {
-            temp[byteCount] = UART_Rx();  
-            byteCount++;
-            timeoutCounter = 0; 
-        }
-        else
-        {
-            timeoutCounter++;
-            
-            if (timeoutCounter > TIMEOUT_MAX)
-            {
-                UART_TxString("<ConfigTimeout>");
-                __delay_ms(MSG_MS_DELAY);
-                
-                // CRITICAL: Do not proceed to erase/write flash if config failed
-                return; 
-            }
-        }
-    }
-
-    // --- PROCESS CONFIG BYTES ---
-    // Byte 0: BLE Toggle (1 = True, 0 = False)
-    isBLE = (temp[0] != 0); 
-
-    // Bytes 1 & 2: Set the MTU Size
-    BLE_MTU_Size = ((uint16_t)temp[1] << 8) | temp[2];
-    
-    __delay_ms(MSG_MS_DELAY);
-    UART_TxString("<ConfigOK>");
-    __delay_ms(MSG_MS_DELAY);
-                
-    Flash_EraseApplication();  
-    DoFirmwareUpdate();    
-}
-
 //-------------------------------------------------------
 // WAIT HANDSHAKE
 //-------------------------------------------------------
@@ -403,20 +353,36 @@ void WaitHandshake(void) {
         {
             curr = UART_Rx();
                 
-            // Check for BLE, SSP, TTL USB and WIFI uses this!
-            if (prev == 0x55 && curr == 0xAA)
-            {         
+            // Expecting 0xAA/0xBB and 0x55 from PC to enter Flash mode
+            // All Devices except BLE
+            if(prev == 0x55 && curr == 0xAA) 
+            {       
+                isBLE = false;
+                
                 // Send initialization acknowledgment before starting Erase and Flash update
                 UART_TxString("<InitReceived>");
                 __delay_ms(MSG_MS_DELAY);
                 
-                ReceiveConfig();
-                   
-                return;        
+                // Update the Firmware        
+                Flash_EraseApplication();               // Erase Flash
+                DoFirmwareUpdate();                     // Flash Write
+                return;
+            }
+            // Check for other devices BLE
+            else if (prev == 0x55 && curr == 0xBB)
+            {      
+                isBLE = true;
+
+                UART_TxString("<InitReceived>");
+                __delay_ms(MSG_MS_DELAY);
+                
+                Flash_EraseApplication();  
+                DoFirmwareUpdate();        
+                
+                return;          
             }            
             // sliding window byte comparison
             prev = curr;
-            //handshakeCounter = 0; // Optional: reset timeout if we see traffic
         }
         else 
         {
@@ -429,7 +395,6 @@ void WaitHandshake(void) {
     UART_TxString("<HandShakeTimeout>");
     __delay_ms(MSG_MS_DELAY);
 }
-
 
 
 //-------------------------------------------------------
