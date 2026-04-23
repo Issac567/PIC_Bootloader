@@ -141,7 +141,7 @@
         <property key="checksum-flash-options-widthc" value="2"/>
         <property key="clear-bss" value="true"/>
         <property key="code-model-external" value="wordwrite"/>
-        <property key="code-model-rom" value="20-8FF"/>
+        <property key="code-model-rom" value="20-9FF"/>
         <property key="create-html-files" value="false"/>
         <property key="data-model-ram" value=""/>
         <property key="data-model-size-of-double" value="32"/>

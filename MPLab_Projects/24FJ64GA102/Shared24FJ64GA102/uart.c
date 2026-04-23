@@ -55,10 +55,9 @@ void UART_Init(void)
     // UARTEN handles the receiver.
 
     // 9. Clear pending RX bytes
-    //uint16_t dummy;
+    uint16_t dummy;
     while (U1STAbits.URXDA) { // While UART1 Receive Data Available
-        //dummy = U1RXREG; 
-        (void)U1RXREG; // Read and intentionally discard the result
+        dummy = U1RXREG; 
     }
 }
 
