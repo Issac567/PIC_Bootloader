@@ -1,7 +1,7 @@
 /*
  * File:   application.c
  * Author: issac
- * Version: 4.01
+ * Version: 4.02
  * Created on January 18, 2026, 12:13 PM
  * Family: 18F26Q24
  * USE 1.30.487
@@ -146,10 +146,10 @@ void __interrupt(high_priority) App_ISR(void)
 }
 
 
-// The __at(0x900) attribute forces the linker to place this code at address 0x900.
-// Can't place it in 0x800 to 0x802 will build with errors. place 0x804 or higher ok
+// The __at(0xA00) attribute forces the linker to place this code at address 0xA00.
+// Can't place it in 0x900 to 0x902 will build with errors. place 0x904 or higher ok
 // This also avoids the compiler add FFFC GOTO function
-void __at(0x900) main(void)  
+void __at(0xA00) main(void)  
 {
     uint8_t b;                          // Variable to hold the received handshake byte
     
@@ -182,7 +182,7 @@ void __at(0x900) main(void)
             b = UART_Rx();
             
             // If the handshake byte (0x55 or 0xAA or 0xBB) is detected:
-            if (b == 0x55 || b == 0xAA || b == 0xBB)            
+            if (b == 0x55 || b == 0xAA)            
             {
                 //Timer2_Stop(); // Enable DEMO
                 

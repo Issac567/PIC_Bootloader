@@ -132,10 +132,10 @@ void EEPROM_WriteByte(uint16_t address, uint8_t data)
 }
 
 
-// The __at(0xA00) attribute forces the linker to place this code at address 0xA00.
-// Can't place it in 0x900 to 0x902 will build with errors. place 0x904 or higher ok
+// The __at(0xB00) attribute forces the linker to place this code at address 0xB00.
+// Can't place it in 0xA00 to 0xA02 will build with errors. place 0xA04 or higher ok
 // This also avoids the compiler add 1FFFC GOTO function
-void __at(0xA00) main(void) 
+void __at(0xB00) main(void) 
 {
     uint8_t b;                          // Variable to hold the received handshake byte
     
@@ -168,7 +168,7 @@ void __at(0xA00) main(void)
             b = UART_Rx();
             
             // If the handshake byte (0x55 or 0xAA or 0xBB) is detected:
-            if (b == 0x55 || b == 0xAA || b == 0xBB)             
+            if (b == 0x55 || b == 0xAA)             
             {
                 // Enable Demo to Test Timer2
                 //Timer2_Stop();
