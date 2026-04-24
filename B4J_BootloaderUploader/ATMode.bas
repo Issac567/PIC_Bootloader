@@ -18,6 +18,7 @@ Sub Class_Globals
 	Private btnQueryName As Button
 	Private optHC05 As RadioButton
 	Private optHM10 As RadioButton
+	Private optHM20 As RadioButton
 	
 	' Pane2
 	Private Pane2 As Pane
@@ -34,6 +35,7 @@ Sub Class_Globals
 	
 	Private serialATMode As Serial							' UART Serial COM
 	Private astream As AsyncStreams							' Read/Write Stream
+
 
 
 End Sub
@@ -125,7 +127,7 @@ Private Sub btnSetBaud_Click
 	If cmbBaud.SelectedIndex <> -1 Then
 		If optHC05.Selected = True Then
 			txtCommand.Text = "AT+UART=" & cmbBaud.Items.Get(cmbBaud.SelectedIndex) & ",0,0"
-		Else
+		Else if optHM10.Selected = True Then
 			Dim intSet As Int
 			Dim Value As String = cmbBaud.Items.Get(cmbBaud.SelectedIndex)
 			Select Case Value
@@ -137,6 +139,20 @@ Private Sub btnSetBaud_Click
 				Case "38400":	intSet = 2
 				Case "57600":	intSet = 3
 				Case "115200":  intSet = 4
+			End Select
+			txtCommand.Text = "AT+BAUD" & intSet
+		Else 
+			Dim intSet As Int
+			Dim Value As String = cmbBaud.Items.Get(cmbBaud.SelectedIndex)
+			Select Case Value
+				Case "1200":	intSet = 0
+				Case "2400":	intSet = 1
+				Case "4800":	intSet = 2
+				Case "9600":	intSet = 3
+				Case "19200":	intSet = 4
+				Case "38400":	intSet = 5
+				Case "57600":	intSet = 6
+				Case "115200":  intSet = 7
 			End Select
 			txtCommand.Text = "AT+BAUD" & intSet
 		End If
@@ -244,6 +260,33 @@ Private Sub optHC05_SelectedChange(Selected As Boolean)
 	cmbListATCommand.Items.Add("AT+INIT")
 	cmbListATCommand.Items.Add("AT+INQ")
 	cmbListATCommand.Items.Add("AT+DISC")	
+	cmbListATCommand.SelectedIndex = 0
+End Sub
+
+Private Sub optHM20_SelectedChange(Selected As Boolean)
+	' Same as HM-10 but Setting Baud is different
+	cmbListATCommand.Items.Clear
+	cmbListATCommand.Items.Add("AT")
+	cmbListATCommand.Items.Add("AT+RESET")
+	cmbListATCommand.Items.Add("AT+VERSION?")
+	cmbListATCommand.Items.Add("AT+ORGL")
+	cmbListATCommand.Items.Add("AT+ADDR?")
+	cmbListATCommand.Items.Add("AT+ROLE?")
+	cmbListATCommand.Items.Add("AT+CLASS?")
+	cmbListATCommand.Items.Add("AT+IAC?")
+	cmbListATCommand.Items.Add("AT+INQM?")
+	cmbListATCommand.Items.Add("AT+PSWD?")
+	cmbListATCommand.Items.Add("AT+CMODE?")
+	cmbListATCommand.Items.Add("AT+BIND?")
+	cmbListATCommand.Items.Add("AT+MPIO?")
+	cmbListATCommand.Items.Add("AT+IPSCAN?")
+	cmbListATCommand.Items.Add("AT+SENM?")
+	cmbListATCommand.Items.Add("AT+ADCN?")
+	cmbListATCommand.Items.Add("AT+MRAD?")
+	cmbListATCommand.Items.Add("AT+STATE?")
+	cmbListATCommand.Items.Add("AT+INIT")
+	cmbListATCommand.Items.Add("AT+INQ")
+	cmbListATCommand.Items.Add("AT+DISC")
 	cmbListATCommand.SelectedIndex = 0
 End Sub
 
@@ -372,7 +415,6 @@ Sub LogMessage(From As String, Msg As String)
 	txtLog.Text = txtLog.Text & From & ": " & Msg & CRLF
 	txtLog.SetSelection(txtLog.Text.Length, txtLog.Text.Length)
 End Sub
-
 
 
 

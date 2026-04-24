@@ -27,7 +27,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Version As String = "10.03"
+	Private Version As String = "10.04"
 	
 	'---------------------------------------
 	' Map Config Variables
@@ -1008,35 +1008,46 @@ Sub SendConfigBytes
 	' One time shot. The PIC will be ready to poll!
 	
 	Dim rs As Object
-	Dim byteONE, byteTWO, byteTHREE As Byte
+	Dim byteONE(1), byteTWO(1), byteTHREE(1) As Byte
 
 	' 1. Set the BLE Flag
 	If btnConnectHM10.Text = "Disconnect" Then
-		byteONE = 0x01	'BLE
+		byteONE(0) = 0x01	'BLE
 	Else
-		byteONE = 0x00  'OTHERS
+		byteONE(0) = 0x00  'OTHERS
 	End If
 
 	' 2. Extract High Byte (Most Significant Byte)
 	' Shift right by 8 bits to move the top 8 bits into the bottom 8 bits
-	byteTWO = Bit.ShiftRight(Bit.And(BLE_useMTUSize, 0xFF00), 8)
+	byteTWO(0) = Bit.ShiftRight(Bit.And(BLE_useMTUSize, 0xFF00), 8)
 
 	' 3. Extract Low Byte (Least Significant Byte)
 	' Use a mask to keep only the bottom 8 bits
-	byteTHREE = Bit.And(BLE_useMTUSize, 0xFF)
-
-	' 4. Send to PIC
-	Dim config() As Byte = Array As Byte(byteONE, byteTWO, byteTHREE)
+	byteTHREE(0) = Bit.And(BLE_useMTUSize, 0xFF)
 
 	' BLE
 	If btnConnectHM10.Text = "Disconnect" Then
-		rs = bkHM10Client.Write(BLE_useUUID, config)
+		rs = bkHM10Client.Write(BLE_useUUID, byteONE)
 		Wait For (rs) Complete (Result2 As PyWrapper)
+		Sleep(50)
+		rs = bkHM10Client.Write(BLE_useUUID, byteTWO)
+		Wait For (rs) Complete (Result2 As PyWrapper)
+		Sleep(50)
+		rs = bkHM10Client.Write(BLE_useUUID, byteTHREE)
+		Wait For (rs) Complete (Result2 As PyWrapper)
+		Sleep(50)
 	' OTHERS (SSP, WIFI and TTL USB)
 	Else
-		If astream.IsInitialized Then astream.Write(config)
+		If astream.IsInitialized Then 
+			astream.Write(byteONE)
+			Sleep(50)
+			astream.Write(byteTWO)
+			Sleep(50)
+			astream.Write(byteTHREE)
+			Sleep(50)
+		End If
 	End If
-	LogMessage("CFG BYTES", "Sending: 0x" & Bit.ToHexString(byteONE).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTWO).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTHREE).ToUpperCase)
+	LogMessage("CFG BYTES", "Sending: 0x" & Bit.ToHexString(byteONE(0)).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTWO(0)).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTHREE(0)).ToUpperCase)
 					
 	Do While blnConfigOK = False
 		If GetBooleanStatus = True Then Return
