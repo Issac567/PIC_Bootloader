@@ -1014,7 +1014,7 @@ Sub SendConfigBytes
 	If btnConnectHM10.Text = "Disconnect" Then
 		byteONE(0) = 0x01	'BLE
 	Else
-		byteONE(0) = 0x00  'OTHERS
+		byteONE(0) = 0x00   'OTHERS
 	End If
 
 	' 2. Extract High Byte (Most Significant Byte)
@@ -1139,7 +1139,6 @@ Sub SendFirmware
 				' BLE Flash Write is supported by MTU Size requested
 				' Need to test HM-20 supports over 400 mtu size!  
 				' HM-10 tested at 20 mtu really sucks!
-				' FLash_Verify MTU Size currently at 20 bytes in firmware.  Future, will improve Verify_Flash	
 				Dim bc As ByteConverter
 				Dim chunkSize As Int = Max(20, BLE_useMTUSize)
 
