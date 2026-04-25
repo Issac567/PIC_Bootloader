@@ -245,12 +245,12 @@ You need to set `HC05/HM10` baud to `57600` with Bootloader Uploader, alternativ
 
 
 ### Hardware Setup
-Connect your `HC-05/08` Bluetooth module to the **TTL USB** as follows:
+Connect your `HC-05/HM-10` Bluetooth module to the **TTL USB** as follows:
 
 - **TX of HC-05/HM-10 → RX of TTL USB**  
 - **RX of HC-05/HM-10 → TX of TTL USB**  
 - **GND → GND**  
-- **VCC → 3.3V or 5V** (depending on your HC-05/08 module)
+- **VCC → 3.3V or 5V** (depending on your HC-05/HM-10 module)
 - **EN** → VCC
 
   
