@@ -27,7 +27,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Version As String = "10.04"
+	Private Version As String = "10.05"
 	
 	'---------------------------------------
 	' Map Config Variables
@@ -298,6 +298,7 @@ Private Sub btHM10_DeviceFound (Device As BleakDevice)
 	'Log($"${Device.DeviceId}, Name=${Device.Name}, Services=${Device.ServiceUUIDS}, ServiceData=${Device.ServiceData}"$)
 	Dim description As String = Device.Name & ": " & Device.DeviceId
 	
+	' Add if not in FoundDevice map!
 	If foundDevices.ContainsKey(description) = False Then
 		ListView1HM10.Items.Add(description)
 		If ListView1HM10.Items.Size > 0 Then
@@ -307,6 +308,7 @@ Private Sub btHM10_DeviceFound (Device As BleakDevice)
 		End If
 	End If
 	
+	' Add to map.  Existing will overwrite
 	foundDevices.Put(description, Device)
 	
 End Sub
@@ -413,7 +415,7 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 			' End of Erase Flash. When Pic sends this, delay a bit and start the flash upload
 		Else If msg.Contains("<EndFlashErase>") Then
 			Sleep(300)
-			SendFirmware
+			SendFirmwareBytes
 			
 			' B4J expects <ACK> from PIC so B4J sends next packets in Firmware Upload routine
 		Else If msg.Contains("<ACK>") Then
@@ -944,7 +946,7 @@ Private Sub btnFlash_Click
                                       		 "Attention!", "Ok", "Cancel", "", Null)
 		Wait For (sf2) Msgbox_Result(ret As Int)
 		If ret = xui.DialogResponse_Positive Then
-			SendHandshakeLoop
+			SendHandShakeBytes
 		End If
 	' Flash Stop Logic
 	Else If btnFlash.Text = "Stop" Then
@@ -956,7 +958,7 @@ Private Sub btnFlash_Click
 		End If
 	End If
 End Sub
-Sub SendHandshakeLoop
+Sub SendHandShakeBytes
 	Dim rs As Object
 	Dim blnToggle As Boolean
 	Dim b() As Byte = Array As Byte(0x55)
@@ -1055,7 +1057,7 @@ Sub SendConfigBytes
 	Loop
 		
 End Sub
-Sub SendFirmware
+Sub SendFirmwareBytes
 	' Firmware Binary file must include all flash data including empty addresses!
 	Dim intBlockSize As Int
 
@@ -1202,13 +1204,13 @@ End Sub
 ' Verify Firmware
 '--------------------------------------------------------
 Sub VerifyStatus
-	If VerifyFirmware = True Then
+	If CompareFirmware = True Then
 		LogMessage("STATUS", "Programming/Verify Success")
 	Else
 		LogMessage("STATUS", "Programming/Verify Failed!")
 	End If
 End Sub
-Sub VerifyFirmware() As Boolean
+Sub CompareFirmware() As Boolean
 	' Make sure both arrays are the same length
 	If firmwareFile.Length <> firmwareVerify.Length Then
 		Return False
