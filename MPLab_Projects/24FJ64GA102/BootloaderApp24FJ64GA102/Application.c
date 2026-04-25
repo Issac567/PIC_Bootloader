@@ -1,7 +1,7 @@
 /*
  * File:   application.c
  * Author: issac
- * Version: 4.01
+ * Version: 4.04
  * Family: 24F64GA102
  * Created on January 18, 2026, 12:13 PM
  * USE 1.10.375
@@ -14,9 +14,9 @@
  * 2. The default p24FJ64GA102.gld was modified to define fixed memory ranges.
  * 3. This prevents memory collisions between the Bootloader and Application.
  * * [APPLICATION RANGE]
- * Start Address (ORIGIN): 0x800
+ * Start Address (ORIGIN): 0xC00
  * End Address:           0xABF6
- * Length:                0xA3F6
+ * Length:                0x9FF6
  * the Unified Hex generator to merge this App with the Bootloader.
  * ----------------------------------------------------------------------------
  */
@@ -88,7 +88,7 @@ void Timer2_Stop(void)
 
 // Use the address attribute to match the Bootloader's goto
 //void __attribute__((address(0x908), interrupt, no_auto_psv)) App_ISR(void)
-void __attribute__((address(0x908), interrupt, no_auto_psv)) _T2Interrupt(void)
+void __attribute__((address(0xD08), interrupt, no_auto_psv)) _T2Interrupt(void)
 {
     // 1. Clear the flag
     // In PIC24, the flag is T2IF in the IFS0 register

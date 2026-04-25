@@ -1,6 +1,6 @@
 /*
  * File:   bootloader.c
- * Version: 4.02
+ * Version: 4.04
  * Author: Issac
  * Created on January 19, 2026, 2:50 PM
  * Family: 16F88
@@ -368,6 +368,7 @@ void ReceiveConfig(void)
 
     // Bytes 1 & 2: Set the MTU Size
     BLE_MTU_Size = ((uint16_t)temp[1] << 8) | temp[2];
+    //BLE_DELAY Variable not required. Its only 8 bytes total!
     
     __delay_ms(MSG_MS_DELAY);
     UART_TxString("<ConfigOK>");

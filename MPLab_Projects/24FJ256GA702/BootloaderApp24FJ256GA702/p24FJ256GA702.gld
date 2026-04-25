@@ -63,9 +63,9 @@ OPTIONAL(-lfx)
 MEMORY
 {
   data  (a!xr)   : ORIGIN = 0x800,         LENGTH = 0x4000
-  reset          : ORIGIN = 0x800,         LENGTH = 0x4
+  reset          : ORIGIN = 0x1000,         LENGTH = 0x4
   ivt            : ORIGIN = 0x4,           LENGTH = 0xFC
-  program (xr)   : ORIGIN = 0x804,         LENGTH = 0x29FFA
+  program (xr)   : ORIGIN = 0x1004,         LENGTH = 0x297FA
   FSEC           : ORIGIN = 0x2AF00,       LENGTH = 0x2
   FBSLIM         : ORIGIN = 0x2AF10,       LENGTH = 0x2
   FSIGN          : ORIGIN = 0x2AF14,       LENGTH = 0x2
@@ -87,8 +87,8 @@ __FPOR = 0x2AF24;
 __FICD = 0x2AF28;
 __FDEVOPT1 = 0x2AF2C;
 
-__CODE_BASE = 0x800;
-__CODE_LENGTH = 0x29FFE;
+__CODE_BASE = 0x1000;
+__CODE_LENGTH = 0x297FE;
 __IVT_BASE  = 0x4;
 __DATA_BASE = 0x800;
 __DATA_LENGTH = 0x4000;

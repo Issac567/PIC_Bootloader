@@ -1,7 +1,7 @@
 /*
  * File:   application.c
  * Author: issac
- * Version: 4.01
+ * Version: 4.04
  * Created on January 18, 2026, 12:13 PM
  * Family: 18F27Q43
  * USE 1.29.481
@@ -164,10 +164,10 @@ void EEPROM_Write(uint16_t address, uint8_t data) {
 }
 
 
-// The __at(0xB00) attribute forces the linker to place this code at address 0xB00.
-// Can't place it in 0xA00 to 0xA02 will build with errors. place 0xA04 or higher ok
+// The __at(0xC00) attribute forces the linker to place this code at address 0xC00.
+// Can't place it in 0xB00 to 0xB02 will build with errors. place 0xB04 or higher ok
 // This also avoids the compiler add 1FFFC GOTO function
-void __at(0xB00) main(void)  
+void __at(0xC00) main(void)  
 {
     uint8_t b;                          // Variable to hold the received handshake byte
     

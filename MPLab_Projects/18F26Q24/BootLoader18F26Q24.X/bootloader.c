@@ -1,6 +1,6 @@
 /*
  * File:   bootloader.c
- * Version: 4.02
+ * Version: 4.04
  * Author: Issac
  * Created on January 19, 2026, 2:50 PM
  * Family: 18F26Q24
@@ -13,9 +13,9 @@
 #include "config.h"
 #include "uart.h"
 
-// Note: B4J Expected bytes = 0xFFFF - 0x00A00 = 0xF700 = 62,976 BYTES!
+// Note: B4J Expected bytes = 0xFFFF - 0x00B00 = 0xF500 = 62,720 BYTES!
 
-#define FLASH_START         0x00A00         // Recommended for Q24 (Page aligned)
+#define FLASH_START         0x00B00         // Recommended for Q24 (Page aligned)
 #define FLASH_END           0x0FFFF         // 64KB Flash limit
 #define FLASH_ERASE_BLOCK   128             // Q24 erases in 128-word (256-byte) pages
 #define FLASH_WRITE_BLOCK   128             // Q24 writes in 128-word (256-byte) pages        
@@ -24,6 +24,7 @@
 
 #define LED_PIN   LATBbits.LATB4            // Use LAT for Output / Bootloader Led Status 
 #define LED_TRIS  TRISBbits.TRISB4          // Output PortB.4 pin
+uint16_t BLE_MTU_Delay = 20;                // Min delay for each packet sent
 
 // HARD-RESERVE THE MEMORY (0x1500 - 0x15FF)
 // The 'volatile' ensures the compiler doesn't optimize away reads/writes.
@@ -157,11 +158,16 @@ void Flash_Verify(void)
             {
                 ble_counter += 2;
         
-                // 2. Every 20 bytes, we must pause for the HM-10 radio
+                // 2. Every xx bytes, we must pause for the HM-10 radio
                 if (ble_counter >= BLE_MTU_Size) 
                 {
                     // Wait for the HM-10 to clear its internal UART-to-BLE buffer
-                    __delay_ms(20);         // Important to keep it min 20 ms! BLE Cant handle less then that!
+                   // Loop until value of MTU_Delay has achieved.
+                    uint16_t temp = BLE_MTU_Delay;
+                    while (temp--)
+                    {
+                        __delay_ms(1);
+                    }   
                     ble_counter = 0;
                 }
             }
@@ -366,6 +372,10 @@ void ReceiveConfig(void)
 
     // Bytes 1 & 2: Set the MTU Size
     BLE_MTU_Size = ((uint16_t)temp[1] << 8) | temp[2];
+    // Linear mapping:
+    // 20 bytes  -> 20 ms
+    // 400 bytes -> 100 ms
+    BLE_MTU_Delay = (uint16_t)((BLE_MTU_Size * 211UL) / 1000UL + 16);
     
     __delay_ms(MSG_MS_DELAY);
     UART_TxString("<ConfigOK>");
@@ -436,8 +446,8 @@ void main(void) {
     
     LED_PIN  = 0;                   // LED Off (bootloader led))
     
-    asm("goto 0xA00");              // If bootloader is not init from PC, then continue to application
+    asm("goto 0xB00");              // If bootloader is not init from PC, then continue to application
     
     
-    // Good news is when bootloader goes to 0x0A00 and is invalid, causes pic to reset and main repeated over and over till handshake and flash success!
+    // Good news is when bootloader goes to 0x0B00 and is invalid, causes pic to reset and main repeated over and over till handshake and flash success!
 }

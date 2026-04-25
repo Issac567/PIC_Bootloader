@@ -1,6 +1,6 @@
 /*
  * File:   bootloader.c
- * Version: 4.02
+ * Version: 4.04
  * Author: Issac
  * Family: 24F64GA102
  * Created on January 19, 2026, 2:50 PM
@@ -15,8 +15,8 @@
  * 2. This defines the dedicated footprint for the Bootloader firmware.
  * * [BOOTLOADER RANGE]
  * Start Address (ORIGIN): 0x200  (Offset for Vector Tables)
- * End Address:           0x7FF
- * Length:                0x600 
+ * End Address:           0xBFF
+ * Length:                0xA00 
  * * COORDINATION: The Application range begins at 0x800.
  * ----------------------------------------------------------------------------
  */
@@ -27,10 +27,10 @@
 #include "config.h"
 #include "uart.h"
 
-// Note: B4J Expected bytes = 0xABF6 - 0x0800 = 83,952 BYTES with Phantom!
+// Note: B4J Expected bytes = 0xABF6 - 0x0C00 = 81,904 BYTES with Phantom!
 
 // Adjusted for PIC24FJ64GA102 based on your .gld configuration
-#define FLASH_START          0x00800            // Matches your Application ORIGIN
+#define FLASH_START          0x00C00            // Matches your Application ORIGIN
 #define FLASH_END            0x0ABF6            // Matches your Application END (Last address)
 
 // PIC24FJ64GA102 Specific Flash geometry
@@ -46,6 +46,7 @@
 uint16_t flash_packet[FLASH_WRITE_BLOCK * 2];   // Array of 128 words
 bool isBLE = false;                             // BLE Detection uses different verify_flash process
 uint16_t BLE_MTU_Size = 20;                     // BLE MTU Size (B4J sends the value from configuration function)
+uint16_t BLE_MTU_Delay = 20;                    // Min delay for each packet sent
 
 //-------------------------------------------------------
 // INTERNAL OSCILLATOR CLK CONFIG
@@ -181,11 +182,16 @@ void Flash_Verify(void)
             {
                 ble_counter += 4;
         
-                // 2. Every 20 bytes, we must pause for the HM-10 radio
+                // 2. Every xx bytes, we must pause for the HM-10 radio
                 if (ble_counter >= BLE_MTU_Size) 
                 {
                     // Wait for the HM-10 to clear its internal UART-to-BLE buffer
-                    __delay_ms(20);         // Important to keep it min 20 ms! BLE Cant handle less then that!
+                   // Loop until value of MTU_Delay has achieved.
+                    uint16_t temp = BLE_MTU_Delay;
+                    while (temp--)
+                    {
+                        __delay_ms(1);
+                    }   
                     ble_counter = 0;
                 }
             }
@@ -380,6 +386,10 @@ void ReceiveConfig(void)
 
     // Bytes 1 & 2: Set the MTU Size
     BLE_MTU_Size = ((uint16_t)temp[1] << 8) | temp[2];
+    // Linear mapping:
+    // 20 bytes  -> 20 ms
+    // 400 bytes -> 100 ms
+    BLE_MTU_Delay = (uint16_t)((BLE_MTU_Size * 211UL) / 1000UL + 16);
     
     __delay_ms(MSG_MS_DELAY);
     UART_TxString("<ConfigOK>");
@@ -452,8 +462,8 @@ int main(void) {
     
     LED_PIN  = 0;                   // LED Off (bootloader led))
     
-    asm("goto 0x800");            
+    asm("goto 0xC00");            
     
-    // Good news is when bootloader goes to 0x0800 and is invalid, causes pic to reset and main repeated over and over till handshake and flash success!
+    // Good news is when bootloader goes to 0x0C00 and is invalid, causes pic to reset and main repeated over and over till handshake and flash success!
 }
 
