@@ -2,13 +2,13 @@
 EndAddrFlash=44022
 HandShakeDelayMS=400
 EmptyFlashValue=0
-PacketDelayMS=1
+PacketDelayMS=0
 PicName=24FJ64GA102
-StartAddrFlash=2048
+StartAddrFlash=3072
 UseWriteBurst=true
 InstructionPacket=64
 StopBit=1
 Notes=24-bit Architecture
-ExpectedBytes=83952
+ExpectedBytes=81904
 UseDoubleHexAddr=true
 Use4Padding=true
