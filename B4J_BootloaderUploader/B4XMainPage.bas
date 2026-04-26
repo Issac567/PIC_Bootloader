@@ -27,7 +27,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Version As String = "10.05"
+	Private Version As String = "10.06"
 	
 	'---------------------------------------
 	' Map Config Variables
@@ -100,14 +100,15 @@ Sub Class_Globals
 	Private firmwareFile() As Byte							' firmware binary from FILE
 	Private firmwareVerify() As Byte						' firmware binary from PIC
 	Private cntVerify As Int								' Counter detection of incoming verify bytes from PIC
-	Private blnVerifyRequest As Boolean						' <StartFlashVerify> from PIC
+	
 	Private blnHandShakeSuccess As Boolean					' <InitReceived> from PIC
-	Private blnExitTimeoutError As Boolean					' <TimeoutError> from PIC
-	Private blnAppExitAstreamError	As Boolean				' Astream error exit loop from app
-	Private blnAppStopQuit As Boolean						' Exit loop for Stop and Quit from app
-	Private blnACK As Boolean								' <ACK> from PIC used in Firmware Upload.  Needs this <ACK> from PIC to continue next Block Write bytes
-	Private blnTimeOut As Boolean							' <ISR Timeout> Timeout Detected from PIC
 	Private blnConfigOK As Boolean							' <ConfigOK> from PIC exit function (Success bytes received)
+	Private blnWriteACK As Boolean							' <ACK> from PIC used in Firmware Upload.  Needs this <ACK> from PIC to continue next Block Write bytes
+	Private blnISRTimeOut As Boolean						' <ISR Timeout> Timeout Detected from PIC
+	Private blnTimeoutError As Boolean						' <TimeoutError> 3 ISR Timeout from PIC
+	Private blnStartVerifyRequest As Boolean				' <StartFlashVerify> from PIC
+	Private blnAstreamError	As Boolean						' Astream error exit loop
+	Private blnAppStopQuit As Boolean						' Exit loop for Stop Flash, Disconnect and Quit App
 	
 	Private rxBufferString As String						' Buffer Newdata in string format PIC Message only
 	Private strLastFilePath As String						' Reloads firmware from FILE when PIC name changed so Firmware array be corrected
@@ -139,7 +140,8 @@ Private Sub B4XPage_Created (Root1 As B4XView)
 	TabPane1.LoadLayout("TabPane2", "Serial Com - TTL USB")
 	TabPane1.LoadLayout("TabPane4", "WIFI DT-06")
 
-	B4XPages.AddPageAndCreate("AT Command Mode", ATCommandMode)
+	'B4XPages.AddPageAndCreate("AT Command Mode", ATCommandMode)
+	B4XPages.AddPage("AT Command Mode", ATCommandMode)
 	
 	B4XPages.SetTitle(Me, "PIC Bootloader Upload Deluxe")
 	
@@ -249,7 +251,7 @@ Sub astream_NewData (Buffer() As Byte)
 	' PIC sends with > as last byte to confirm end of message or bytes
 	' When VerifyRequest = true, it does not received ">". Sticktly bytes only!
 	' Buffer is meant for Verify Bytes only.
-	If rxBufferString.Contains(">") Or blnVerifyRequest = True Then
+	If rxBufferString.Contains(">") Or blnStartVerifyRequest = True Then
 		HandleMessage(rxBufferString, Buffer)
 		rxBufferString = ""
 	End If
@@ -260,7 +262,7 @@ Sub astream_Error
 	astream_Terminated
 End Sub
 Sub astream_Terminated
-	blnAppExitAstreamError = True
+	blnAstreamError = True
 	
 	If astream.IsInitialized Then
 		astream.Close
@@ -348,7 +350,7 @@ Private Sub btHM10_CharNotify (Notification As BleakNotification)
 	' PIC sends with > as last byte to confirm end of message
 	' When VerifyRequest = true, it does not received ">". Sticktly bytes only!
 	' Buffer is meant for Verify Bytes only.
-	If rxBufferString.Contains(">") Or blnVerifyRequest = True Then
+	If rxBufferString.Contains(">") Or blnStartVerifyRequest = True Then
 		HandleMessage(rxBufferString, Buffer)
 		rxBufferString = ""
 	End If
@@ -366,12 +368,12 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 	
 	' We dont want to log Incoming <ACK> while Firmware upload!
 	' We dont want to log Incoming PIC VERIFY bytes
-	If blnVerifyRequest <> True And msg <> "<ACK>" Then
+	If blnStartVerifyRequest <> True And msg <> "<ACK>" Then
 		LogMessage("PIC", msg)
 	End If
 	
 	' This is triggered by <StartFlashVerify> from PIC after Flash Write is completed
-	If blnVerifyRequest = True Then
+	If blnStartVerifyRequest = True Then
 		'LogMessage("INCOMMING", BytesToHexString(buffer))  ' debugging only!!!					
 		For x = 0 To buffer.Length - 1  ' This method is better.  Newdata does not guarantee all block in one event
 			' This array will compare to firmware() which is Converted FILE binary
@@ -405,7 +407,7 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 			LogMessage("STATUS", "Bootloader responded.")
 			
 		Else If msg.Contains("<ConfigTimeout>") Then
-			blnExitTimeoutError = True
+			blnTimeoutError = True
 			EnableFunction
 			LogMessage("STATUS", "PIC reported timeout error, try again")
 			
@@ -419,22 +421,22 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 			
 			' B4J expects <ACK> from PIC so B4J sends next packets in Firmware Upload routine
 		Else If msg.Contains("<ACK>") Then
-			blnACK = True
+			blnWriteACK = True
 
 			' Timeout occurred with Flash Write.  This will attempt a redo send
 		Else If msg.Contains("<ISR Timeout>") Then
-			blnTimeOut = True
+			blnISRTimeOut = True
 			
 			' 3 ISR timeout = error by PIC
 		Else If msg.Contains("<ErrorTimeout>") Then
-			blnExitTimeoutError = True
+			blnTimeoutError = True
 			EnableFunction
 			LogMessage("STATUS", "PIC reported timeout error, try again")
 
 			' Start of verify flash program code
 		Else If msg.Contains("<StartFlashVerify>") Then
 			cntVerify = 0
-			blnVerifyRequest = True
+			blnStartVerifyRequest = True
 			LogMessage("STATUS", "Waiting for verification...")
 				
 			' End of verify flash program code
@@ -1092,12 +1094,12 @@ Sub SendFirmwareBytes
 		If GetBooleanStatus = True Then Return
 
 		' Wait for ACK or handle timeout
-		Do While blnACK = False
+		Do While blnWriteACK = False
 			If GetBooleanStatus = True Then Return
 
-			If blnTimeOut = True Then
+			If blnISRTimeOut = True Then
 				LogMessage("FIRMWAREUPLOAD", "Timeout detected, retrying at byte #" & i)
-				blnTimeOut = False
+				blnISRTimeOut = False
 				Continue    ' retry immediately
 			End If
 
@@ -1105,7 +1107,7 @@ Sub SendFirmwareBytes
 		Loop
 		
 		' Reset ACK for next block
-		blnACK = False
+		blnWriteACK = False
 		
 		'--------------------------------------------------------------------------------
 		' Burst = False
@@ -1183,12 +1185,12 @@ Sub SendFirmwareBytes
 End Sub
 Sub GetBooleanStatus As Boolean
 	' PIC reported timeout error (Handshake does not have this!)
-	If blnExitTimeoutError = True Then
+	If blnTimeoutError = True Then
 		Return True
 	End If
 		
 	' Astream error or terminated
-	If blnAppExitAstreamError = True Then
+	If blnAstreamError = True Then
 		Return True
 	End If
 		
@@ -1247,9 +1249,9 @@ Sub DisableFunction
 	btnFlash.Text = "Stop"
 
 	blnHandShakeSuccess = False
-	blnExitTimeoutError = False
-	blnAppExitAstreamError = False
-	blnTimeOut = False
+	blnTimeoutError = False
+	blnAstreamError = False
+	blnISRTimeOut = False
 	blnConfigOK = False
 	txtLog.Text = ""
 	prgBar.Progress = 0		
@@ -1268,8 +1270,8 @@ Sub EnableFunction
 	blnAppStopQuit = True
 	btnFlash.Text = "Flash"
 	
-	blnACK = False	
-	blnVerifyRequest = False
+	blnWriteACK = False
+	blnStartVerifyRequest = False
 	
 	
 End Sub

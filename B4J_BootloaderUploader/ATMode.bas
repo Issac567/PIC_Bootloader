@@ -49,25 +49,22 @@ Private Sub B4XPage_Created (Root1 As B4XView)
 	Root = Root1
 	Root.LoadLayout("ATMode")
 	
+	Dim lstBaud As List
+	lstBaud.Initialize
+	lstBaud.Add("1200")
+	lstBaud.Add("2400")
+	lstBaud.Add("4800")
+	lstBaud.Add("9600")
+	lstBaud.Add("19200")
+	lstBaud.Add("38400")
+	lstBaud.Add("57600")
+	lstBaud.Add("115200")
+	
 	' Baud for Uart to PIC
-	cmbBaud.Items.Add("1200")
-	cmbBaud.Items.Add("2400")
-	cmbBaud.Items.Add("4800")
-	cmbBaud.Items.Add("9600")
-	cmbBaud.Items.Add("19200")
-	cmbBaud.Items.Add("38400")
-	cmbBaud.Items.Add("57600")
-	cmbBaud.Items.Add("115200")
+	cmbBaud.Items.AddAll(lstBaud)
 
 	' AT Mode Baud
-	cmbBaudMode.Items.Add("1200")
-	cmbBaudMode.Items.Add("2400")
-	cmbBaudMode.Items.Add("4800")
-	cmbBaudMode.Items.Add("9600")
-	cmbBaudMode.Items.Add("19200")
-	cmbBaudMode.Items.Add("38400")
-	cmbBaudMode.Items.Add("57600")
-	cmbBaudMode.Items.Add("115200")
+	cmbBaudMode.Items.AddAll(lstBaud)
 			
 	' Load all available COM Ports
 	cmbPort.Items.AddAll(serialATMode.ListPorts)
