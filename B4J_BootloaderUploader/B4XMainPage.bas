@@ -27,7 +27,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Version As String = "10.06"
+	Private Version As String = "10.07"
 	
 	'---------------------------------------
 	' Map Config Variables
@@ -970,7 +970,10 @@ Sub SendHandShakeBytes
 		
 	Do While True
 		' Status boolean
-		If GetBooleanStatus = True Then Return
+		If GetBooleanStatus = True Then 
+			EnableFunction
+			Return
+		End If
 		
 		' Exit and Start Config upload
 		If blnHandShakeSuccess = True Then
@@ -1054,7 +1057,10 @@ Sub SendConfigBytes
 	LogMessage("CFG BYTES", "Sending: 0x" & Bit.ToHexString(byteONE(0)).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTWO(0)).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTHREE(0)).ToUpperCase)
 					
 	Do While blnConfigOK = False
-		If GetBooleanStatus = True Then Return
+		If GetBooleanStatus = True Then 
+			EnableFunction
+			Return
+		End If
 		Sleep(50)
 	Loop
 		
@@ -1091,11 +1097,17 @@ Sub SendFirmwareBytes
 		Next
 
 		' Check for global abort
-		If GetBooleanStatus = True Then Return
+		If GetBooleanStatus = True Then 
+			EnableFunction
+			Return
+		End If
 
 		' Wait for ACK or handle timeout
 		Do While blnWriteACK = False
-			If GetBooleanStatus = True Then Return
+			If GetBooleanStatus = True Then 
+				EnableFunction
+				Return
+			End If
 
 			If blnISRTimeOut = True Then
 				LogMessage("FIRMWAREUPLOAD", "Timeout detected, retrying at byte #" & i)
