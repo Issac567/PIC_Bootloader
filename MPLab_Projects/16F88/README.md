@@ -16,7 +16,7 @@ The goal of this project is to provide a clean, understandable reference impleme
 * `/BootLoader16F88.X`      → MPLAB X Bootloader firmware  
 * `/BootloaderApp16F88.X`   → MPLAB X Application firmware
 * `/Shared16F88`            → Uart shared
-* `/B4J/BootloaderUploader`                → B4J PC uploader tool
+* `B4J_BootloaderUploader`  → B4J PC uploader tool
 
 ---
 
