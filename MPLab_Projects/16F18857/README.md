@@ -68,11 +68,14 @@ I use **MPLAB X IDE 6.05** (supports Pickit 3/3.5 if using this!)
 [B4J – B4X](https://www.b4x.com/b4j.html)
 
 ### Libraries required
-
-* jRandomAccess
+* jRandomAccessFile
 * jSerial
 * jFX
 * B4XPages
+* jBluetooth
+* BluetoothConnection
+* Bleak
+* PyBridge
 
 ### Features
 
