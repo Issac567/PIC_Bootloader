@@ -5,7 +5,6 @@ Type=Class
 Version=10.5
 @EndOfDesignText@
 Sub Class_Globals
-' test branch
 	Private Root As B4XView 'ignore
 	Private xui As XUI 'ignore
 		
