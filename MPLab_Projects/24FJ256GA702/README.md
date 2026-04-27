@@ -15,8 +15,8 @@ The goal of this project is to provide a clean, understandable reference impleme
 
 * `/BootLoader24FJ256GA702.X`      → MPLAB X Bootloader firmware  
 * `/BootloaderApp24FJ256GA702.X`   → MPLAB X Application firmware
-* `/Shared24FJ256GA702` → UART and Config.h shared
-* `/BootloaderUploader/B4J` → B4J PC uploader tool
+* `/Shared24FJ256GA702`            → UART and Config.h shared
+* `/B4J_BootloaderUploader`        → B4J PC uploader tool
 
 ---
 
