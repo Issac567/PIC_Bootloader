@@ -67,11 +67,14 @@ I use **MPLAB X IDE 6.25** (or higher with MBLAB Snap PG164100)
 [B4J – B4X](https://www.b4x.com/b4j.html)
 
 ### Libraries required
-
-* jRandomAccess
+* jRandomAccessFile
 * jSerial
 * jFX
 * B4XPages
+* jBluetooth
+* BluetoothConnection
+* Bleak
+* PyBridge
 
 ### Features
 
