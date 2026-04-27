@@ -27,7 +27,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Version As String = "10.07"
+	Private Version As String = "10.10"
 	
 	'---------------------------------------
 	' Map Config Variables
@@ -329,24 +329,6 @@ Private Sub btHM10_CharNotify (Notification As BleakNotification)
 	' Buffer for Messages, PIC Sends
 	rxBufferString = rxBufferString & BytesToString(Buffer, 0, Buffer.Length, "UTF8")
 	
-	'-------------------------------------------------------------------------------------
-	' Temp Workaround until firmware solution (BLE ONLY!) (NOT NEEDED!! Fixed in HandleMessage)
-	'-------------------------------------------------------------------------------------
-	' FILTER: Find the first valid starting bracket
-	' 24F causes bad char at initial power up.  always the first character PIC sends!
-'	If rxBufferString.Contains("<") Then
-'		Dim StartPos As Int = rxBufferString.IndexOf("<")
-'	        
-'		' If there is any junk before the "<", discard it immediately
-'		If StartPos > 0 Then
-'			rxBufferString = rxBufferString.SubString(StartPos)
-'		End If
-'	End If
-	
-	' UPDATE:
-	' I changed HandleMessage routine to handle this by using contain property!
-	'-------------------------------------------------------------------------------------
-	
 	' PIC sends with > as last byte to confirm end of message
 	' When VerifyRequest = true, it does not received ">". Sticktly bytes only!
 	' Buffer is meant for Verify Bytes only.
@@ -435,7 +417,7 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 
 			' Start of verify flash program code
 		Else If msg.Contains("<StartFlashVerify>") Then
-			cntVerify = 0
+			cntVerify = 0		' not needed?? its in disableFunction?
 			blnStartVerifyRequest = True
 			LogMessage("STATUS", "Waiting for verification...")
 				
@@ -970,10 +952,7 @@ Sub SendHandShakeBytes
 		
 	Do While True
 		' Status boolean
-		If GetBooleanStatus = True Then 
-			EnableFunction
-			Return
-		End If
+		If GetBooleanStatus = True Then Return
 		
 		' Exit and Start Config upload
 		If blnHandShakeSuccess = True Then
@@ -1057,10 +1036,7 @@ Sub SendConfigBytes
 	LogMessage("CFG BYTES", "Sending: 0x" & Bit.ToHexString(byteONE(0)).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTWO(0)).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTHREE(0)).ToUpperCase)
 					
 	Do While blnConfigOK = False
-		If GetBooleanStatus = True Then 
-			EnableFunction
-			Return
-		End If
+		If GetBooleanStatus = True Then Return
 		Sleep(50)
 	Loop
 		
@@ -1097,17 +1073,11 @@ Sub SendFirmwareBytes
 		Next
 
 		' Check for global abort
-		If GetBooleanStatus = True Then 
-			EnableFunction
-			Return
-		End If
+		If GetBooleanStatus = True Then Return
 
 		' Wait for ACK or handle timeout
 		Do While blnWriteACK = False
-			If GetBooleanStatus = True Then 
-				EnableFunction
-				Return
-			End If
+			If GetBooleanStatus = True Then Return
 
 			If blnISRTimeOut = True Then
 				LogMessage("FIRMWAREUPLOAD", "Timeout detected, retrying at byte #" & i)
@@ -1326,6 +1296,7 @@ Sub LoadAllPicNames() As List
 	Return picList
 End Sub
 Sub LoadConfiguration(SelectedPicName As String) As Boolean
+	
 	' Make sure folder exists
 	If File.Exists(File.DirApp, "configs") = False Then
 		Return False
@@ -1369,9 +1340,11 @@ Sub LoadConfiguration(SelectedPicName As String) As Boolean
 						End If
 						
 						' If port already open update stop bit parameter!
-						'If btnConnect.Text = "Disconnect" Then
-						'	serial1.SetParams(serial1.BAUDRATE_57600, serial1.DATABITS_8, intStopBit, serial1.PARITY_NONE)  ' Set baud=57600, 8 data bits, config value, no parity
-						'End If
+						If btnOpenUSBTTL.Text = "Close Port" Then
+							LogMessage("Status", "Reapplying Parameters to Serial Com")
+							btnOpenUSBTTL_Click ' Close
+							btnOpenUSBTTL_Click ' Open
+						End If
 						
 						LogMessage("", "---------------------------------------------------------")
 						LogMessage("", "CONFIGURATION FOR " & CheckName)
@@ -1393,7 +1366,8 @@ Sub LoadConfiguration(SelectedPicName As String) As Boolean
 						LogMessage(":::", "Use Double Hex Addressed = " & blnUseDoubleHexAddr)
 						LogMessage(":::", "Use 4 Padding = " & blnUse4Padding)
 						LogMessage("", "---------------------------------------------------------")
-  						Return True
+  						
+						Return True
 					End If			
 				End If
 			Catch
