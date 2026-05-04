@@ -27,7 +27,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Version As String = "10.10"
+	Private Version As String = "10.25"
 	
 	'---------------------------------------
 	' Map Config Variables
@@ -44,6 +44,7 @@ Sub Class_Globals
 	Private blnUseWriteBurst  As Boolean					' True = Tx Write Packet as whole, no delays in between!
 	Private blnUseDoubleHexAddr As Boolean					' 16F, 24F = Increment 2 Hex Address, 18F = Increment 1 Hex Address. Used with Intel Hex Conversion
 	Private blnUse4Padding As Boolean						' 24 Bit need step 4, others step 2. Used with Intel Hex Conversion
+	Private strPicName As String							' Name of PIC
 	
 	'---------------------------------------
 	' BLE (Bleak), jBluetooth and Serial Library + Astream
@@ -899,11 +900,14 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
 		If blnDetectRecord Then
 			btnFlash.Enabled = True
 			LogMessage("STATUS", "Conversion success.")
+			' This will be used for future esp32 project.  Use binary instead of Intel Hex
+			ExportBinaryFile(firmwareData)
+			ExportConfigFile
 		Else
 			btnFlash.Enabled = False
 			LogMessage("STATUS", "Error: No valid data found above start address.")
 		End If
-        
+		        
 		Return firmwareData
         
 	Catch
@@ -911,6 +915,38 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
 		Dim EmptyArr() As Byte = Array As Byte()
 		Return EmptyArr
 	End Try
+End Sub
+Sub ExportBinaryFile(binData() As Byte)
+	If File.Exists(File.DirApp, "flash.bin") Then 
+		File.Delete(File.DirApp, "flash.bin")
+	End If
+	File.WriteBytes(File.DirApp, "flash.bin", binData)
+	LogMessage("Status", "export @ " & File.DirApp & "\flash.bin")
+End Sub
+Sub ExportConfigFile
+	If File.Exists(File.DirApp, "config.map") Then
+		File.Delete(File.DirApp, "config.map")
+	End If
+	
+	Dim cfg As Map
+	cfg.Initialize
+	
+	cfg.Put("StartAddrFlash", intStartAddrFlash)
+	cfg.Put("EndAddrFlash", intEndAddrFlash)
+	cfg.Put("EmptyFlashValue", intEmptyFlashValue)
+	cfg.Put("InstructionPacket", intInstructionPacket)
+	cfg.Put("PacketDelayMS", intPacketDelayMS)
+	cfg.Put("HandShakeDelayMS", intHandShakeDelayMS)
+	cfg.Put("StopBit", intStopBit)
+	cfg.Put("Notes", strNotes)
+	cfg.Put("ExpectedBytes", intExpectedFirmwareBytes)
+	cfg.Put("UseWriteBurst", blnUseWriteBurst)
+	cfg.Put("UseDoubleHexAddr", blnUseDoubleHexAddr)
+	cfg.Put("Use4Padding", blnUse4Padding)
+	cfg.Put("PicName", strPicName)
+	
+	File.WriteMap(File.DirApp, "config.map", cfg)
+	LogMessage("Status", "export @ " & File.DirApp & "\config.map")
 End Sub
 
 '--------------------------------------------------------
@@ -1328,7 +1364,8 @@ Sub LoadConfiguration(SelectedPicName As String) As Boolean
 						blnUseWriteBurst = cfg.Get("UseWriteBurst")			' No delays in between bytes if True!
 						blnUseDoubleHexAddr = cfg.Get("UseDoubleHexAddr") 	' For Intel Hex Conversion
 						blnUse4Padding = cfg.Get("Use4Padding")				' For Intel Hex conversion
-							
+						strPicName = cfg.Get("PicName")						' PIC Name
+						
 						' Set Proper Arrays to FirmwareVerfiy()
 						firmwareVerify = Array As Byte()
 						Dim temp(intExpectedFirmwareBytes) As Byte
