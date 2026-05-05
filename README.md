@@ -90,7 +90,7 @@ Updating the application device firmware requires the B4J uploader tool, but boo
 ### 3. Update Firmware (ESP32) `Option 2`
 Updating the application device firmware requires the ESP32 uploader tool, but bootloader must be flashed with MPLAB first:
 1.  Build circuit according to schematics.
-2.  SD Card requires flash.bin and config.map exported by B4J Uploader.  In B4J, select **PIC Name** from list, click **Tools->Export for ESP32**.
+2.  SD Card requires `flash.bin` and `config.map` exported by B4J Uploader.  In B4J, select **PIC Name** from list, click **Tools->Export for ESP32**.
 3.  Copy files to SD Card.
 4.  With HM-10 connected to your choice of PIC.
 5.  Execute the `Flash` command to flash the device.  It will Erase, Flash and Verify in that order.
