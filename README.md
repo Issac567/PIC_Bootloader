@@ -1,4 +1,4 @@
-# PIC Microcontroller Projects & B4J Uploader
+# PIC Microcontroller Projects & B4J Uploader & ESP32 S3 Uploader
 
 This repository contains a collection of firmware projects for various **PIC microcontroller families**. It includes both the source code for the microcontrollers and the necessary PC-side utilities for firmware deployment.
 
@@ -8,6 +8,7 @@ This repository contains a collection of firmware projects for various **PIC mic
 
 * **`MPLAB_Projects/`**: Organized by PIC family. Each directory contains the complete source code, headers, and build files.
 * **`B4J_BootloaderUploader/`**: Contains the **B4J uploader** utility used to flash compiled `.hex` files to the target hardware via a PC.
+   **`ESP32_BootloaderUploader/`**: Contains the **ESP32 uploader** utility used to flash compiled `.hex` files to the target hardware via a PC. Only BLE is supported at 20 MTU only.
 
 ## 🛠 Requirements
 
@@ -16,6 +17,7 @@ This repository contains a collection of firmware projects for various **PIC mic
 | **MPLAB X IDE** | Compiling and building the firmware projects. |
 | **XC Compilers** | Required for the build process (XC8, XC16, or XC32). |
 | **B4J Runtime** | Necessary to run the uploader utilities on your PC. |
+| **ESP32 ** | Another option, to run the uploader utilities on your PC. |
 | **Adaptor** | Required communcation from B4J to Microchip. |
 
 ---
@@ -25,6 +27,7 @@ This repository contains a collection of firmware projects for various **PIC mic
 * [MPLAB Ecosystem – Microchip (Recommend MPLAB X 6.05 for both Pickit 3/MBLAP Snap)](https://www.microchip.com/en-us/tools-resources/archives/mplab-ecosystem)
 * [MPLAB Compiler – Microchip](https://www.microchip.com/en-us/tools-resources/develop/mplab-xc-compilers)
 * [B4J – B4X](https://www.b4x.com/b4j.html)
+* [Visual Studio Code with Platformio extension](https://www.b4x.com/b4j.html)
 
 ## 🔌 Adaptors Required (Choose any one)
 `Aliexpress can be a hit or miss.  I had few defects with them.  Try Amazon by DSD Tech Bluetooth. I tested HC-05 and HM-10 ok.  They are better.`
