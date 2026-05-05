@@ -8,7 +8,7 @@ This repository contains a collection of firmware projects for various **PIC mic
 
 * **`MPLAB_Projects/`**: Organized by PIC family. Each directory contains the complete source code, headers, and build files.
 * **`B4J_BootloaderUploader/`**: Contains the **B4J uploader** utility used to flash compiled `.hex` files to the target hardware via a PC.
-   **`ESP32_BootloaderUploader/`**: Contains the **ESP32 uploader** utility used to flash compiled `.hex` files to the target hardware via a PC. Only BLE is supported at 20 MTU only.
+* **`ESP32_BootloaderUploader/`**: Contains the **ESP32 uploader** utility used to flash compiled `.hex` files to the target hardware via a PC. Only BLE is supported at 20 MTU only.
 
 ## 🛠 Requirements
 
