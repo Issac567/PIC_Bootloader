@@ -76,7 +76,7 @@ Follow these steps to correctly link the Application and Bootloader projects:
 1. Open the specific project folder in **MPLAB X IDE**.
 2. Select your target configuration.  Under properties make sure your programmer is selected.
 4. Run **Clean and Build**. 
-5. Make sure minimal bootloader is flashed before B4J usage.  **Chip with download icon** to flash.
+5. Make sure minimal bootloader is flashed before `B4J` or `ESP32` usage.  **Chip with download icon** to flash.
 
 ### 2. Update Firmware (B4J) `Option 1`
 Updating the application device firmware requires the B4J uploader tool, but bootloader must be flashed with MPLAB first:
