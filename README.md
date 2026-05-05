@@ -17,7 +17,7 @@ This repository contains a collection of firmware projects for various **PIC mic
 | **MPLAB X IDE** | Compiling and building the firmware projects. |
 | **XC Compilers** | Required for the build process (XC8, XC16, or XC32). |
 | **B4J Runtime** | Necessary to run the uploader utilities on your PC. |
-| **ESP32 ** | Another option, to run the uploader utilities on your PC. |
+| **ESP32** | Another option, to run the uploader utilities on your PC. |
 | **Adaptor** | Required communcation from B4J to Microchip. |
 
 ---
