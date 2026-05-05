@@ -78,7 +78,7 @@ Follow these steps to correctly link the Application and Bootloader projects:
 4. Run **Clean and Build**. 
 5. Make sure minimal bootloader is flashed before B4J usage.  **Chip with download icon** to flash.
 
-### 2. Update Firmware (B4J) Option 1
+### 2. Update Firmware (B4J) `Option 1`
 Updating the application device firmware requires the B4J uploader tool, but bootloader must be flashed with MPLAB first:
 1. Connect your target PIC device to your PC.
 2. Open the **B4J Uploader** utility.
