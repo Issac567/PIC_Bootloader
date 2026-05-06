@@ -6,6 +6,7 @@
 
 MenuState currentMenu = MAIN;
 bool wasTouched = false;
+bool isFlashBtn_Visible = false;
 
 void initDisplaySystem() 
 {
@@ -53,9 +54,9 @@ void handleTouch()
             if (x > 20 && x < 230 && y > 190 && y < 300)   changeMenu(SYSTEM);
             if (x > 250 && x < 460 && y > 190 && y < 300)  changeMenu(ABOUT);
         } else if (currentMenu == FLASH) {
-            if (x > 250 && x < 350 && y > 260 && y < 305)  changeMenu(FIRMWARESTART);       // FIRMWARE START button
+            if (x > 250 && x < 350 && y > 260 && y < 305)  changeMenu(FIRMWARESTART);       // FIRMWARE Flash button
             if (x > 360 && x < 460 && y > 260 && y < 305)  changeMenu(MAIN);                // Back button
-        } else if (currentMenu == FIRMWARESTART) {
+        } else if (currentMenu == FIRMWARESTART) {                                          // Back2 button
             if (x > 360 && x < 460 && y > 260 && y < 305)  
             {
                 myPicStatus.blnUserCancel = true;                                           // Allows flash.cpp to exit loops
@@ -105,6 +106,8 @@ void drawMainMenu()
 // --- SUB-MENUS ---
 void drawFlashMenu() 
 {
+    isFlashBtn_Visible = false;
+
     if (myPicStatus.blnStartVerifyRequest == true)
     {
         // Critical must inform user verify is running. can't stop it once its running!!!
@@ -185,6 +188,7 @@ void drawFlashMenu()
             tft.setTextColor(TFT_WHITE, TFT_BLACK);
             tft.drawString(myConfig.strNotes, 10, 200, 2);
 
+            isFlashBtn_Visible = true;
             drawFlashButton();
         } else {
             tft.setTextSize(2);
@@ -299,6 +303,7 @@ void drawFlashFirmwareMenu()
     tft.drawCentreString(myConfig.strPicName, 240, 20, 4);
 
     drawBack2Button();
+
     Serial.println("HANDSHAKE Function Called");
     sendHandShakeBytes(); 
 }
@@ -329,6 +334,13 @@ void drawFlashButton()
 
 void changeMenu(MenuState next) 
 {
+    // Workaround so invisible button will not be detected in touchhandle!
+    if ((isFlashBtn_Visible == false) && (next == FIRMWARESTART))
+    {
+        Serial.println("Not drawing FIRMWARESTART");
+        return;
+    }
+
     if (currentMenu == next) return;  // prevents redraw spam
     currentMenu = next;
     drawUI();

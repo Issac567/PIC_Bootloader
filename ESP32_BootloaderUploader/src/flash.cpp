@@ -22,22 +22,7 @@ void sendHandShakeBytes()
     // Loop until handshake succeeds or user cancels
     while (true)
     {
-        handleTouch();
-
-        // 1. Status Check (User abort/System status)
-        if (getBooleanStatus() == true) 
-        {
-            updateCriticalLabel("Failed!", false);
-            return;
-        }
-
-        if (myPicStatus.blnUserCancel == true) 
-        {
-            changeMenu(MAIN);
-            return;
-        }
-
-        // 2. Success Check (Set by notifyCallback/handleMessage)
+        // 1. Success Check (Set by notifyCallback/handleMessage)
         if (myPicStatus.blnHandShakeSuccess == true)
         {
             delay(300); // Give firmware time to stabilize
@@ -46,7 +31,7 @@ void sendHandShakeBytes()
         }
         else
         {
-            // 3. Send Toggle Bytes via NimBLE
+            // 2. Send Toggle Bytes via NimBLE
             if (blnToggle == false)
             {
                 // Write 0x55 to the PIC
@@ -61,9 +46,27 @@ void sendHandShakeBytes()
             }
         }
 
-        // 4. Delay to avoid flooding the UART/PIC buffer
-        // Use your predefined delay (e.g., 200ms)
-        delay(myConfig.intHandShakeDelayMS);
+        // 3. Delay to avoid flooding the UART/PIC buffer
+        uint16_t getHSDelay = myConfig.intHandShakeDelayMS;
+        while(getHSDelay --)
+        {
+            handleTouch();
+
+            // 4. Status Check (User abort/System status)
+            if (getBooleanStatus() == true) 
+            {
+                updateCriticalLabel("Failed!", false);
+                return;
+            }
+
+            if (myPicStatus.blnUserCancel == true) 
+            {
+                changeMenu(MAIN);
+                return;
+            }
+            
+            delay(1);
+        }
 
         // 5. Flip the toggle
         blnToggle = !blnToggle;
