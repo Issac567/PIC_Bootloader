@@ -1,6 +1,5 @@
 /*
  * File:   application.c
- * Author: issac
  * Version: 4.04
  * Family: 24F64GA102
  * Created on January 18, 2026, 12:13 PM
