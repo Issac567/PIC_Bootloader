@@ -1,7 +1,6 @@
 /*
  * File:   bootloader.c
  * Version: 4.04
- * Author: Issac
  * Created on January 19, 2026, 2:50 PM
  * Family: 16F13145
  * PACKS: USE 1.29.444
@@ -37,7 +36,7 @@ uint16_t BLE_MTU_Delay = 20;                // Min delay for each packet sent
 void INTOSC_Init(void)
 {
     // Select HFINTOSC, no divider (NDIV = 1)
-    OSCCON1 = 0x60;   // NOSC = 110 (HFINTOSC), NDIV = 0000 (÷1)
+    OSCCON1 = 0x60;   // NOSC = 110 (HFINTOSC), NDIV = 0000 (Ã·1)
 
     // Set frequency to 32 MHz
     OSCFRQ = 0x06;    // HFFRQ = 110 ? 32 MHz
