@@ -1,6 +1,5 @@
 /* 
  * File:   
- * Author: Issac
  * Comments:
  * Revision history: 
  * Version 1.01
@@ -25,7 +24,7 @@
 
 // FOSCSEL
 #pragma config FNOSC = FRCPLL           // FRC with PLL (gives 32 MHz Fosc) 
-#pragma config PLLMODE = PLL4X          // FRC ×4 ? Fosc = 32 MHz
+#pragma config PLLMODE = PLL4X          // FRC Ã—4 ? Fosc = 32 MHz
 #pragma config IESO = OFF               // <-- optional: stay on internal, no switching
 
 // FOSC
