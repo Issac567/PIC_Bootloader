@@ -48,7 +48,7 @@
 | **TX**  | RX          |
 | **RX**  | TX          |
 | **GND** | VSS         |
-| **Power** | VCC.       |
+| **Power** | VCC.      |
 
 ![Image](./image/HM10toPIC.jpg)
 
