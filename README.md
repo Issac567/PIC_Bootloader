@@ -47,7 +47,7 @@ The firmware flashing duration varies significantly based on the hardware interf
 | **DT-06** | WiFi | High Throughput | 🟢 Fast |
 | **HC-05** | BT Classic | Continuous Stream | 🟡 Moderate |
 | **HM-10** | BLE 4.0 | **20-byte MTU Limit** | 🔴 **Very Slow** |
-| **ESP32 S3** | BLE 5.0 | **20-byte MTU Limit** | 🔴 **Very Slow** |
+| **ESP32 S3 UI** | BLE 5.0 | **20-byte MTU Limit** | 🔴 **Very Slow** |
 
 > **Note:** BLE flashing is throttled by the mandatory 20-byte packet limit, making it the least efficient method for large binary transfers.
 
