@@ -1,6 +1,5 @@
 /*
  * File:   uart.c
- * Author: issac
  * Version: 3.04
  * Created on January 18, 2026, 12:13 PM
  * Family: 18F26Q24
