@@ -27,7 +27,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Version As String = "10.25"
+	Private Version As String = "10.30"
 	
 	'---------------------------------------
 	' Map Config Variables
@@ -476,6 +476,7 @@ Private Sub btnConnectHC05_Click
 				astream.Initialize(connection.InputStream, connection.OutputStream, "astream")
 				btnConnectHC05.Text = "Disconnect"
 				LogMessage("STATUS", "Bluetooth Connected! @ " & address)
+				LogMessage("Status", "Ready Flash")
 			Else
 				LogMessage("STATUS", "Bluetooth Failed! @ " & address)
 			End If
@@ -490,6 +491,9 @@ Private Sub btnConnectHC05_Click
 			Wait For (sf3) Msgbox_Result(ret2 As Int)
 			If ret2 = xui.DialogResponse_Positive Then
 				LogMessage("STATUS", "User stop flash!")
+				If blnStartVerifyRequest = True Then
+					xui.Msgbox2Async("Verify is running in background with PIC.  It has to complete before starting a new flash!", "Flash Verfiy Canceled!", "OK", "", "", Null)
+				End If
 				EnableFunction
 			Else
 				Return
@@ -571,6 +575,7 @@ Private Sub btnConnectHM10_Click
 				Log("Negotiated MTU: " & RawMTU)
 				Log("Payload MTU (MTU-3): " & PayloadMTU)
 				Log("Universal MTU for PIC: " & UniversalMTU)
+				LogMessage("BLUETOOTH", "MTU Size = " & UniversalMTU)
 				'-----------------------------------------------------------------
 				
 				btnConnectHM10.Text = "Disconnect"
@@ -589,6 +594,7 @@ Private Sub btnConnectHM10_Click
 								LogMessage("BLUETOOTH", "Failed to set notify!")
 							Else
 								LogMessage("BLUETOOTH", "Notify set @ " & BLE_useUUID)
+								LogMessage("Status", "Ready Flash")
 							End If
 						End If					
 					Next
@@ -597,7 +603,6 @@ Private Sub btnConnectHM10_Click
 				If BLE_useUUID = "" Then
 					LogMessage("BLUETOOTH", "Characteristic UUID not found!")
 				End If
-				LogMessage("BLUETOOTH", "MTU Size = " & UniversalMTU)
 			Else
 				Log(Py.PyLastException)
 				LogMessage("STATUS", "Bluetooth Failed! @ " & address)
@@ -613,6 +618,9 @@ Private Sub btnConnectHM10_Click
 			Wait For (sf3) Msgbox_Result(ret2 As Int)
 			If ret2 = xui.DialogResponse_Positive Then
 				LogMessage("STATUS", "User stop flash!")
+				If blnStartVerifyRequest = True Then
+					xui.Msgbox2Async("Verify is running in background with PIC.  It has to complete before starting a new flash!", "Flash Verfiy Canceled!", "OK", "", "", Null)
+				End If
 				EnableFunction
 			Else
 				Return
@@ -641,6 +649,7 @@ Private Sub btnConnectWIFI_Click
 			astream.Initialize(WIFIClient.InputStream, WIFIClient.OutputStream, "astream")
 			btnConnectWIFI.Text = "Disconnect"
 			LogMessage("STATUS", "WIFI connected!")
+			LogMessage("Status", "Ready Flash")
 		Else
 			LogMessage("STATUS", "WIFI connection failed!")
 		End If
@@ -678,6 +687,7 @@ Private Sub btnOpenUSBTTL_Click
 		btnOpenUSBTTL.Text = "Close Port"
 		btnRefreshComUSBTTL.Enabled = False
 		LogMessage("STATUS", "Serial COM opened")
+		LogMessage("Status", "Ready Flash")
 		
 		' Close Port
 	Else
@@ -734,6 +744,8 @@ Private Sub MenuBar1_Action
 		' Tools
 		Case "AT _Mode"
 			B4XPages.ShowPage("AT Command Mode")
+		Case "_Export for ESP32"
+			btnLoadFile_Click
 	End Select
 
 End Sub
@@ -974,6 +986,9 @@ Private Sub btnFlash_Click
 		Wait For (sf3) Msgbox_Result(ret2 As Int)		
 		If ret2 = xui.DialogResponse_Positive Then
 			LogMessage("STATUS", "User stop flash!")
+			If blnStartVerifyRequest = True Then
+				xui.Msgbox2Async("Verify is running in background with PIC.  It has to complete before starting a new flash!", "Flash Verfiy Canceled!", "OK", "", "", Null)
+			End If
 			EnableFunction
 		End If
 	End If
