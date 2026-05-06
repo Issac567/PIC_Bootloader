@@ -2,6 +2,17 @@
 
 ---
 
+## 🛠 Screenshots
+![Image](./image/mainmenu.jpg)
+![Image](./image/SystemCheck.jpg)
+![Image](./image/btstatus.jpg)
+![Image](./image/flash.jpg)
+![Image](./image/verify.jpg)
+![Image](./image/verifypass.jpg)
+![Image](./image/HM10.jpg)
+
+---
+
 ## 🛠 Hardware Configuration
 
 * **MCU:** ESP32-S3
