@@ -69,6 +69,7 @@
 
 1. Clone the repository
 2. Open in VS Code with PlatformIO
+3. Click at bottom status bar the **right arrow** (upload) button to flash ESP32 S3.
 
 ---
 
