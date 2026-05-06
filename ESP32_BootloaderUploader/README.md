@@ -29,7 +29,7 @@
 | TOUCH_IRQ  | 1   | Interrupt |
 | SD_CS      | 21  | SPI Bus 2 |
 
-![Image](DeviceImage.jpg)
+![Image](./image/DeviceImage.jpg)
 
 ---
 
@@ -40,7 +40,7 @@
 | Power 3.3v   | VCC  |
 | Ground  | GND  |
 
-![Image](HM10toPIC.jpg)
+![Image](./image/HM10toPIC.jpg)
 
 ---
 
