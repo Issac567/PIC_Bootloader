@@ -1,6 +1,5 @@
 /* 
  * File:   
- * Author: Issac
  * Comments:
  * Revision history: 
  * Version 1.01
