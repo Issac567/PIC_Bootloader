@@ -191,13 +191,7 @@ void drawFlashMenu()
             isFlashBtn_Visible = true;
             drawFlashButton();
         } else {
-            tft.setTextSize(2);
-            tft.setTextColor(TFT_YELLOW, TFT_RED); 
-            
-            // Header
-            tft.setCursor(10, 10);
-            tft.print(status);
-            tft.setTextSize(1);
+            updateCriticalLabel(status, true);
         } 
     }
 

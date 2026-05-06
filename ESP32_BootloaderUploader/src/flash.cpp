@@ -107,8 +107,8 @@ void sendConfigBytes()
     // Wait for the PIC to confirm configuration via notifyCallback
     while (myPicStatus.blnConfigOK == false)
     {
-		handleTouch();
-		
+        handleTouch();
+        
         if (getBooleanStatus() == true) 
         {
             updateCriticalLabel("Failed!", false);
@@ -125,8 +125,8 @@ void sendConfigBytes()
 
     while (myPicStatus.blnEndFlashErase == false)
     {
-		handleTouch();
-		
+        handleTouch();
+
         if (getBooleanStatus() == true) 
         {
             updateCriticalLabel("Failed!", false);
