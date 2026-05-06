@@ -2,7 +2,7 @@
 
 ---
 
-## 🛠 Screenshots
+## 📺 Screenshots
 ![Image](./image/mainmenu.jpg)
 ![Image](./image/flash.jpg)
 ![Image](./image/verify.jpg)
