@@ -43,10 +43,12 @@
 
 ## 🔌 Pin Mapping (HM-10)
 
-| Function   | Pin |
-| ---------- | --- |
-| Power 3.3v   | VCC  |
-| Ground  | GND  |
+| HM-10 | PIC |
+| ------- | ----------- |
+| **TX**  | RX          |
+| **RX**  | TX          |
+| **GND** | VSS         |
+| **Power** | VCC.       |
 
 ![Image](./image/HM10toPIC.jpg)
 
