@@ -63,5 +63,5 @@
 ---
 
 ## Note
-* You can experiment with BLE by powering on and off the HM-10 and checking the status.  Also, removing and inserting the SD Card and checking with **FLASH** button.  In the future i will include a working flash uploader for microchip.  
+* You can experiment with BLE by powering on and off the HM-10 and checking the status.  Also, removing and inserting the SD Card and checking with **FLASH** button. 
 
