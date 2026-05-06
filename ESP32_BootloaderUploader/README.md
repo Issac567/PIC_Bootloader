@@ -49,6 +49,8 @@
 * **Framework:** Arduino / PlatformIO
 * **Graphics:** https://github.com/Bodmer/TFT_eSPI
 * **Touch:** https://github.com/PaulStoffregen/XPT2046_Touchscreen
+* **NIMBLE:** https://github.com/h2zero/NimBLE-Arduino
+* **ADRAFRUIT:** https://github.com/adafruit/adafruit_neopixel
 * **IDE:** VS Code + PlatformIO
 
 ---
