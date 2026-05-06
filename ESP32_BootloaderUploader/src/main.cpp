@@ -51,7 +51,7 @@ void setup()
 
     drawUI();
     
-    Serial.println("Issac Engineer Go-Box Ready.");
+    Serial.println("Engineer Go-Box Ready.");
 }
 
 void loop() 
