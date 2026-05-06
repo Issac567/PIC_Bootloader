@@ -1,7 +1,6 @@
 /*
  * File:   bootloader.c
  * Version: 4.04
- * Author: Issac
  * Created on January 19, 2026, 2:50 PM
  * Family: 16F18857
  * PACKS: USE 1.29.444
