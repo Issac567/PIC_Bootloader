@@ -31,12 +31,16 @@
 
 ![Image](DeviceImage.jpg)
 
+---
+
 ## 🔌 Pin Mapping (HM-10)
 
 | Function   | Pin |
 | ---------- | --- |
 | Power 3.3v   | VCC  |
 | Ground  | GND  |
+
+![Image](HM10toPIC.jpg)
 
 ---
 
