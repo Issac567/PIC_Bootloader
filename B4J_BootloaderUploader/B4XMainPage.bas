@@ -4,7 +4,6 @@ ModulesStructureVersion=1
 Type=Class
 Version=9.85
 @EndOfDesignText@
-' Author: Issac
 ' Features: Bluetooth SSP 2.0, Bluetooth BLE 4.0, WIFI TCP/IP and USB TTL Serial (COM)
 
 '------------------------------------------------------------------------------------------------------
