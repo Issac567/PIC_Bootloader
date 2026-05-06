@@ -15,7 +15,7 @@
 * **MCU:** ESP32-S3
 * **Display:** ILI9488 3.5" TFT
 * **Touch:** XPT2046 (Resistive)
-* **Storage:** MicroSD via SPI (Optional)
+* **Storage:** MicroSD via SPI
 * **BLE Device:** HM-10 BLE Adaptor
 
 ---
