@@ -322,7 +322,14 @@ void drawFlashFirmwareMenu()
     drawBack2Button();
 
     Serial.println("HANDSHAKE Function Called");
-    sendHandShakeBytes(); 
+
+    // Check connection or it will crash!!
+    if (bleIsConnected() == true) 
+    {
+        sendHandShakeBytes(); 
+    } else {
+        updateCriticalLabel("No connection! Retry again.", false);
+    }
 }
 
 // --- UI HELPERS ---

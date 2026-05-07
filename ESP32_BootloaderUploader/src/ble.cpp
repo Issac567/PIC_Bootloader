@@ -203,6 +203,11 @@ void handleConnection()
             doScan = true; 
         }
     }
+
+    if (bleIsConnected() == false) 
+    {
+        myPicStatus.blnStartVerifyRequest = false;      // just in case verify is running and you power off the HM10!
+    }
 }
 
 void handleBleScan()
