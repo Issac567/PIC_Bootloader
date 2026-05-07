@@ -26,7 +26,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Version As String = "10.31"
+	Private Version As String = "10.32"
 	
 	'---------------------------------------
 	' Map Config Variables
@@ -106,7 +106,7 @@ Sub Class_Globals
 	Private blnWriteACK As Boolean							' <ACK> from PIC used in Firmware Upload.  Needs this <ACK> from PIC to continue next Block Write bytes
 	Private blnISRTimeOut As Boolean						' <ISR Timeout> Timeout Detected from PIC
 	Private blnTimeoutError As Boolean						' <TimeoutError> 3 ISR Timeout from PIC
-	Private blnStartVerifyRequest As Boolean				' <StartFlashVerify> from PIC
+	Private StartFlashVerify As Boolean						' <StartFlashVerify> from PIC
 	Private blnAstreamError	As Boolean						' Astream error exit loop
 	Private blnAppStopQuit As Boolean						' Exit loop for Stop Flash, Disconnect and Quit App
 	
@@ -251,7 +251,7 @@ Sub astream_NewData (Buffer() As Byte)
 	' PIC sends with > as last byte to confirm end of message or bytes
 	' When VerifyRequest = true, it does not received ">". Sticktly bytes only!
 	' Buffer is meant for Verify Bytes only.
-	If rxBufferString.Contains(">") Or blnStartVerifyRequest = True Then
+	If rxBufferString.Contains(">") Or StartFlashVerify = True Then
 		HandleMessage(rxBufferString, Buffer)
 		rxBufferString = ""
 	End If
@@ -332,7 +332,7 @@ Private Sub btHM10_CharNotify (Notification As BleakNotification)
 	' PIC sends with > as last byte to confirm end of message
 	' When VerifyRequest = true, it does not received ">". Sticktly bytes only!
 	' Buffer is meant for Verify Bytes only.
-	If rxBufferString.Contains(">") Or blnStartVerifyRequest = True Then
+	If rxBufferString.Contains(">") Or StartFlashVerify = True Then
 		HandleMessage(rxBufferString, Buffer)
 		rxBufferString = ""
 	End If
@@ -350,12 +350,12 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 	
 	' We dont want to log Incoming <ACK> while Firmware upload!
 	' We dont want to log Incoming PIC VERIFY bytes
-	If blnStartVerifyRequest <> True And msg <> "<ACK>" Then
+	If StartFlashVerify <> True And msg <> "<ACK>" Then
 		LogMessage("PIC", msg)
 	End If
 	
 	' This is triggered by <StartFlashVerify> from PIC after Flash Write is completed
-	If blnStartVerifyRequest = True Then
+	If StartFlashVerify = True Then
 		'LogMessage("INCOMMING", BytesToHexString(buffer))  ' debugging only!!!					
 		For x = 0 To buffer.Length - 1  ' This method is better.  Newdata does not guarantee all block in one event
 			' This array will compare to firmware() which is Converted FILE binary
@@ -418,7 +418,7 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 			' Start of verify flash program code
 		Else If msg.Contains("<StartFlashVerify>") Then
 			cntVerify = 0		' not needed?? its in disableFunction?
-			blnStartVerifyRequest = True
+			StartFlashVerify = True
 			LogMessage("STATUS", "Waiting for verification...")
 				
 			' End of verify flash program code
@@ -490,7 +490,7 @@ Private Sub btnConnectHC05_Click
 			Wait For (sf3) Msgbox_Result(ret2 As Int)
 			If ret2 = xui.DialogResponse_Positive Then
 				LogMessage("STATUS", "User stop flash!")
-				If blnStartVerifyRequest = True Then
+				If StartFlashVerify = True Then
 					xui.Msgbox2Async("Verify is running in background with PIC.  It has to complete before starting a new flash!", "Flash Verfiy Canceled!", "OK", "", "", Null)
 				Else
 					LogMessage("WARNING!", "Minimum 20 seconds delay before another flash attempt!")
@@ -501,14 +501,12 @@ Private Sub btnConnectHC05_Click
 			End If
 		End If
 		
-		LogMessage("STATUS", "Disconnect called")
-		
 		' close Astream
 		If astream.IsInitialized Then
 			astream.Close
 			btHC05Connection.Disconnect
+			LogMessage("STATUS", "Disconnected")
 		End If
-		
 		btnConnectHC05.Text = "Connect"
 	End If
 End Sub
@@ -619,7 +617,7 @@ Private Sub btnConnectHM10_Click
 			Wait For (sf3) Msgbox_Result(ret2 As Int)
 			If ret2 = xui.DialogResponse_Positive Then
 				LogMessage("STATUS", "User stop flash!")
-				If blnStartVerifyRequest = True Then
+				If StartFlashVerify = True Then
 					xui.Msgbox2Async("Verify is running in background with PIC.  It has to complete before starting a new flash!", "Flash Verfiy Canceled!", "OK", "", "", Null)
 				Else
 					LogMessage("WARNING!", "Minimum 20 seconds delay before another flash attempt!")
@@ -630,8 +628,8 @@ Private Sub btnConnectHM10_Click
 			End If
 		End If
 		
-		LogMessage("STATUS", "Disconnect called")
 		bkHM10Client.Disconnect
+		LogMessage("STATUS", "Disconnect")
 		btnConnectHM10.Text = "Connect"
 	End If
 
@@ -657,12 +655,28 @@ Private Sub btnConnectWIFI_Click
 			LogMessage("STATUS", "WIFI connection failed!")
 		End If
 	Else
-		LogMessage("STATUS", "Disconnect called")
+		If btnFlash.Text = "Stop" Then
+			Dim sf3 As Object = xui.Msgbox2Async("Flash in progress! Do you want to stop?", "Flashing", "Yes", "", "No", Null)
+			Wait For (sf3) Msgbox_Result(ret2 As Int)
+			If ret2 = xui.DialogResponse_Positive Then
+				LogMessage("STATUS", "User stop flash!")
+				If StartFlashVerify = True Then
+					xui.Msgbox2Async("Verify is running in background with PIC.  It has to complete before starting a new flash!", "Flash Verfiy Canceled!", "OK", "", "", Null)
+				Else
+					LogMessage("WARNING!", "Minimum 20 seconds delay before another flash attempt!")
+				End If
+				EnableFunction
+			Else
+				Return
+			End If
+		End If
+		
 		If astream.IsInitialized Then
 			astream.Close
 			If WIFIClient.Connected = True Then 
 				WIFIClient.Close
 			End If
+			LogMessage("STATUS", "Disconnect")
 		End If
 		btnConnectWIFI.Text = "Connect"
 	End If
@@ -694,13 +708,30 @@ Private Sub btnOpenUSBTTL_Click
 		
 		' Close Port
 	Else
+		If btnFlash.Text = "Stop" Then
+			Dim sf3 As Object = xui.Msgbox2Async("Flash in progress! Do you want to stop?", "Flashing", "Yes", "", "No", Null)
+			Wait For (sf3) Msgbox_Result(ret2 As Int)
+			If ret2 = xui.DialogResponse_Positive Then
+				LogMessage("STATUS", "User stop flash!")
+				If StartFlashVerify = True Then
+					xui.Msgbox2Async("Verify is running in background with PIC.  It has to complete before starting a new flash!", "Flash Verfiy Canceled!", "OK", "", "", Null)
+				Else
+					LogMessage("WARNING!", "Minimum 20 seconds delay before another flash attempt!")
+				End If
+				EnableFunction
+			Else
+				Return
+			End If
+		End If
+		
 		If astream.IsInitialized Then
 			astream.Close
 			serialUSBTTL.Close
+			LogMessage("STATUS", "Serial COM closed")
 		End If
 		btnOpenUSBTTL.Text = "Open Port"
 		btnRefreshComUSBTTL.Enabled = True
-		LogMessage("STATUS", "Serial COM closed")
+		
 	End If
 End Sub
 Private Sub btnRefreshComUSBTTL_Click
@@ -989,7 +1020,7 @@ Private Sub btnFlash_Click
 		Wait For (sf3) Msgbox_Result(ret2 As Int)		
 		If ret2 = xui.DialogResponse_Positive Then
 			LogMessage("STATUS", "User stop flash!")
-			If blnStartVerifyRequest = True Then
+			If StartFlashVerify = True Then
 				xui.Msgbox2Async("Verify is running in background with PIC.  It has to complete before starting a new flash!", "Flash Verfiy Canceled!", "OK", "", "", Null)
 			Else
 				LogMessage("WARNING!", "Minimum 20 seconds delay before another flash attempt!")
@@ -1008,7 +1039,7 @@ Sub SendHandShakeBytes
 		
 	Do While True
 		' Status boolean
-		If GetBooleanStatus = True Then Return
+		If isOperationFailed = True Then Return
 		
 		' Exit and Start Config upload
 		If blnHandShakeSuccess = True Then
@@ -1092,7 +1123,7 @@ Sub SendConfigBytes
 	LogMessage("CFG BYTES", "Sending: 0x" & Bit.ToHexString(byteONE(0)).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTWO(0)).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTHREE(0)).ToUpperCase)
 					
 	Do While blnConfigOK = False
-		If GetBooleanStatus = True Then Return
+		If isOperationFailed = True Then Return
 		Sleep(50)
 	Loop
 		
@@ -1129,11 +1160,11 @@ Sub SendFirmwareBytes
 		Next
 
 		' Check for global abort
-		If GetBooleanStatus = True Then Return
+		If isOperationFailed = True Then Return
 
 		' Wait for ACK or handle timeout
 		Do While blnWriteACK = False
-			If GetBooleanStatus = True Then Return
+			If isOperationFailed = True Then Return
 
 			If blnISRTimeOut = True Then
 				LogMessage("FIRMWAREUPLOAD", "Timeout detected, retrying at byte #" & i)
@@ -1221,7 +1252,7 @@ Sub SendFirmwareBytes
 
 	LogMessage("FIRMWAREUPLOAD", "Firmware upload completed!")
 End Sub
-Sub GetBooleanStatus As Boolean
+Sub isOperationFailed As Boolean
 	' PIC reported timeout error (Handshake does not have this!)
 	If blnTimeoutError = True Then
 		Return True
@@ -1279,8 +1310,6 @@ Sub DisableFunction
 	btnSearchHC05.Enabled = False  
 	ListView1HM10.Enabled = False
 	btnStartScanHM10.Enabled = False
-	btnOpenUSBTTL.Enabled = False
-	cmbPortUSBTTL.Enabled = False
 	btnLoadFile.Enabled = False
 	cmbPicList.Enabled = False
 	blnAppStopQuit = False
@@ -1301,15 +1330,13 @@ Sub EnableFunction
 	btnSearchHC05.Enabled = True 
 	ListView1HM10.Enabled = True
 	btnStartScanHM10.Enabled = True
-	btnOpenUSBTTL.Enabled = True
-	cmbPortUSBTTL.Enabled = True
 	btnLoadFile.Enabled = True
 	cmbPicList.Enabled = True
 	blnAppStopQuit = True
 	btnFlash.Text = "Flash"
 	
 	blnWriteACK = False
-	blnStartVerifyRequest = False
+	StartFlashVerify = False
 	
 	
 End Sub
