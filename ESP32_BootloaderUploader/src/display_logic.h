@@ -32,4 +32,6 @@ void updateVerifyBytesLabel();
 void updateCriticalLabel(String msg, bool isSuccess) ;
 void ResetProgressBar();
 
+extern MenuState currentMenu;
+
 #endif

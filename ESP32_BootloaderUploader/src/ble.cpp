@@ -281,19 +281,20 @@ void handleMessage(String msg, uint8_t* rawBytes, size_t length)
             verifyFile.write(rawBytes, length);
         }
 
+        //if ((myPicStatus.blnUserCancel == true) && (currentMenu != FIRMWARESTART))
         if (myPicStatus.blnUserCancel == true)
         {
             // Can't do much with verify when its going.  it has to exhaust all sent bytes from PIC.
             // Currently, no shutting off Verify_Flash!!
             return;
+        } else {
+            // Update progress bar
+            float progress = (float)myPicStatus.cntVerify / myConfig.intExpectedFirmwareBytes;
+            updateProgressBar(progress);
+
+            // Update total bytes
+            updateVerifyBytesLabel();
         }
-
-        // Update progress bar
-        float progress = (float)myPicStatus.cntVerify / myConfig.intExpectedFirmwareBytes;
-        updateProgressBar(progress);
-
-        // Update total bytes
-        updateVerifyBytesLabel();
 
     // Handle PIC System Messages
     } else {

@@ -137,6 +137,14 @@ void drawFlashMenu()
     {
         // Critical must inform user verify is running. can't stop it once its running!!!
         updateCriticalLabel("Verify in progress.  Wait until finish!", false);
+        
+        // Continue back the progressbar with Flash Verify (Crashes with multiple reentery???)
+        //tft.setTextColor(TFT_WHITE, TFT_BLACK);
+        //tft.drawCentreString(myConfig.strPicName, 240, 20, 4);
+        //drawBackButton();
+        //myPicStatus.blnUserCancel = false;
+        //currentMenu = FIRMWARESTART;
+        //return;
     } else {
         // 1. Get the data from SD first
         String status = GetConfigInfo();
