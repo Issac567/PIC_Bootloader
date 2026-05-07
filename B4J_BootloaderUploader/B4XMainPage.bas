@@ -26,7 +26,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Version As String = "10.30"
+	Private Version As String = "10.31"
 	
 	'---------------------------------------
 	' Map Config Variables
@@ -492,6 +492,8 @@ Private Sub btnConnectHC05_Click
 				LogMessage("STATUS", "User stop flash!")
 				If blnStartVerifyRequest = True Then
 					xui.Msgbox2Async("Verify is running in background with PIC.  It has to complete before starting a new flash!", "Flash Verfiy Canceled!", "OK", "", "", Null)
+				Else
+					LogMessage("WARNING!", "Minimum 20 seconds delay before another flash attempt!")
 				End If
 				EnableFunction
 			Else
@@ -619,6 +621,8 @@ Private Sub btnConnectHM10_Click
 				LogMessage("STATUS", "User stop flash!")
 				If blnStartVerifyRequest = True Then
 					xui.Msgbox2Async("Verify is running in background with PIC.  It has to complete before starting a new flash!", "Flash Verfiy Canceled!", "OK", "", "", Null)
+				Else
+					LogMessage("WARNING!", "Minimum 20 seconds delay before another flash attempt!")
 				End If
 				EnableFunction
 			Else
@@ -987,6 +991,8 @@ Private Sub btnFlash_Click
 			LogMessage("STATUS", "User stop flash!")
 			If blnStartVerifyRequest = True Then
 				xui.Msgbox2Async("Verify is running in background with PIC.  It has to complete before starting a new flash!", "Flash Verfiy Canceled!", "OK", "", "", Null)
+			Else
+				LogMessage("WARNING!", "Minimum 20 seconds delay before another flash attempt!")
 			End If
 			EnableFunction
 		End If
