@@ -5,21 +5,46 @@
 #include "sdcard.h"
 
 PicStatus myPicStatus;
-uint16_t intMTUSize = 20;
+uint16_t intMTUSize = 20;       // will make this adjustable by requesting mtu in future!
+
+// Minimum 20 seconds wait required when user cancels flash!
+const unsigned long intervalFlashDelay = 20000;            
+
+// Set it to a very large negative-offset value 
+// so (currentMillis - previousMillis) is always > intervalFlashDelay at startup.
+unsigned long previousMillis = -20000;
 
 //-----------------------------------------------------------
 //Firmware uploader handler
 //-----------------------------------------------------------
 void sendHandShakeBytes()
 {
+    disableFunction();
+
+    // --- PART 1: The Safety Wait (Previous Flash Timeout) ---
+    // This forces the app to wait if the PIC is still in a timeout state
+    while (millis() - previousMillis < intervalFlashDelay) 
+    {
+        unsigned long elapsed = millis() - previousMillis;
+        long timeLeft = (long)intervalFlashDelay - (long)elapsed;
+        if (timeLeft < 0) timeLeft = 0;
+
+        if (myPicStatus.blnUserCancel == true) return;      // Only usercancel no blntimeouterror
+
+        // Update UI with countdown
+        updateProgressLabel(("   Wait... " + String(timeLeft / 1000) + "s   ").c_str());
+        handleTouch();
+        delay(50); 
+    }   
+
+    // --- PART 2: The Handshake Loop ---
     bool blnToggle = false;
     uint8_t b_55[1] = {0x55};
     uint8_t b_AA[1] = {0xAA};
-
-    disableFunction();
-    updateProgressLabel("Please wait...");
-
-    // Loop until handshake succeeds or user cancels
+     
+    disableFunction();  // call it again. cause handleMessage in BLE will trigger true for blnErrortimeout!
+    updateProgressLabel("Connecting...");
+    
     while (true)
     {
         // 1. Success Check (Set by notifyCallback/handleMessage)
@@ -53,17 +78,7 @@ void sendHandShakeBytes()
             handleTouch();
 
             // 4. Status Check (User abort/System status)
-            if (getBooleanStatus() == true) 
-            {
-                updateCriticalLabel("Failed!", false);
-                return;
-            }
-
-            if (myPicStatus.blnUserCancel == true) 
-            {
-                changeMenu(MAIN);
-                return;
-            }
+            if (handleStatus() == true) return;
             
             delay(1);
         }
@@ -71,6 +86,7 @@ void sendHandShakeBytes()
         // 5. Flip the toggle
         blnToggle = !blnToggle;
     }
+
 }
 
 void sendConfigBytes()
@@ -109,16 +125,7 @@ void sendConfigBytes()
     {
         handleTouch();
         
-        if (getBooleanStatus() == true) 
-        {
-            updateCriticalLabel("Failed!", false);
-            return;
-        }
-        if (myPicStatus.blnUserCancel == true) 
-        {
-            changeMenu(MAIN);
-            return;
-        }
+        if (handleStatus() == true) return;
         
         delay(10);
     }
@@ -127,16 +134,7 @@ void sendConfigBytes()
     {
         handleTouch();
 
-        if (getBooleanStatus() == true) 
-        {
-            updateCriticalLabel("Failed!", false);
-            return;
-        }
-        if (myPicStatus.blnUserCancel == true) 
-        {
-            changeMenu(MAIN);
-            return;
-        }
+        if (handleStatus() == true) return;
         
         delay(10);
     }
@@ -189,19 +187,11 @@ void sendFirmwareBytes()
         }
 
         // 4. Check for Global Abort
-        if (getBooleanStatus() == true)
-        {
-            updateCriticalLabel("Failed!", false);
-            dataFile.close();
-            return;
-        }
-        if (myPicStatus.blnUserCancel == true) 
+        if (handleStatus() == true)
         {
             dataFile.close();
-            changeMenu(MAIN);
             return;
-        }
-              
+        }             
         
         // 5. Wait for ACK or handle ISR Timeout
         // Note: The ACK is set to true in your handleMessage()
@@ -209,25 +199,16 @@ void sendFirmwareBytes()
         {
             handleTouch();
  
-            if (getBooleanStatus() == true)
-            {
-                updateCriticalLabel("Failed!", false);
-                dataFile.close();
-                return;
-            }
-            if (myPicStatus.blnUserCancel == true) 
+            if (handleStatus() == true)
             {
                 dataFile.close();
-                changeMenu(MAIN);
                 return;
-            }
+            }    
 
             if (myPicStatus.blnISRTimeOut == true)
             {
                 Serial.printf("FIRMWAREUPLOAD: Timeout detected, retrying at byte #%d\n", i);
                 myPicStatus.blnISRTimeOut = false;
-                //dataFile.seek(i); // Move SD file pointer back to start of this block
-                //dataFile.read(block, intBlockSize); // Reload the block
                 // Continue loop logic occurs naturally here
             }
             delay(1); // Small yield for background tasks
@@ -291,6 +272,23 @@ bool getBooleanStatus()
     return false;
 }
 
+bool handleStatus()
+{
+    if (getBooleanStatus() == true) 
+    {
+        updateCriticalLabel("Failed!", false);
+        return true;
+    }
+
+    if (myPicStatus.blnUserCancel == true) 
+    {
+        changeMenu(MAIN);
+        return true;
+    }
+
+    return false;
+}
+
 void disableFunction()
 {
 	myPicStatus.blnHandShakeSuccess = false;
@@ -302,5 +300,6 @@ void disableFunction()
     myPicStatus.blnEndFlashErase = false;
 	myPicStatus.cntVerify = 0;
     myPicStatus.blnUserCancel = false;
+    myPicStatus.blnEndFlashVerify = false;
 }
 

@@ -54,15 +54,10 @@ void handleTouch()
             if (x > 20 && x < 230 && y > 190 && y < 300)   changeMenu(SYSTEM);
             if (x > 250 && x < 460 && y > 190 && y < 300)  changeMenu(ABOUT);
         } else if (currentMenu == FLASH) {
-            if (x > 250 && x < 350 && y > 260 && y < 305)  changeMenu(FIRMWARESTART);       // FIRMWARE Flash button
-            if (x > 360 && x < 460 && y > 260 && y < 305)  changeMenu(MAIN);                // Back button
-        } else if (currentMenu == FIRMWARESTART) {                                          // Back2 button
-            if (x > 360 && x < 460 && y > 260 && y < 305)  
-            {
-                myPicStatus.blnUserCancel = true;                                           // Allows flash.cpp to exit loops
-                delay(100);                                                                 // Must delay for verify flash!
-                changeMenu(MAIN);
-            }
+            if (x > 250 && x < 350 && y > 260 && y < 305)  handleFlashStart();              // FIRMWARE Flash button
+            if (x > 360 && x < 460 && y > 260 && y < 305)  handleFlashBack();               // Back button
+        } else if (currentMenu == FIRMWARESTART) {                                          
+            if (x > 360 && x < 460 && y > 260 && y < 305)  handleBack2();                   // Back2 button
         } else {
             if (x > 360 && x < 460 && y > 260 && y < 305)  changeMenu(MAIN);                // Back button
         }
@@ -72,6 +67,36 @@ void handleTouch()
     
     // Update the state
     wasTouched = isCurrentlyTouched;                
+}
+
+void handleFlashBack()
+{
+    myPicStatus.blnUserCancel == true;                                          // For millis entry!
+    delay(100);
+    changeMenu(MAIN);                                                           // Back button
+}
+
+void handleBack2()
+{
+    // If backed out before Verify Flash, then dont let user come back in unless specific seconds has exhausted!
+    // 3 timeouts = 9 seconds in PIC.  we need to wait it out!!!
+    if ((myPicStatus.blnStartVerifyRequest == false) && (myPicStatus.blnEndFlashVerify == false))
+    {
+        previousMillis = millis();                                              // Yes delay needed!
+    }
+    
+    myPicStatus.blnUserCancel = true;                                           // Allows flash.cpp to exit loops
+    delay(100);                                                                 // Must delay for verify flash!
+    changeMenu(MAIN);
+}
+
+void handleFlashStart()
+{
+    // Workaround so invisible button will not be detected in touchhandle!
+    if ((isFlashBtn_Visible == true))
+    {
+        changeMenu(FIRMWARESTART);                                              
+    }   
 }
 
 // --- CORE UI CONTROLLER ---
@@ -201,7 +226,6 @@ void drawFlashMenu()
 void drawBTMenu() 
 {
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    //tft.setTextSize(2); // Multiplies the size of the font you call next
     tft.drawCentreString("BLUETOOTH STATUS", 240, 20, 4);
     tft.setTextColor(TFT_CYAN);
     
@@ -224,7 +248,6 @@ void drawBTMenu()
         // Show "Offline" or "Scanning..."
          tft.drawCentreString("BT Module: DISCONNECTED", 240, 150, 2);
     }
-    //tft.setTextSize(1); 
     drawBackButton();
 }
 
@@ -328,13 +351,6 @@ void drawFlashButton()
 
 void changeMenu(MenuState next) 
 {
-    // Workaround so invisible button will not be detected in touchhandle!
-    if ((isFlashBtn_Visible == false) && (next == FIRMWARESTART))
-    {
-        Serial.println("Not drawing FIRMWARESTART");
-        return;
-    }
-
     if (currentMenu == next) return;  // prevents redraw spam
     currentMenu = next;
     drawUI();
@@ -430,5 +446,5 @@ void updateCriticalLabel(String msg, bool isSuccess)
 
 void ResetProgressBar()
 {
-    tft.fillRect(0, 75, 480, 160, TFT_BLACK);                               // Clear screen below top label!
+    tft.fillRect(0, 75, 480, 160, TFT_BLACK);  // Clear screen below top label and before Back button!
 }

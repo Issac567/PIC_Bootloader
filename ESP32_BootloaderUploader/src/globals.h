@@ -37,6 +37,7 @@ struct PicStatus {
     volatile bool blnStartVerifyRequest = false;
     volatile bool blnUserCancel = false;
     volatile bool blnEndFlashErase = false;
+    volatile bool blnEndFlashVerify = false;
 };
 
 // External references so other files can see them (main.cpp)

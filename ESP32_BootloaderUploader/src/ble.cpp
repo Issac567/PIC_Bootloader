@@ -333,7 +333,6 @@ void handleMessage(String msg, uint8_t* rawBytes, size_t length)
         }
         else if (msg.indexOf("<StartFlashVerify>") > -1)
         {
-            //ResetProgressBar();
             myPicStatus.cntVerify = 0;
             myPicStatus.blnStartVerifyRequest = true;
             SD.remove("/verify.bin");
@@ -342,6 +341,8 @@ void handleMessage(String msg, uint8_t* rawBytes, size_t length)
         }
         else if (msg.indexOf("<EndFlashVerify>") > -1)
         {
+            myPicStatus.blnEndFlashVerify = true;
+
             if (verifyFile) 
             {
                 verifyFile.close();

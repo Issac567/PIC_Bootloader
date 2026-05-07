@@ -8,6 +8,9 @@ enum MenuState { MAIN, FLASH, FIRMWARESTART, BT_CHECK, SYSTEM, ABOUT };
 // UI Prototypes
 void initDisplaySystem();
 void handleTouch();
+void handleFlashBack();
+void handleBack2();
+void handleFlashStart();
 void drawUI();
 void drawMainMenu();
 void drawFlashMenu();
