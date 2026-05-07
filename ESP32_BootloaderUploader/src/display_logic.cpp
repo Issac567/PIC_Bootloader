@@ -62,7 +62,7 @@ void handleTouch()
             if (x > 360 && x < 460 && y > 260 && y < 305)  changeMenu(MAIN);                // Back button
         }
         // Debounce: wait for finger lift so we don't spam state changes
-        while (touch.touched()) { delay(10); }
+        while (touch.touched()) { vTaskDelay(pdMS_TO_TICKS(10));  }
     }
     
     // Update the state
@@ -71,8 +71,8 @@ void handleTouch()
 
 void handleFlashBack()
 {
-    myPicStatus.blnUserCancel == true;                                          // For millis entry!
-    delay(100);
+    myPicStatus.blnUserCancel == true;                                         
+    vTaskDelay(pdMS_TO_TICKS(100));                                             // For millis entry!
     changeMenu(MAIN);                                                           // Back button
 }
 
@@ -80,13 +80,13 @@ void handleBack2()
 {
     // If backed out before Verify Flash, then dont let user come back in unless specific seconds has exhausted!
     // 3 timeouts = 9 seconds in PIC.  we need to wait it out!!!
-    if ((myPicStatus.blnStartVerifyRequest == false) && (myPicStatus.blnEndFlashVerify == false))
+    if ((myPicStatus.blnStartFlashVerify == false) && (myPicStatus.blnEndFlashVerify == false))
     {
         previousMillis = millis();                                              // Yes delay needed!
     }
     
-    myPicStatus.blnUserCancel = true;                                           // Allows flash.cpp to exit loops
-    delay(100);                                                                 // Must delay for verify flash!
+    myPicStatus.blnUserCancel = true;                                           // Allows flash.cpp to exit loops                                                
+    vTaskDelay(pdMS_TO_TICKS(100));                                             // Must delay for verify flash!
     changeMenu(MAIN);
 }
 
@@ -101,9 +101,7 @@ void handleFlashStart()
 
 // --- CORE UI CONTROLLER ---
 void drawUI() 
-{
-    tft.fillScreen(TFT_BLACK);
-    
+{    
     switch (currentMenu) 
     {
         case MAIN:              drawMainMenu();         break;
@@ -118,6 +116,8 @@ void drawUI()
 // --- MAIN MENU ---
 void drawMainMenu() 
 {
+    tft.fillScreen(TFT_BLACK);
+
     tft.setTextColor(TFT_YELLOW);
     tft.drawCentreString("ESP32  UPLOADER", 240, 10, 4);
     
@@ -131,20 +131,23 @@ void drawMainMenu()
 // --- SUB-MENUS ---
 void drawFlashMenu() 
 {
+    tft.fillScreen(TFT_BLACK);
+
     isFlashBtn_Visible = false;
 
-    if (myPicStatus.blnStartVerifyRequest == true)
+    if (myPicStatus.blnStartFlashVerify == true)
     {
         // Critical must inform user verify is running. can't stop it once its running!!!
-        updateCriticalLabel("Verify in progress.  Wait until finish!", false);
+        //updateCriticalLabel("Verify in progress.  Wait until finish!", false);
         
-        // Continue back the progressbar with Flash Verify (Crashes with multiple reentery???)
-        //tft.setTextColor(TFT_WHITE, TFT_BLACK);
-        //tft.drawCentreString(myConfig.strPicName, 240, 20, 4);
-        //drawBackButton();
-        //myPicStatus.blnUserCancel = false;
-        //currentMenu = FIRMWARESTART;
-        //return;
+        // Continue back the progressbar with Flash Verify (Was crashing i changed to vTaskDelay so far good!)
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+        tft.drawCentreString(myConfig.strPicName, 240, 20, 4);
+        drawBackButton();
+        vTaskDelay(pdMS_TO_TICKS(100));
+        myPicStatus.blnUserCancel = false;
+        currentMenu = FIRMWARESTART;
+        return;
     } else {
         // 1. Get the data from SD first
         String status = GetConfigInfo();
@@ -233,6 +236,8 @@ void drawFlashMenu()
 
 void drawBTMenu() 
 {
+    tft.fillScreen(TFT_BLACK);
+
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawCentreString("BLUETOOTH STATUS", 240, 20, 4);
     tft.setTextColor(TFT_CYAN);
@@ -261,6 +266,8 @@ void drawBTMenu()
 
 void drawSystemMenu() 
 {
+    tft.fillScreen(TFT_BLACK);
+
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawCentreString("System Check", 240, 20, 4);
  
@@ -312,6 +319,8 @@ void drawSystemMenu()
 
 void drawAboutMenu() 
 {
+    tft.fillScreen(TFT_BLACK);
+
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawCentreString("ABOUT", 240, 20, 4);
     tft.drawString("Author: First Last", 5, 80, 2);
@@ -324,6 +333,8 @@ void drawAboutMenu()
 // --- SUB-SUB-MENUS ---
 void drawFlashFirmwareMenu()
 {
+    tft.fillScreen(TFT_BLACK);
+
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawCentreString(myConfig.strPicName, 240, 20, 4);
 

@@ -97,7 +97,7 @@ static void notifyCallback(NimBLERemoteCharacteristic* pRemoteCharacteristic, ui
 
     rxBufferString += String((char*)pData, length);
 
-    if (rxBufferString.indexOf(">") > -1 || myPicStatus.blnStartVerifyRequest == true)
+    if (rxBufferString.indexOf(">") > -1 || myPicStatus.blnStartFlashVerify == true)
     {
         // Call your message handler (passing the string and your data buffer)
         handleMessage(rxBufferString, pData, length);
@@ -206,7 +206,7 @@ void handleConnection()
 
     if (bleIsConnected() == false) 
     {
-        myPicStatus.blnStartVerifyRequest = false;      // just in case verify is running and you power off the HM10!
+        myPicStatus.blnStartFlashVerify = false;      // just in case verify is running and you power off the HM10!
     }
 }
 
@@ -254,7 +254,7 @@ void handleMessage(String msg, uint8_t* rawBytes, size_t length)
 {
     // We dont want to log Incoming <ACK> while Firmware upload!
 	// We dont want to log Incoming PIC VERIFY bytes
-    if (myPicStatus.blnStartVerifyRequest != true && msg != "<ACK>")
+    if (myPicStatus.blnStartFlashVerify != true && msg != "<ACK>")
     {
         // Print to the PlatformIO Serial Monitor
         Serial.print("PIC: ");
@@ -262,14 +262,14 @@ void handleMessage(String msg, uint8_t* rawBytes, size_t length)
     }  
 
     // Check if we are in Verification Mode
-    if (myPicStatus.blnStartVerifyRequest == true) {
+    if (myPicStatus.blnStartFlashVerify == true) {
         myPicStatus.cntVerify += length;
 
         // Check for completion based on byte count
         if (myPicStatus.cntVerify >= myConfig.intExpectedFirmwareBytes)
         {
             // Without this, Last iteration will cause issues! Due to low 150ms delay in PIC after msg send!
-            myPicStatus.blnStartVerifyRequest = false;
+            myPicStatus.blnStartFlashVerify = false;
 
             // we let <EndFlashVerify> handle the UI transition.
             Serial.println("STATUS: All verify bytes received.");
@@ -340,7 +340,7 @@ void handleMessage(String msg, uint8_t* rawBytes, size_t length)
         else if (msg.indexOf("<StartFlashVerify>") > -1)
         {
             myPicStatus.cntVerify = 0;
-            myPicStatus.blnStartVerifyRequest = true;
+            myPicStatus.blnStartFlashVerify = true;
             SD.remove("/verify.bin");
             verifyFile = SD.open("/verify.bin", FILE_WRITE);         // OPEN ONCE
             Serial.println("STATUS: Waiting for verification...");

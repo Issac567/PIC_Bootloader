@@ -5,14 +5,9 @@
 #include "sdcard.h"
 
 PicStatus myPicStatus;
-uint16_t intMTUSize = 20;       // will make this adjustable by requesting mtu in future!
-
-// Minimum 20 seconds wait required when user cancels flash!
-const unsigned long intervalFlashDelay = 20000;            
-
-// Set it to a very large negative-offset value 
-// so (currentMillis - previousMillis) is always > intervalFlashDelay at startup.
-unsigned long previousMillis = -20000;
+uint16_t intMTUSize = 20;                               // will make this adjustable by requesting mtu in future!
+const unsigned long INTERVAL_FLASH_DELAY = 20000;       // Minimum 20 seconds wait required when user cancels flash!        
+unsigned long previousMillis = -20000;                  // Set it to a matching negative-offset value to intervalFlashdelay. For initial startup!
 
 //-----------------------------------------------------------
 //Firmware uploader handler
@@ -23,10 +18,10 @@ void sendHandShakeBytes()
 
     // --- PART 1: The Safety Wait (Previous Flash Timeout) ---
     // This forces the app to wait if the PIC is still in a timeout state
-    while (millis() - previousMillis < intervalFlashDelay) 
+    while (millis() - previousMillis < INTERVAL_FLASH_DELAY) 
     {
         unsigned long elapsed = millis() - previousMillis;
-        long timeLeft = (long)intervalFlashDelay - (long)elapsed;
+        long timeLeft = (long)INTERVAL_FLASH_DELAY - (long)elapsed;
         if (timeLeft < 0) timeLeft = 0;
 
         if (myPicStatus.blnUserCancel == true) return;      // Only usercancel no blntimeouterror
@@ -34,7 +29,7 @@ void sendHandShakeBytes()
         // Update UI with countdown
         updateProgressLabel(("   Wait... " + String(timeLeft / 1000) + "s   ").c_str());
         handleTouch();
-        delay(50); 
+        vTaskDelay(pdMS_TO_TICKS(50));
     }   
 
     // --- PART 2: The Handshake Loop ---
@@ -50,7 +45,8 @@ void sendHandShakeBytes()
         // 1. Success Check (Set by notifyCallback/handleMessage)
         if (myPicStatus.blnHandShakeSuccess == true)
         {
-            delay(300); // Give firmware time to stabilize
+            // Give firmware time to stabilize
+            vTaskDelay(pdMS_TO_TICKS(300));
             sendConfigBytes();
             return;
         }
@@ -78,9 +74,9 @@ void sendHandShakeBytes()
             handleTouch();
 
             // 4. Status Check (User abort/System status)
-            if (handleStatus() == true) return;
+            if (isOperationFailed() == true) return;
             
-            delay(1);
+            vTaskDelay(pdMS_TO_TICKS(1));
         }
 
         // 5. Flip the toggle
@@ -109,13 +105,13 @@ void sendConfigBytes()
 
     // Write packets with 50ms gaps as per your B4J logic
     pRemoteCharacteristic->writeValue(byteONE, 1, false);
-    delay(50);
-    
+    vTaskDelay(pdMS_TO_TICKS(50));
+
     pRemoteCharacteristic->writeValue(byteTWO, 1, false);
-    delay(50);
-    
+    vTaskDelay(pdMS_TO_TICKS(50));
+
     pRemoteCharacteristic->writeValue(byteTHREE, 1, false);
-    delay(50);
+    vTaskDelay(pdMS_TO_TICKS(50));
 
     // Debugging output to Serial Monitor
     Serial.printf("CFG BYTES: Sending: 0x%02X, 0x%02X, 0x%02X\n", byteONE[0], byteTWO[0], byteTHREE[0]);
@@ -125,28 +121,30 @@ void sendConfigBytes()
     {
         handleTouch();
         
-        if (handleStatus() == true) return;
+        if (isOperationFailed() == true) return;
         
-        delay(10);
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 
     while (myPicStatus.blnEndFlashErase == false)
     {
         handleTouch();
 
-        if (handleStatus() == true) return;
+        if (isOperationFailed() == true) return;
         
-        delay(10);
+
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 
     ResetProgressBar();
-    delay(300);             // give PIC time to enter Receive firmware mode!
+    // give PIC time to enter Receive firmware mode!
+    vTaskDelay(pdMS_TO_TICKS(300));
     sendFirmwareBytes();
 }
 
 void sendFirmwareBytes()
 {
-    // 1. Calculate Block Size based on PIC Architecture
+    // 1. --- Calculate Block Size based on PIC Architecture ---
     int intBlockSize;
     if (myConfig.blnUse4Padding == true)
     {
@@ -157,7 +155,7 @@ void sendFirmwareBytes()
         intBlockSize = myConfig.intInstructionPacket * 2;
     }
 
-    // 2. Open the binary file from the SD card
+    // 2. --- Open the binary file from the SD card ---
     File dataFile = SD.open(FLASH_FILE, FILE_READ);
     if (!dataFile)
     {
@@ -176,7 +174,7 @@ void sendFirmwareBytes()
     {
         handleTouch();
 
-        // 3. Read Block from SD and Pad with 0xFF if necessary (REMOVE THIS NOT NECCESSARY!!  ALSO IN B4J??)
+        // 3. --- Read Block from SD and Pad with 0xFF if necessary (REMOVE THIS NOT NECCESSARY!!  ALSO IN B4J??) ---
         size_t bytesRead = dataFile.read(block, intBlockSize);
         if (bytesRead < intBlockSize)
         {
@@ -187,19 +185,19 @@ void sendFirmwareBytes()
         }
 
         // 4. Check for Global Abort
-        if (handleStatus() == true)
+        if (isOperationFailed() == true)
         {
             dataFile.close();
             return;
         }             
         
-        // 5. Wait for ACK or handle ISR Timeout
+        // 5. --- Wait for ACK or handle ISR Timeout ---
         // Note: The ACK is set to true in your handleMessage()
         while (myPicStatus.blnWriteACK == false)
         {
             handleTouch();
  
-            if (handleStatus() == true)
+            if (isOperationFailed() == true)
             {
                 dataFile.close();
                 return;
@@ -211,18 +209,19 @@ void sendFirmwareBytes()
                 myPicStatus.blnISRTimeOut = false;
                 // Continue loop logic occurs naturally here
             }
-            delay(1); // Small yield for background tasks
+            // Small yield for background tasks
+            vTaskDelay(pdMS_TO_TICKS(1));
         }
         
         myPicStatus.blnWriteACK = false;
 
-        // 6. Fragmentation Logic (BLE MTU Handling)
+        // 6. --- Fragmentation Logic (BLE MTU Handling) ---
         size_t chunkSize = (intMTUSize < 20) ? 20 : intMTUSize;
 
         if (intBlockSize <= chunkSize)
         {
             bool blnStatus = pRemoteCharacteristic->writeValue(block, intBlockSize, false);
-            delay(10);
+            vTaskDelay(pdMS_TO_TICKS(10));
         }
         else
         {
@@ -230,18 +229,18 @@ void sendFirmwareBytes()
             {
                 size_t currentChunkSize = (intBlockSize - x < chunkSize) ? (intBlockSize - x) : chunkSize;
                 bool blnStatus = pRemoteCharacteristic->writeValue(&block[x], currentChunkSize, false);
-                delay(10);
+                vTaskDelay(pdMS_TO_TICKS(10));
                 // No delay required as per B4J testing!  We need it here??  It tested success without delays??
             }
         }
 
-        delay(myConfig.intPacketDelayMS);
+        vTaskDelay(pdMS_TO_TICKS(myConfig.intPacketDelayMS));
 
-        // 7. Update Progress (Map this to your ILI9488 UI)
+        // 7. --- Update Progress (Map this to your ILI9488 UI) ---
         float progress = (float)(i + intBlockSize) / fileSize;
         updateProgressBar(progress); 
 
-        // 8. Update the Block Status Text
+        // 8. --- Update the Block Status Text ---
         updateBlockSizeLabel(intBlockSize, fileSize, i);
   
         i += intBlockSize;
@@ -253,39 +252,31 @@ void sendFirmwareBytes()
     ResetProgressBar();  // for verifyflash!
 }
 
-bool getBooleanStatus()
+bool isOperationFailed()
 {
-    // 3 timeouts = this
+    // 1. 3 timeouts = PIC Timeout Error
     if (myPicStatus.blnTimeoutError == true) 
-    {
-        return true;
-    }
-
-    // Exit if BLE is NOT connected (connection lost)
-    if (bleIsConnected() == false)
-    {
-        Serial.println("STATUS: Connection Lost!");
-        return true;
-    }
-
-    // If everything is fine, return false (don't exit the loop)
-    return false;
-}
-
-bool handleStatus()
-{
-    if (getBooleanStatus() == true) 
     {
         updateCriticalLabel("Failed!", false);
         return true;
     }
 
+    // 2. Connection to BLE is lost
+    if (bleIsConnected() == false)
+    {
+        updateCriticalLabel("Failed!", false);
+        Serial.println("STATUS: Connection Lost!");
+        return true;
+    }
+
+    // 3. User canceled!
     if (myPicStatus.blnUserCancel == true) 
     {
         changeMenu(MAIN);
         return true;
     }
 
+    // If everything is fine, return false (don't exit the loop)
     return false;
 }
 
@@ -296,7 +287,7 @@ void disableFunction()
 	myPicStatus.blnTimeoutError = false;
 	myPicStatus.blnISRTimeOut = false;
     myPicStatus.blnWriteACK = false;
-	myPicStatus.blnStartVerifyRequest = false;
+	myPicStatus.blnStartFlashVerify = false;
     myPicStatus.blnEndFlashErase = false;
 	myPicStatus.cntVerify = 0;
     myPicStatus.blnUserCancel = false;

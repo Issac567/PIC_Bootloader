@@ -34,7 +34,7 @@ struct PicStatus {
     volatile bool blnWriteACK = false;
     volatile bool blnISRTimeOut = false;
     volatile bool blnTimeoutError = false;
-    volatile bool blnStartVerifyRequest = false;
+    volatile bool blnStartFlashVerify = false;
     volatile bool blnUserCancel = false;
     volatile bool blnEndFlashErase = false;
     volatile bool blnEndFlashVerify = false;

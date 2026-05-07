@@ -2,11 +2,9 @@
 #define FLASH_H
 
 void sendHandShakeBytes();
-void continueHandshake();
 void sendConfigBytes();
 void sendFirmwareBytes();
-bool getBooleanStatus();
-bool handleStatus();
+bool isOperationFailed();
 void disableFunction();
 
 extern unsigned long previousMillis;
