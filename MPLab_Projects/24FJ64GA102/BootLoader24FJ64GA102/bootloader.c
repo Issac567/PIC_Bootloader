@@ -1,6 +1,6 @@
 /*
  * File:   bootloader.c
- * Version: 4.04
+ * Version: 4.10
  * Family: 24F64GA102
  * Created on January 19, 2026, 2:50 PM
  * USE 1.10.375
@@ -154,12 +154,28 @@ void Flash_Verify(void)
 {
     uint32_t addr;
     uint8_t ble_counter = 0;
+    uint8_t b;
     
     UART_TxString("<StartFlashVerify>");
     __delay_ms(MSG_MS_DELAY);
 
     for (addr = FLASH_START; addr <= FLASH_END; addr += (FLASH_WRITE_BLOCK * 2))
     {
+        // --- NEW CANCEL CHECK ---
+        // Check if data is available in the hardware UART buffer
+        if (U1STAbits.URXDA)
+        {
+            b = UART_Rx();
+            if (b == 0xCA) // Read the byte to clear the flag
+            {
+                __delay_ms(MSG_MS_DELAY); 
+                UART_TxString("<VerifyCancelled>");
+                __delay_ms(MSG_MS_DELAY); 
+                return; 
+            }
+        }
+        // -------------------------
+        
         uint32_t packet[FLASH_WRITE_BLOCK];
 
         // Read block (24-bit instructions)
@@ -352,7 +368,8 @@ void ReceiveConfig(void)
  
     // ----FLUSH------
     uint16_t dummy;
-    while (U1STAbits.URXDA) { // While UART1 Receive Data Available
+    while (U1STAbits.URXDA) 
+    {
         dummy = U1RXREG; 
     }
        
