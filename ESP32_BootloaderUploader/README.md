@@ -73,14 +73,15 @@
 
 ---
 
-## How to use
-Updating the application device firmware requires the ESP32 uploader tool, but bootloader must be flashed with MPLAB first:
-1.  Build circuit according to schematics.
-2.  SD Card requires `flash.bin` and `config.map` exported by B4J Uploader.  In B4J, select **PIC Name** from list, click **Tools->Export for ESP32**.
-3.  Copy files to SD Card.
-4.  With HM-10 connected to your choice of PIC.
-5.  Execute the `Flash` command to flash the device.  It will Erase, Flash and Verify in that order.
-6. Goto `ESP32_BootloaderUploader` directory for more information.
+## How to Use
+Updating the PIC application device firmware requires the ESP32 uploader tool:
+1.  Build circuit according to schematics above.
+2.  SD Card requires `flash.bin` and `config.map` exported by `B4J Uploader`.  In `B4J`, select **PIC Name** from list, click **Tools->Export for ESP32**.
+3.  Copy both files to SD Card formatted in fat32.
+4.  With `HM-10` connected to your choice of PIC.
+5.  Execute the **Flash** command to flash the device.  It will Erase, Flash and Verify in that order.
+
+---
 
 ## Note
 * You can experiment with BLE by powering on and off the HM-10 and checking the status.  Also, removing and inserting the SD Card and checking with **FLASH** button. 
