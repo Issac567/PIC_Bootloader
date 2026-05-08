@@ -1,6 +1,6 @@
 /*
  * File:   bootloader.c
- * Version: 4.04
+ * Version: 4.10
  * Created on January 19, 2026, 2:50 PM
  * Family: 18F27Q43
  * USE 1.29.481
@@ -143,6 +143,7 @@ void Flash_Verify(void)
 {
     uint32_t addr;
     uint8_t ble_counter = 0;
+    uint8_t b;
     
     UART_TxString("<StartFlashVerify>");
     __delay_ms(MSG_MS_DELAY);
@@ -152,6 +153,21 @@ void Flash_Verify(void)
     //for (addr = FLASH_START; addr < FLASH_END; addr += (FLASH_ERASE_BLOCK * 2))
     for (addr = FLASH_START; addr + (FLASH_ERASE_BLOCK * 2) - 1 <= FLASH_END; addr += FLASH_ERASE_BLOCK * 2)
     {
+        // --- NEW CANCEL CHECK ---
+        // Check if data is available in the hardware UART buffer
+        if (PIR4bits.U1RXIF)
+        {
+            b = UART_Rx();
+            if (b == 0xCA) // Read the byte to clear the flag
+            {
+                __delay_ms(MSG_MS_DELAY); 
+                UART_TxString("<VerifyCancelled>");
+                __delay_ms(MSG_MS_DELAY); 
+                return; 
+            }
+        }
+        // -------------------------
+        
         // On Q43, this buffer needs to be 128 words long
         uint16_t packet[FLASH_WRITE_BLOCK];
 
@@ -351,7 +367,8 @@ void ReceiveConfig(void)
 
         //-----FLush-----
     uint8_t dummy;
-    while (PIR4bits.U1RXIF) {
+    while (PIR4bits.U1RXIF) 
+    {
         dummy = U1RXB;        
     }
     
