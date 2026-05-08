@@ -71,7 +71,7 @@ Follow these steps to correctly link the Application and Bootloader projects:
 ---
 
 ## 🚀 Usage Instructions
-![Image](./MPLab_Projects/fileopen.jpg)
+![Image](./MPLab_Projects/ImageMain/fileopen.jpg)
 
 ### 1. Build the Project (MPLAB) `Required`
 1. Open the specific project folder in **MPLAB X IDE**.
