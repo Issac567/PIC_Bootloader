@@ -23,7 +23,6 @@
 
 #define LED_PIN   LATBbits.LATB4            // Use LAT for Output / Bootloader Led Status 
 #define LED_TRIS  TRISBbits.TRISB4          // Output PortB.4 pin
-uint16_t BLE_MTU_Delay = 20;                // Min delay for each packet sent
 
 // HARD-RESERVE THE MEMORY (0x1500 - 0x15FF)
 // The 'volatile' ensures the compiler doesn't optimize away reads/writes.
@@ -33,6 +32,7 @@ volatile uint16_t nvm_hardware_buffer[FLASH_WRITE_BLOCK] __section("nvm_ram_area
 uint16_t flash_packet[FLASH_WRITE_BLOCK];   // 128 words, 256 bytes total
 bool isBLE = false;                         // BLE Detection uses different verify_flash process
 uint16_t BLE_MTU_Size = 20;                 // BLE MTU Size (B4J sends the value from configuration function)
+uint16_t BLE_MTU_Delay = 20;                // Min delay for each packet sent
 
 //-------------------------------------------------------
 // INTERNAL OSCILLATOR CLK CONFIG
@@ -130,6 +130,7 @@ void Flash_Verify(void)
 {
     uint32_t addr;
     uint8_t ble_counter = 0;
+    uint8_t b;
     
     UART_TxString("<StartFlashVerify>");
     __delay_ms(MSG_MS_DELAY);
@@ -139,6 +140,21 @@ void Flash_Verify(void)
     //for (addr = FLASH_START; addr < FLASH_END; addr += (FLASH_ERASE_BLOCK * 2))
     for (addr = FLASH_START; addr + (FLASH_ERASE_BLOCK * 2) - 1 <= FLASH_END; addr += FLASH_ERASE_BLOCK * 2)
     {
+        // --- NEW CANCEL CHECK ---
+        // Check if data is available in the hardware UART buffer
+        if (PIR4bits.U1RXIF)
+        {
+            b = UART_Rx();
+            if (b == 0xCA) // Read the byte to clear the flag
+            {
+                __delay_ms(MSG_MS_DELAY); 
+                UART_TxString("<VerifyCancelled>");
+                __delay_ms(MSG_MS_DELAY); 
+                return; 
+            }
+        }
+        // -------------------------
+        
         // On Q24, this buffer needs to be 128 words long
         uint16_t packet[FLASH_WRITE_BLOCK];
 
@@ -338,7 +354,8 @@ void ReceiveConfig(void)
 
     //-----FLush-----
     uint8_t dummy;
-    while (PIR4bits.U1RXIF) {
+    while (PIR4bits.U1RXIF) 
+    {
         dummy = U1RXB;        
     }
     
