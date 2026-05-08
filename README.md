@@ -78,7 +78,7 @@ Follow these steps to correctly link the Application and Bootloader projects:
 4. Run **Clean and Build**. 
 5. Make sure minimal bootloader is flashed before `B4J` or `ESP32` usage.  **Chip with download icon** to flash.
 
-### 2. Update Firmware (B4J) `Option 1`
+### 2. Update Application Firmware (B4J) `Option 1`
 Updating the application device firmware requires the B4J uploader tool, but bootloader must be flashed with MPLAB first:
 1. Connect your target PIC device to your PC.
 2. Open the **B4J Uploader** utility.
@@ -87,7 +87,7 @@ Updating the application device firmware requires the B4J uploader tool, but boo
 5. Click `Load Firmware` the `BootLoaderApp16F88.X.production.hex` file generated in the previous step.
 6. Execute the `Flash` command to flash the device.  It will Erase, Flash and Verify in that order.
 
-### 3. Update Firmware (ESP32) `Option 2`
+### 3. Update Application Firmware (ESP32) `Option 2`
 Updating the application device firmware requires the ESP32 uploader tool, but bootloader must be flashed with MPLAB first:
 1.  Build circuit according to schematics.
 2.  SD Card requires `flash.bin` and `config.map` exported by B4J Uploader.  In B4J, select **PIC Name** from list, click **Tools->Export for ESP32**.
