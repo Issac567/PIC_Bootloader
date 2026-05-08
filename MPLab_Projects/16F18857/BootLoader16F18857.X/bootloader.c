@@ -1,6 +1,6 @@
 /*
  * File:   bootloader.c
- * Version: 4.04
+ * Version: 4.10
  * Created on January 19, 2026, 2:50 PM
  * Family: 16F18857
  * PACKS: USE 1.29.444
@@ -173,7 +173,8 @@ void Flash_Verify(void)
 {
     uint16_t addr;
     uint8_t ble_counter = 0;
-    
+    uint8_t b;  
+     
     // Send to host
     UART_TxString("<StartFlashVerify>");
     __delay_ms(MSG_MS_DELAY);
@@ -181,6 +182,21 @@ void Flash_Verify(void)
     // Loop through all flash from start to end
     for (addr = FLASH_START; addr + FLASH_WRITE_BLOCK - 1 <= FLASH_END; addr += FLASH_WRITE_BLOCK)
     {
+        // --- NEW CANCEL CHECK ---
+        // Check if data is available in the hardware UART buffer
+        if (PIR3bits.RCIF)
+        {
+            b = UART_Rx();
+            if (b == 0xCA) // Read the byte to clear the flag
+            {
+                __delay_ms(MSG_MS_DELAY); 
+                UART_TxString("<VerifyCancelled>");
+                __delay_ms(MSG_MS_DELAY); 
+                return; 
+            }
+        }
+        // -------------------------
+        
         // Prepare 32-word packet
         uint16_t packet[FLASH_WRITE_BLOCK];
         for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
@@ -392,7 +408,8 @@ void ReceiveConfig(void)
     
    // ----- FLush -----
     uint8_t dummy;
-    while (PIR3bits.RCIF) {
+    while (PIR3bits.RCIF) 
+    {
         dummy = RC1REG;         // discard
     }
     
