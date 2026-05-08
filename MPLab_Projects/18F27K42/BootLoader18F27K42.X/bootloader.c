@@ -1,6 +1,6 @@
 /*
  * File:   bootloader.c
- * Version: 4.04
+ * Version: 4.10
  * Created on January 19, 2026, 2:50 PM
  * Family: 18F27K42
  * USE 1.15.303
@@ -138,6 +138,7 @@ void Flash_Verify(void)
 {
     uint32_t addr;
     uint8_t ble_counter = 0;
+    uint8_t b;
     
     // Marker sent to host
     UART_TxString("<StartFlashVerify>");
@@ -147,6 +148,21 @@ void Flash_Verify(void)
     //for (addr = FLASH_START; addr < FLASH_END; addr += FLASH_ERASE_BLOCK * 2)
     for (addr = FLASH_START; addr + (FLASH_ERASE_BLOCK * 2) - 1 <= FLASH_END; addr += FLASH_ERASE_BLOCK * 2)
     {
+        // --- NEW CANCEL CHECK ---
+        // Check if data is available in the hardware UART buffer
+        if (PIR3bits.U1RXIF)
+        {
+            b = UART_Rx();
+            if (b == 0xCA) // Read the byte to clear the flag
+            {
+                __delay_ms(MSG_MS_DELAY); 
+                UART_TxString("<VerifyCancelled>");
+                __delay_ms(MSG_MS_DELAY); 
+                return; 
+            }
+        }
+        // -------------------------
+        
         // Buffer holds FLASH_WRITE_BLOCK words
         uint16_t packet[FLASH_WRITE_BLOCK];
 
@@ -379,7 +395,8 @@ void ReceiveConfig(void)
 
     //-----FLush-----
     uint8_t dummy;
-    while (PIR3bits.U1RXIF) {
+    while (PIR3bits.U1RXIF) 
+    {
         dummy = U1RXB;        
     }
     
