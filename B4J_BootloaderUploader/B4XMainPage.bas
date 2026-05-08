@@ -26,7 +26,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Const VERSION As String = "11.01"
+	Private Const VERSION As String = "11.02"
 	
 	Private Const DEVICE_NONE As Int = 0
 	Private Const DEVICE_BLE As Int = 1
@@ -38,19 +38,36 @@ Sub Class_Globals
 	'---------------------------------------
 	' Map Config Variables
 	'---------------------------------------
-	Private intStartAddrFlash As Int 						' Used with Intel Hex Conversion
-	Private intEndAddrFlash   As Int						' Used with Intel Hex Conversion
-	Private intEmptyFlashValue As Int						' 16F = 0x3F, 18F = 0xFF, 24F = 0x00 Phantom 24bit
-	Private intInstructionPacket As Int						' Number of Instruction per block
-	Private intPacketDelayMS As Int							' Delay for Tx Write Packets
-	Private intHandShakeDelayMS As Int						' Delay for 0x55 and 0xAA in between	
-	Private intStopBit As Int = 1							' Default
-	Private strNotes As String 
-	Private intExpectedFirmwareBytes As Int					' Total Firmware bytes
-	Private blnUseWriteBurst  As Boolean					' True = Tx Write Packet as whole, no delays in between!
-	Private blnUseDoubleHexAddr As Boolean					' 16F, 24F = Increment 2 Hex Address, 18F = Increment 1 Hex Address. Used with Intel Hex Conversion
-	Private blnUse4Padding As Boolean						' 24 Bit need step 4, others step 2. Used with Intel Hex Conversion
-	Private strPicName As String							' Name of PIC
+	Type ConfigMap( _
+		intStartAddrFlash As Int, _							' Used with Intel Hex Conversion
+		intEndAddrFlash   As Int, _							' Used with Intel Hex Conversion
+		intEmptyFlashValue As Int, _						' 16F = 0x3F, 18F = 0xFF, 24F = 0x00 Phantom 24bit
+		intInstructionPacket As Int, _						' Number of Instruction per block
+		intPacketDelayMS As Int, _							' Delay for Tx Write Packets
+		intHandShakeDelayMS As Int, _						' Delay for 0x55 and 0xAA in between	
+		intStopBit As Int, _ 								' Default
+		strNotes As String, _ 
+		intExpectedFirmwareBytes As Int, _					' Total Firmware bytes
+		blnUseWriteBurst  As Boolean, _						' True = Tx Write Packet as whole, no delays in between!
+		blnUseDoubleHexAddr As Boolean, _					' 16F, 24F = Increment 2 Hex Address, 18F = Increment 1 Hex Address. Used with Intel Hex Conversion
+		blnUse4Padding As Boolean, _						' 24 Bit need step 4, others step 2. Used with Intel Hex Conversion
+		strPicName As String)								' Name of PIC
+	Private myConfigMap As ConfigMap
+
+	'---------------------------------------
+	' PIC Status
+	'---------------------------------------
+	Type PicStatus( _
+		cntVerify As Int, _									' Counter detection of incoming verify bytes from PIC
+		blnHandShakeSuccess As Boolean, _					' <InitReceived> from PIC
+		blnConfigOK As Boolean, _							' <ConfigOK> from PIC exit function (Success bytes received)
+		blnWriteACK As Boolean, _							' <ACK> from PIC used in Firmware Upload.  Needs this <ACK> from PIC to continue next Block Write bytes
+		blnISRTimeOut As Boolean, _							' <ISR Timeout> Timeout Detected from PIC
+		blnTimeoutError As Boolean, _						' <TimeoutError> 3 ISR Timeout from PIC
+		blnStartFlashVerify As Boolean, _					' <StartFlashVerify> from PIC
+		blnAstreamError	As Boolean, _						' Astream error exit loop
+		blnUserCancel As Boolean)							' Exit loop for Stop Flash, Disconnect and Quit App
+	Private myPicStatus As PicStatus
 	
 	'---------------------------------------
 	' BLE (Bleak), jBluetooth and Serial Library + Astream
@@ -106,16 +123,6 @@ Sub Class_Globals
 	
 	Private firmwareFile() As Byte							' firmware binary from FILE
 	Private firmwareVerify() As Byte						' firmware binary from PIC
-	Private cntVerify As Int								' Counter detection of incoming verify bytes from PIC
-	
-	Private blnHandShakeSuccess As Boolean					' <InitReceived> from PIC
-	Private blnConfigOK As Boolean							' <ConfigOK> from PIC exit function (Success bytes received)
-	Private blnWriteACK As Boolean							' <ACK> from PIC used in Firmware Upload.  Needs this <ACK> from PIC to continue next Block Write bytes
-	Private blnISRTimeOut As Boolean						' <ISR Timeout> Timeout Detected from PIC
-	Private blnTimeoutError As Boolean						' <TimeoutError> 3 ISR Timeout from PIC
-	Private blnStartFlashVerify As Boolean					' <StartFlashVerify> from PIC
-	Private blnAstreamError	As Boolean						' Astream error exit loop
-	Private blnAppStopQuit As Boolean						' Exit loop for Stop Flash, Disconnect and Quit App
 	
 	Private rxBufferString As String						' Buffer Newdata in string format PIC Message only
 	Private strLastFilePath As String						' Reloads firmware from FILE when PIC name changed so Firmware array be corrected
@@ -133,6 +140,9 @@ Public Sub Initialize
 	serialUSBTTL.Initialize("serial")
 	WIFIClient.Initialize("WifiClient")
 	ATCommandMode.Initialize
+	myConfigMap.Initialize
+	myConfigMap.intStopBit = 1
+	myPicStatus.Initialize
 End Sub
 
 '--------------------------------------------------------
@@ -258,7 +268,7 @@ Sub astream_NewData (Buffer() As Byte)
 	' PIC sends with > as last byte to confirm end of message or bytes
 	' When VerifyRequest = true, it does not received ">". Sticktly bytes only!
 	' Buffer is meant for Verify Bytes only.
-	If rxBufferString.Contains(">") Or blnStartFlashVerify = True Then
+	If rxBufferString.Contains(">") Or myPicStatus.blnStartFlashVerify = True Then
 		HandleMessage(rxBufferString, Buffer)	
 		rxBufferString = ""
 		
@@ -272,7 +282,7 @@ Sub astream_Error
 	astream_Terminated
 End Sub
 Sub astream_Terminated
-	blnAstreamError = True
+	myPicStatus.blnAstreamError = True
 	
 	If astream.IsInitialized Then
 		astream.Close
@@ -342,7 +352,7 @@ Private Sub btHM10_CharNotify (Notification As BleakNotification)
 	' PIC sends with > as last byte to confirm end of message
 	' When VerifyRequest = true, it does not received ">". Sticktly bytes only!
 	' Buffer is meant for Verify Bytes only.
-	If rxBufferString.Contains(">") Or blnStartFlashVerify = True Then
+	If rxBufferString.Contains(">") Or myPicStatus.blnStartFlashVerify = True Then
 		HandleMessage(rxBufferString, Buffer)
 		rxBufferString = ""
 	End If
@@ -362,8 +372,9 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 	' We dont want to log Incoming PIC VERIFY bytes, but just <VerifyCancelled>!
 	'If blnStartFlashVerify <> True And msg <> "<ACK>" Then
 	If msg <> "<ACK>" Then
-		If blnStartFlashVerify = True Then
-			If msg = "<VerifyCancelled>" Then
+		If myPicStatus.blnStartFlashVerify = True Then
+			If msg = "<VerifyCancelled>" Or msg.Contains("VerifyCancelled") Then
+				'Contains is workaround for HC-05!
 				LogMessage("PIC", msg)
 			End If
 		Else
@@ -372,18 +383,19 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 	End If
 	
 	' This is triggered by <StartFlashVerify> from PIC after Flash Write is completed
-	If blnStartFlashVerify = True Then
+	If myPicStatus.blnStartFlashVerify = True Then
 		'LogMessage("INCOMMING", BytesToHexString(buffer))  ' debugging only!!!					
 		For x = 0 To buffer.Length - 1  ' This method is better.  Newdata does not guarantee all block in one event
 			' This array will compare to firmware() which is Converted FILE binary
-			firmwareVerify(cntVerify) = buffer(x)
+			firmwareVerify(myPicStatus.cntVerify) = buffer(x)
 										
 			' Update progress bar
-			prgBar.Progress = Min(1, cntVerify / intExpectedFirmwareBytes)
-			cntVerify = cntVerify + 1
+			prgBar.Progress = Min(1, myPicStatus.cntVerify / myConfigMap.intExpectedFirmwareBytes)
+			myPicStatus.cntVerify = myPicStatus.cntVerify + 1
 					
 			' Check if we reached the expected firmware size
-			If cntVerify >= intExpectedFirmwareBytes Then
+			If myPicStatus.cntVerify >= myConfigMap.intExpectedFirmwareBytes Then
+				myPicStatus.blnStartFlashVerify = False
 				' Let <EndFlashVerify> display the status of Verify!
 				' Just enable button here
 				EnableFunction
@@ -402,16 +414,16 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 			
 			' Bootloader start handshake timeout.  if no handshake it will enter application
 		Else If msg.Contains("<InitReceived>") Then
-			blnHandShakeSuccess = True	' Must do this first. Exit handshake no more 0x55 0xAA. 
+			myPicStatus.blnHandShakeSuccess = True	' Must do this first. Exit handshake no more 0x55 0xAA.
 			LogMessage("STATUS", "Bootloader responded.")
 			
 		Else If msg.Contains("<ConfigTimeout>") Then
-			blnTimeoutError = True
+			myPicStatus.blnTimeoutError = True
 			EnableFunction
 			LogMessage("STATUS", "PIC reported timeout error, try again")
 			
 		Else If msg.Contains("<ConfigOK>") Then
-			blnConfigOK = True
+			myPicStatus.blnConfigOK = True
 								
 			' End of Erase Flash. When Pic sends this, delay a bit and start the flash upload
 		Else If msg.Contains("<EndFlashErase>") Then
@@ -420,26 +432,25 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 			
 			' B4J expects <ACK> from PIC so B4J sends next packets in Firmware Upload routine
 		Else If msg.Contains("<ACK>") Then
-			blnWriteACK = True
+			myPicStatus.blnWriteACK = True
 
 			' Timeout occurred with Flash Write.  This will attempt a redo send
 		Else If msg.Contains("<ISR Timeout>") Then
-			blnISRTimeOut = True
+			myPicStatus.blnISRTimeOut = True
 			
 			' 3 ISR timeout = error by PIC
 		Else If msg.Contains("<ErrorTimeout>") Then
-			blnTimeoutError = True
+			myPicStatus.blnTimeoutError = True
 			EnableFunction
 			LogMessage("STATUS", "PIC reported timeout error, try again")
 
 			' Start of verify flash program code
 		Else If msg.Contains("<StartFlashVerify>") Then
-			cntVerify = 0		' not needed?? its in disableFunction?
-			blnStartFlashVerify = True
+			myPicStatus.cntVerify = 0		' not needed?? its in disableFunction?
+			myPicStatus.blnStartFlashVerify = True
 			LogMessage("STATUS", "Waiting for verification...")
 				
-		Else If msg.Contains("<VerifyCancelled>") Then
-			blnStartFlashVerify = False
+		'Else If msg.Contains("<VerifyCancelled>") Then
 			
 			' End of verify flash program code
 		Else If msg.Contains("<EndFlashVerify>") Then
@@ -667,7 +678,7 @@ Private Sub OpenUSBTLL
 		Dim serial1 As Serial
 		serial1.Initialize("serial1")
 		serial1.Open(cmbPortUSBTTL.Value)
-		serial1.SetParams(serial1.BAUDRATE_57600, serial1.DATABITS_8, intStopBit, serial1.PARITY_NONE)  ' Set baud=57600, 8 data bits, config value, no parity
+		serial1.SetParams(serial1.BAUDRATE_57600, serial1.DATABITS_8, myConfigMap.intStopBit, serial1.PARITY_NONE)  ' Set baud=57600, 8 data bits, config value, no parity
 		If astream.IsInitialized Then astream.Close
 		astream.Initialize(serial1.GetInputStream, serial1.GetOutputStream, "astream")
 		serialUSBTTL = serial1
@@ -757,14 +768,14 @@ Sub CloseConnection(BLE As Boolean, SSP As Boolean, TTLUSB As Boolean, WIFI As B
 		End If
 	End If
 End Sub
-Sub PerformUserAbort(WhichDevice As Int)
+Sub PerformUserAbort(WhichButton As Int)
 	' 1. --- Confirm with User ---
 	If btnFlash.Text = "Stop" Then
 		Dim sf3 As Object = xui.Msgbox2Async("Flash in progress! Do you want to stop?", "Flashing", "Yes", "", "No", Null)
 		Wait For (sf3) Msgbox_Result(ret2 As Int)
 		If ret2 = xui.DialogResponse_Positive Then
 			LogMessage("STATUS", "User stop flash!")
-			If blnStartFlashVerify = False Then
+			If myPicStatus.blnStartFlashVerify = False Then
 				LogMessage("WARNING!", "Minimum 20 seconds delay before another flash attempt!")
 			End If
 		Else
@@ -777,7 +788,7 @@ Sub PerformUserAbort(WhichDevice As Int)
 	Dim CancelByte(1) As Byte
 	CancelByte(0) = 0xCA
 	
-	If blnStartFlashVerify Then
+	If myPicStatus.blnStartFlashVerify Then
 		Select Case WhichDeviceConnection
 			Case DEVICE_BLE
 				Dim rs As Object
@@ -804,7 +815,7 @@ Sub PerformUserAbort(WhichDevice As Int)
 	EnableFunction
 	
 	' 4. --- Close the connection! ---
-	Select Case WhichDevice
+	Select Case WhichButton
 		Case DEVICE_BLE
 			bkHM10Client.Disconnect
 			LogMessage("STATUS", "Disconnect")
@@ -839,22 +850,6 @@ Sub PerformUserAbort(WhichDevice As Int)
 			
 	End Select
 End Sub
-Sub GetWhichDeviceUsing As Int
-	' Specifically for Stop Button on whom did it!
-	Dim DeviceType As Int = 0
-	
-	If btnConnectHC05.Text = "Disconnect" Then
-		DeviceType = DEVICE_CLASSIC_BT
-	Else If btnConnectHM10.Text = "Disconnect" Then
-		DeviceType = DEVICE_BLE
-	Else If btnConnectWIFI.Text = "Disconnect" Then
-		DeviceType = DEVICE_WIFI
-	Else If btnOpenUSBTTL.Text = "Close Port" Then
-		DeviceType = DEVICE_TTLSERIAL
-	End If
-	
-	Return DeviceType
-End Sub
 
 '--------------------------------------------------------
 ' Load Intel Hex file and convert it to binary (LSB->MSB Little Endian)
@@ -883,7 +878,7 @@ Private Sub btnLoadFile_Click
 	If filepath <> "" Then
 		strLastFilePath = filepath
 		LogMessage("STATUS", "File Path: " & filepath)
-		firmwareFile = ConvertHexIntelToBinaryRange(filepath, intStartAddrFlash, intEndAddrFlash)
+		firmwareFile = ConvertHexIntelToBinaryRange(filepath, myConfigMap.intStartAddrFlash, myConfigMap.intEndAddrFlash)
 	Else
 		strLastFilePath = ""
 		LogMessage("STATUS", "No file selected.")
@@ -895,7 +890,7 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
         
 		' Intel Double Hex Byte Addressed
 		Dim startByte, endByte As Int
-		If blnUseDoubleHexAddr = True Then
+		If myConfigMap.blnUseDoubleHexAddr = True Then
 			startByte = startAddr * 2       ' eg. PIC 16F88, PIC 24F
 			endByte = endAddr * 2
 		' Non Intel Double Hex Byte Addressed
@@ -905,22 +900,22 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
 		End If
         
 		' Create binary array relative to startAddr
-		Dim firmwareData(intExpectedFirmwareBytes) As Byte
+		Dim firmwareData(myConfigMap.intExpectedFirmwareBytes) As Byte
         
 		' --- FIRMWARE INITIALIZATION (Don't leave this out!) ---
-		If blnUse4Padding = True Then
+		If myConfigMap.blnUse4Padding = True Then
 			'LSB, Mid, MSB, Phantom format for PIC24
 			For i = 0 To firmwareData.Length - 1 Step 4
 				firmwareData(i) = 0xFF                  ' Low Byte
 				firmwareData(i+1) = 0xFF                ' Mid Byte
 				firmwareData(i+2) = 0xFF                ' High Byte
-				firmwareData(i+3) = intEmptyFlashValue  ' Phantom (Void) Byte
+				firmwareData(i+3) = myConfigMap.intEmptyFlashValue  ' Phantom (Void) Byte
 			Next
 		Else
 			' LSB(0xFF) Then MSB(0x3F or 0xFF) format for 18F and 16F
 			For i = 0 To firmwareData.Length - 1 Step 2
 				firmwareData(i) = 0xFF					' Low Byte
-				firmwareData(i+1) = intEmptyFlashValue	' High Byte
+				firmwareData(i+1) = myConfigMap.intEmptyFlashValue	' High Byte
 			Next
 		End If
         
@@ -1014,19 +1009,19 @@ Sub ExportConfigFile
 	Dim cfg As Map
 	cfg.Initialize
 	
-	cfg.Put("StartAddrFlash", intStartAddrFlash)
-	cfg.Put("EndAddrFlash", intEndAddrFlash)
-	cfg.Put("EmptyFlashValue", intEmptyFlashValue)
-	cfg.Put("InstructionPacket", intInstructionPacket)
-	cfg.Put("PacketDelayMS", intPacketDelayMS)
-	cfg.Put("HandShakeDelayMS", intHandShakeDelayMS)
-	cfg.Put("StopBit", intStopBit)
-	cfg.Put("Notes", strNotes)
-	cfg.Put("ExpectedBytes", intExpectedFirmwareBytes)
-	cfg.Put("UseWriteBurst", blnUseWriteBurst)
-	cfg.Put("UseDoubleHexAddr", blnUseDoubleHexAddr)
-	cfg.Put("Use4Padding", blnUse4Padding)
-	cfg.Put("PicName", strPicName)
+	cfg.Put("StartAddrFlash", myConfigMap.intStartAddrFlash)
+	cfg.Put("EndAddrFlash", myConfigMap.intEndAddrFlash)
+	cfg.Put("EmptyFlashValue", myConfigMap.intEmptyFlashValue)
+	cfg.Put("InstructionPacket", myConfigMap.intInstructionPacket)
+	cfg.Put("PacketDelayMS", myConfigMap.intPacketDelayMS)
+	cfg.Put("HandShakeDelayMS", myConfigMap.intHandShakeDelayMS)
+	cfg.Put("StopBit", myConfigMap.intStopBit)
+	cfg.Put("Notes", myConfigMap.strNotes)
+	cfg.Put("ExpectedBytes", myConfigMap.intExpectedFirmwareBytes)
+	cfg.Put("UseWriteBurst", myConfigMap.blnUseWriteBurst)
+	cfg.Put("UseDoubleHexAddr", myConfigMap.blnUseDoubleHexAddr)
+	cfg.Put("Use4Padding", myConfigMap.blnUse4Padding)
+	cfg.Put("PicName", myConfigMap.strPicName)
 	
 	File.WriteMap(File.DirApp, "config.map", cfg)
 	LogMessage("Status", "export @ " & File.DirApp & "\config.map")
@@ -1053,7 +1048,6 @@ Private Sub btnFlash_Click
 		End If
 	' Flash Stop Logic
 	Else If btnFlash.Text = "Stop" Then
-		WhichDeviceConnection = GetWhichDeviceUsing
 		PerformUserAbort(DEVICE_NONE)
 	End If
 End Sub
@@ -1070,7 +1064,7 @@ Sub SendHandShakeBytes
 		If isOperationFailed = True Then Return
 		
 		' Exit and Start Config upload
-		If blnHandShakeSuccess = True Then
+		If myPicStatus.blnHandShakeSuccess = True Then
 			Sleep(300) ' give firmware time to call ReceiveConfig.
 			SendConfigBytes
 			Return
@@ -1100,7 +1094,7 @@ Sub SendHandShakeBytes
 		End If
 				
 		' Avoid flooding UART
-		Sleep(intHandShakeDelayMS)		' Recommend 200 ms minimum in .map file
+		Sleep(myConfigMap.intHandShakeDelayMS)		' Recommend 200 ms minimum in .map file
 		
 		blnToggle = Not(blnToggle)
 	Loop
@@ -1150,7 +1144,7 @@ Sub SendConfigBytes
 	End If
 	LogMessage("CFG BYTES", "Sending: 0x" & Bit.ToHexString(byteONE(0)).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTWO(0)).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTHREE(0)).ToUpperCase)
 					
-	Do While blnConfigOK = False
+	Do While myPicStatus.blnConfigOK = False
 		If isOperationFailed = True Then Return
 		Sleep(50)
 	Loop
@@ -1160,10 +1154,10 @@ Sub SendFirmwareBytes
 	' Firmware Binary file must include all flash data including empty addresses!
 	Dim intBlockSize As Int
 
-	If blnUse4Padding = True Then
-		intBlockSize = intInstructionPacket * 4 ' eg. 64 words = 256 intBlockSize 24FJ64GA102
+	If myConfigMap.blnUse4Padding = True Then
+		intBlockSize = myConfigMap.intInstructionPacket * 4 ' eg. 64 words = 256 intBlockSize 24FJ64GA102
 	Else
-		intBlockSize = intInstructionPacket * 2 ' eg. 4 words = 8 intBlockSize 16F88
+		intBlockSize = myConfigMap.intInstructionPacket * 2 ' eg. 4 words = 8 intBlockSize 16F88
 	End If
 	
 	Dim block(intBlockSize) As Byte
@@ -1191,12 +1185,12 @@ Sub SendFirmwareBytes
 		If isOperationFailed = True Then Return
 
 		' Wait for ACK or handle timeout
-		Do While blnWriteACK = False
+		Do While myPicStatus.blnWriteACK = False
 			If isOperationFailed = True Then Return
 
-			If blnISRTimeOut = True Then
+			If myPicStatus.blnISRTimeOut = True Then
 				LogMessage("FIRMWAREUPLOAD", "Timeout detected, retrying at byte #" & i)
-				blnISRTimeOut = False
+				myPicStatus.blnISRTimeOut = False
 				Continue    ' retry immediately
 			End If
 
@@ -1204,12 +1198,12 @@ Sub SendFirmwareBytes
 		Loop
 		
 		' Reset ACK for next block
-		blnWriteACK = False
+		myPicStatus.blnWriteACK = False
 		
 		'--------------------------------------------------------------------------------
 		' Burst = False
 		'--------------------------------------------------------------------------------
-		If blnUseWriteBurst = False Then
+		If myConfigMap.blnUseWriteBurst = False Then
 			For x = 0 To intBlockSize - 1
 				Dim b(1) As Byte
 				b(0) = block(x)
@@ -1226,7 +1220,7 @@ Sub SendFirmwareBytes
 					If astream.IsInitialized Then astream.Write(b)
 				End If
 				
-				Sleep(intPacketDelayMS)
+				Sleep(myConfigMap.intPacketDelayMS)
 				
 			Next
 		'-----------------------------------------------------------------------------
@@ -1267,7 +1261,7 @@ Sub SendFirmwareBytes
 				If astream.IsInitialized Then astream.Write(block)
 			End If
 			
-			Sleep(intPacketDelayMS)
+			Sleep(myConfigMap.intPacketDelayMS)
 			
 		End If
 
@@ -1282,17 +1276,17 @@ Sub SendFirmwareBytes
 End Sub
 Sub isOperationFailed As Boolean
 	' PIC reported timeout error (Handshake does not have this!)
-	If blnTimeoutError = True Then
+	If myPicStatus.blnTimeoutError = True Then
 		Return True
 	End If
 		
 	' Astream error or terminated
-	If blnAstreamError = True Then
+	If myPicStatus.blnAstreamError = True Then
 		Return True
 	End If
 		
 	' Stop or Quit Detected
-	If blnAppStopQuit = True Then
+	If myPicStatus.blnUserCancel = True Then
 		Return True
 	End If
 	
@@ -1340,17 +1334,19 @@ Sub DisableFunction
 	btnStartScanHM10.Enabled = False
 	btnLoadFile.Enabled = False
 	cmbPicList.Enabled = False
-	blnAppStopQuit = False
 	btnFlash.Text = "Stop"
 
-	blnHandShakeSuccess = False
-	blnTimeoutError = False
-	blnAstreamError = False
-	blnISRTimeOut = False
-	blnConfigOK = False
+	myPicStatus.blnUserCancel = False
+	myPicStatus.blnHandShakeSuccess = False
+	myPicStatus.blnTimeoutError = False
+	myPicStatus.blnAstreamError = False
+	myPicStatus.blnISRTimeOut = False
+	myPicStatus.blnConfigOK = False
+	myPicStatus.blnStartFlashVerify = False
+	myPicStatus.cntVerify = 0
+	
 	txtLog.Text = ""
 	prgBar.Progress = 0		
-	cntVerify = 0
 End Sub
 Sub EnableFunction
 	MenuBar1.Enabled = True
@@ -1360,13 +1356,9 @@ Sub EnableFunction
 	btnStartScanHM10.Enabled = True
 	btnLoadFile.Enabled = True
 	cmbPicList.Enabled = True
-	blnAppStopQuit = True
 	btnFlash.Text = "Flash"
 	
-	blnWriteACK = False
-	blnStartFlashVerify = False
-	
-	
+	myPicStatus.blnUserCancel = True
 End Sub
 
 '--------------------------------------------------------
@@ -1427,28 +1419,28 @@ Sub LoadConfiguration(SelectedPicName As String) As Boolean
 					If CheckName = SelectedPicName Then
 						txtLog.Text = ""
 						
-						intStartAddrFlash = cfg.Get("StartAddrFlash")		' Start Address of Flash. For Intel Hex Conversion
-						intEndAddrFlash = cfg.Get("EndAddrFlash")			' End Address of Flash
-						intEmptyFlashValue = cfg.Get("EmptyFlashValue")		' Empty Flash Value (eg. 3FFF = 3F)
-						intInstructionPacket = cfg.Get("InstructionPacket")	' Total Instruction Words Per Packet for Write Block
-						intPacketDelayMS = cfg.Get("PacketDelayMS")			' Write Block Packet Delay
-						intHandShakeDelayMS = cfg.Get("HandShakeDelayMS")	' Handshake Delay (0x55 and 0xAA in between delay)
-						intStopBit = cfg.Get("StopBit")						' 1 or 2 stop bits, older PIC need 2 so it buys time processing other instructions
-						strNotes = cfg.Get("Notes")							' Special Notes
-						intExpectedFirmwareBytes = cfg.Get("ExpectedBytes") ' Total Bytes need flash and erase
-						blnUseWriteBurst = cfg.Get("UseWriteBurst")			' No delays in between bytes if True!
-						blnUseDoubleHexAddr = cfg.Get("UseDoubleHexAddr") 	' For Intel Hex Conversion
-						blnUse4Padding = cfg.Get("Use4Padding")				' For Intel Hex conversion
-						strPicName = cfg.Get("PicName")						' PIC Name
+						myConfigMap.intStartAddrFlash = cfg.Get("StartAddrFlash")		' Start Address of Flash. For Intel Hex Conversion
+						myConfigMap.intEndAddrFlash = cfg.Get("EndAddrFlash")			' End Address of Flash
+						myConfigMap.intEmptyFlashValue = cfg.Get("EmptyFlashValue")		' Empty Flash Value (eg. 3FFF = 3F)
+						myConfigMap.intInstructionPacket = cfg.Get("InstructionPacket")	' Total Instruction Words Per Packet for Write Block
+						myConfigMap.intPacketDelayMS = cfg.Get("PacketDelayMS")			' Write Block Packet Delay
+						myConfigMap.intHandShakeDelayMS = cfg.Get("HandShakeDelayMS")	' Handshake Delay (0x55 and 0xAA in between delay)
+						myConfigMap.intStopBit = cfg.Get("StopBit")						' 1 or 2 stop bits, older PIC need 2 so it buys time processing other instructions
+						myConfigMap.strNotes = cfg.Get("Notes")							' Special Notes
+						myConfigMap.intExpectedFirmwareBytes = cfg.Get("ExpectedBytes") ' Total Bytes need flash and erase
+						myConfigMap.blnUseWriteBurst = cfg.Get("UseWriteBurst")			' No delays in between bytes if True!
+						myConfigMap.blnUseDoubleHexAddr = cfg.Get("UseDoubleHexAddr") 	' For Intel Hex Conversion
+						myConfigMap.blnUse4Padding = cfg.Get("Use4Padding")				' For Intel Hex conversion
+						myConfigMap.strPicName = cfg.Get("PicName")						' PIC Name
 						
 						' Set Proper Arrays to FirmwareVerfiy()
 						firmwareVerify = Array As Byte()
-						Dim temp(intExpectedFirmwareBytes) As Byte
+						Dim temp(myConfigMap.intExpectedFirmwareBytes) As Byte
 						firmwareVerify = temp
 		
 						' Make sure reload the Intel Hex file to new firmwareFile() array
 						If strLastFilePath <> "" Then
-							firmwareFile = ConvertHexIntelToBinaryRange(strLastFilePath, intStartAddrFlash, intEndAddrFlash)
+							firmwareFile = ConvertHexIntelToBinaryRange(strLastFilePath, myConfigMap.intStartAddrFlash, myConfigMap.intEndAddrFlash)
 						End If
 						
 						' If port already open update stop bit parameter!
@@ -1461,22 +1453,22 @@ Sub LoadConfiguration(SelectedPicName As String) As Boolean
 						LogMessage("", "---------------------------------------------------------")
 						LogMessage("", "CONFIGURATION FOR " & CheckName)
 						LogMessage("", "---------------------------------------------------------")
-						LogMessage(":::", "Notes: " & strNotes)
-						LogMessage(":::", "Start Address = 0x" & Bit.ToHexString(intStartAddrFlash).ToUpperCase)
-						LogMessage(":::", "End Address = 0x" & Bit.ToHexString(intEndAddrFlash).ToUpperCase)
-						LogMessage(":::", "Empty Flash Value = 0x" & Bit.ToHexString(intEmptyFlashValue).ToUpperCase)
-						LogMessage(":::", "HandShake Delay = " & intHandShakeDelayMS & " ms")
-						LogMessage(":::", "Packet Delay = " & intPacketDelayMS & " ms")
-						LogMessage(":::", "Stop Bit = " & intStopBit)
-						If blnUse4Padding = True Then
-							LogMessage(":::", "Instruction Write Size = " & (intInstructionPacket * 4) & " bytes w/padding (" &  intInstructionPacket & " instructions)" )
+						LogMessage(":::", "Notes: " & myConfigMap.strNotes)
+						LogMessage(":::", "Start Address = 0x" & Bit.ToHexString(myConfigMap.intStartAddrFlash).ToUpperCase)
+						LogMessage(":::", "End Address = 0x" & Bit.ToHexString(myConfigMap.intEndAddrFlash).ToUpperCase)
+						LogMessage(":::", "Empty Flash Value = 0x" & Bit.ToHexString(myConfigMap.intEmptyFlashValue).ToUpperCase)
+						LogMessage(":::", "HandShake Delay = " & myConfigMap.intHandShakeDelayMS & " ms")
+						LogMessage(":::", "Packet Delay = " & myConfigMap.intPacketDelayMS & " ms")
+						LogMessage(":::", "Stop Bit = " & myConfigMap.intStopBit)
+						If myConfigMap.blnUse4Padding = True Then
+							LogMessage(":::", "Instruction Write Size = " & (myConfigMap.intInstructionPacket * 4) & " bytes w/padding (" &  myConfigMap.intInstructionPacket & " instructions)" )
 						Else
-							LogMessage(":::", "Instruction Write Size = " & (intInstructionPacket * 2) & " bytes w/padding (" &  intInstructionPacket & " instructions)" )
+							LogMessage(":::", "Instruction Write Size = " & (myConfigMap.intInstructionPacket * 2) & " bytes w/padding (" &  myConfigMap.intInstructionPacket & " instructions)" )
 						End If
-						LogMessage(":::", "Expected Firmware Size = " & NumberFormat2(intExpectedFirmwareBytes, 1, 0, 0, True) & " bytes")
-						LogMessage(":::", "Use Write Burst = " & blnUseWriteBurst)
-						LogMessage(":::", "Use Double Hex Addressed = " & blnUseDoubleHexAddr)
-						LogMessage(":::", "Use 4 Padding = " & blnUse4Padding)
+						LogMessage(":::", "Expected Firmware Size = " & NumberFormat2(myConfigMap.intExpectedFirmwareBytes, 1, 0, 0, True) & " bytes")
+						LogMessage(":::", "Use Write Burst = " & myConfigMap.blnUseWriteBurst)
+						LogMessage(":::", "Use Double Hex Addressed = " & myConfigMap.blnUseDoubleHexAddr)
+						LogMessage(":::", "Use 4 Padding = " & myConfigMap.blnUse4Padding)
 						LogMessage("", "---------------------------------------------------------")
   						
 						Return True
