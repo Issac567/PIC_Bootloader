@@ -86,6 +86,7 @@ e.g. using **TTL Serial Com**.  Updating the application device firmware require
 4. Select configuration type eg. `16F88` in the combobox
 5. Click `Load Firmware` the `BootLoaderApp16F88.X.production.hex` file generated in the previous step.
 6. Execute the `Flash` command to flash the device.  It will Erase, Flash and Verify in that order.
+7. Goto `B4J_BootloaderUploader` directory for more information on various connection device.
 
 ### 3. Update Application Firmware (ESP32) `Option 2`
 Updating the application device firmware requires the ESP32 uploader tool, but bootloader must be flashed with MPLAB first:
@@ -94,6 +95,7 @@ Updating the application device firmware requires the ESP32 uploader tool, but b
 3.  Copy files to SD Card.
 4.  With HM-10 connected to your choice of PIC.
 5.  Execute the `Flash` command to flash the device.  It will Erase, Flash and Verify in that order.
+6. Goto `ESP32_BootloaderUploader` directory for more information.
 
 ---
 
