@@ -26,7 +26,14 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Version As String = "10.32"
+	Private Const VERSION As String = "11.01"
+	
+	Private Const DEVICE_NONE As Int = 0
+	Private Const DEVICE_BLE As Int = 1
+	Private Const DEVICE_CLASSIC_BT As Int = 2
+	Private Const DEVICE_WIFI As Int = 3
+	Private Const DEVICE_TTLSERIAL As Int = 4
+	Private WhichDeviceConnection As Int = 0
 	
 	'---------------------------------------
 	' Map Config Variables
@@ -106,7 +113,7 @@ Sub Class_Globals
 	Private blnWriteACK As Boolean							' <ACK> from PIC used in Firmware Upload.  Needs this <ACK> from PIC to continue next Block Write bytes
 	Private blnISRTimeOut As Boolean						' <ISR Timeout> Timeout Detected from PIC
 	Private blnTimeoutError As Boolean						' <TimeoutError> 3 ISR Timeout from PIC
-	Private StartFlashVerify As Boolean						' <StartFlashVerify> from PIC
+	Private blnStartFlashVerify As Boolean					' <StartFlashVerify> from PIC
 	Private blnAstreamError	As Boolean						' Astream error exit loop
 	Private blnAppStopQuit As Boolean						' Exit loop for Stop Flash, Disconnect and Quit App
 	
@@ -251,9 +258,12 @@ Sub astream_NewData (Buffer() As Byte)
 	' PIC sends with > as last byte to confirm end of message or bytes
 	' When VerifyRequest = true, it does not received ">". Sticktly bytes only!
 	' Buffer is meant for Verify Bytes only.
-	If rxBufferString.Contains(">") Or StartFlashVerify = True Then
-		HandleMessage(rxBufferString, Buffer)
+	If rxBufferString.Contains(">") Or blnStartFlashVerify = True Then
+		HandleMessage(rxBufferString, Buffer)	
 		rxBufferString = ""
+		
+		' NOTE: HC05 data in < first run then VerifyCancelled>.  
+		' We need a workaround to fix this issue!
 	End If
 	
 End Sub
@@ -332,7 +342,7 @@ Private Sub btHM10_CharNotify (Notification As BleakNotification)
 	' PIC sends with > as last byte to confirm end of message
 	' When VerifyRequest = true, it does not received ">". Sticktly bytes only!
 	' Buffer is meant for Verify Bytes only.
-	If rxBufferString.Contains(">") Or StartFlashVerify = True Then
+	If rxBufferString.Contains(">") Or blnStartFlashVerify = True Then
 		HandleMessage(rxBufferString, Buffer)
 		rxBufferString = ""
 	End If
@@ -349,13 +359,20 @@ End Sub
 Sub HandleMessage(msg As String, buffer() As Byte)
 	
 	' We dont want to log Incoming <ACK> while Firmware upload!
-	' We dont want to log Incoming PIC VERIFY bytes
-	If StartFlashVerify <> True And msg <> "<ACK>" Then
-		LogMessage("PIC", msg)
+	' We dont want to log Incoming PIC VERIFY bytes, but just <VerifyCancelled>!
+	'If blnStartFlashVerify <> True And msg <> "<ACK>" Then
+	If msg <> "<ACK>" Then
+		If blnStartFlashVerify = True Then
+			If msg = "<VerifyCancelled>" Then
+				LogMessage("PIC", msg)
+			End If
+		Else
+			LogMessage("PIC", msg)
+		End If
 	End If
 	
 	' This is triggered by <StartFlashVerify> from PIC after Flash Write is completed
-	If StartFlashVerify = True Then
+	If blnStartFlashVerify = True Then
 		'LogMessage("INCOMMING", BytesToHexString(buffer))  ' debugging only!!!					
 		For x = 0 To buffer.Length - 1  ' This method is better.  Newdata does not guarantee all block in one event
 			' This array will compare to firmware() which is Converted FILE binary
@@ -418,9 +435,12 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 			' Start of verify flash program code
 		Else If msg.Contains("<StartFlashVerify>") Then
 			cntVerify = 0		' not needed?? its in disableFunction?
-			StartFlashVerify = True
+			blnStartFlashVerify = True
 			LogMessage("STATUS", "Waiting for verification...")
 				
+		Else If msg.Contains("<VerifyCancelled>") Then
+			blnStartFlashVerify = False
+			
 			' End of verify flash program code
 		Else If msg.Contains("<EndFlashVerify>") Then
 			EnableFunction
@@ -452,62 +472,41 @@ Private Sub btnSearchHC05_Click
 	End If
 End Sub
 Private Sub btnConnectHC05_Click
-	' USE (57600 Baud) from HC05 to PIC
 	If btnConnectHC05.Text = "Connect" Then
-		If ListView1HC05.SelectedIndex <> - 1 Then
-			If btHC05.IsEnabled = False Then
-				xui.Msgbox2Async("Bluetooth is disabled. Please turn it on!", "Bluetooth", "Ok", "", "", Null)
-				Return
-			End If
-			
-			CloseConnection(True, False, True, True)
-		
-			btHC05.CancelDiscovery
-			
-			' Connect Bluetooth with Address selected from listview
-			Dim address As String = foundDevices.Get(ListView1HC05.SelectedItem)
-			btHC05.Connect(address)
-			LogMessage("STATUS", "Connecting to " & ListView1HC05.SelectedItem & "...")
-			wait for btHC05_Connected (Success As Boolean, connection As BluetoothConnection)
-			btHC05Connection = connection
-			If Success Then
-				If astream.IsInitialized Then astream.Close
-				astream.Initialize(connection.InputStream, connection.OutputStream, "astream")
-				btnConnectHC05.Text = "Disconnect"
-				LogMessage("STATUS", "Bluetooth Connected! @ " & address)
-				LogMessage("Status", "Ready Flash")
-			Else
-				LogMessage("STATUS", "Bluetooth Failed! @ " & address)
-			End If
-		Else
-			xui.Msgbox2Async("Please select Bluetooth fom the list!", "Select Bluetooth", "Ok", "", "", Null)
-		End If
-	' Disconnect
+		ConnectHC05
 	Else
-		' If its flashing inform with msgbox
-		If btnFlash.Text = "Stop" Then
-			Dim sf3 As Object = xui.Msgbox2Async("Flash in progress! Do you want to stop?", "Flashing", "Yes", "", "No", Null)
-			Wait For (sf3) Msgbox_Result(ret2 As Int)
-			If ret2 = xui.DialogResponse_Positive Then
-				LogMessage("STATUS", "User stop flash!")
-				If StartFlashVerify = True Then
-					xui.Msgbox2Async("Verify is running in background with PIC.  It has to complete before starting a new flash!", "Flash Verfiy Canceled!", "OK", "", "", Null)
-				Else
-					LogMessage("WARNING!", "Minimum 20 seconds delay before another flash attempt!")
-				End If
-				EnableFunction
-			Else
-				Return
-			End If
+		PerformUserAbort(DEVICE_CLASSIC_BT)
+	End If
+End Sub
+Private Sub ConnectHC05
+	If ListView1HC05.SelectedIndex <> - 1 Then
+		If btHC05.IsEnabled = False Then
+			xui.Msgbox2Async("Bluetooth is disabled. Please turn it on!", "Bluetooth", "Ok", "", "", Null)
+			Return
 		End If
+			
+		CloseConnection(True, False, True, True)
 		
-		' close Astream
-		If astream.IsInitialized Then
-			astream.Close
-			btHC05Connection.Disconnect
-			LogMessage("STATUS", "Disconnected")
+		btHC05.CancelDiscovery
+			
+		' Connect Bluetooth with Address selected from listview
+		Dim address As String = foundDevices.Get(ListView1HC05.SelectedItem)
+		btHC05.Connect(address)
+		LogMessage("STATUS", "Connecting to " & ListView1HC05.SelectedItem & "...")
+		wait for btHC05_Connected (Success As Boolean, connection As BluetoothConnection)
+		btHC05Connection = connection
+		If Success Then
+			If astream.IsInitialized Then astream.Close
+			astream.Initialize(connection.InputStream, connection.OutputStream, "astream")
+			WhichDeviceConnection = DEVICE_CLASSIC_BT
+			btnConnectHC05.Text = "Disconnect"
+			LogMessage("STATUS", "Bluetooth Connected! @ " & address)
+			LogMessage("Status", "Ready Flash")
+		Else
+			LogMessage("STATUS", "Bluetooth Failed! @ " & address)
 		End If
-		btnConnectHC05.Text = "Connect"
+	Else
+		xui.Msgbox2Async("Please select Bluetooth fom the list!", "Select Bluetooth", "Ok", "", "", Null)
 	End If
 End Sub
 
@@ -538,202 +537,114 @@ Private Sub btnStopScanHM10_Click
 	End If
 End Sub
 Private Sub btnConnectHM10_Click
-	' USE (57600 Baud) from HM10 to PIC
 	If btnConnectHM10.Text = "Connect" Then
-		If ListView1HM10.SelectedIndex <> - 1 Then
-			If btHC05.IsEnabled = False Then
-				xui.Msgbox2Async("Bluetooth is disabled. Please turn it on!", "Bluetooth", "Ok", "", "", Null)
-				Return
-			End If
-			
-			' Close any open connections
-			CloseConnection(False, True, True, True)
-			
-			BLE_useUUID = ""
-			
-			' Connect Bluetooth with Address selected from listview
-			Dim address As String = ListView1HM10.SelectedItem
-			bkHM10Client = btHM10.CreateClient(foundDevices.Get(address))
-			LogMessage("STATUS", "Connecting to " & ListView1HM10.SelectedItem & "...")
-			Wait For (bkHM10Client.Connect) Complete (Success As Boolean)
-			If Success Then
-				
-				'----------------------------------------------------------------
-				' Check MTU amount allowed
-				Dim mtu As PyWrapper = bkHM10Client.client.GetField("mtu_size")
-				Wait For (mtu.Fetch) Complete (mtu As PyWrapper)
-				' Step 1: Get MTU Size
-				Dim RawMTU As Int = mtu.Value
-				' Step 2: Remove ATT header
-				Dim PayloadMTU As Int = RawMTU - 3
-				' Step 3: Align for PIC (multiple of 4 and compatible with 2 in Verify_Flash Firmware (Future reserved))
-				Dim UniversalMTU As Int = Bit.And(PayloadMTU, 0xFFFC)
-				If UniversalMTU > 0 Then
-					BLE_useMTUSize = UniversalMTU
-				End If
-				Log("Negotiated MTU: " & RawMTU)
-				Log("Payload MTU (MTU-3): " & PayloadMTU)
-				Log("Universal MTU for PIC: " & UniversalMTU)
-				LogMessage("BLUETOOTH", "MTU Size = " & UniversalMTU)
-				'-----------------------------------------------------------------
-				
-				btnConnectHM10.Text = "Disconnect"
-				btnStopScanHM10_Click
-				LogMessage("STATUS", "Bluetooth Connected! @ " & address)
-				For Each service As BleakService In bkHM10Client.Services.Values
-					Log("---------------------------------")
-					Log("Service: " & service.UUID)
-					For Each Chara As BleakCharacteristic In service.Characteristics					
-						Log(Chara.Properties)
-						Log(Chara.UUID)						
-						If Chara.UUID.ToLowerCase.Contains("ffe1") = True And Chara.Properties.IndexOf("notify") <> -1 Then
-							BLE_useUUID = Chara.UUID
-							Wait For (bkHM10Client.SetNotify(BLE_useUUID)) Complete (Result As PyWrapper)
-							If Result.IsSuccess = False Then
-								LogMessage("BLUETOOTH", "Failed to set notify!")
-							Else
-								LogMessage("BLUETOOTH", "Notify set @ " & BLE_useUUID)
-								LogMessage("Status", "Ready Flash")
-							End If
-						End If					
-					Next
-				Next
-				
-				If BLE_useUUID = "" Then
-					LogMessage("BLUETOOTH", "Characteristic UUID not found!")
-				End If
-			Else
-				Log(Py.PyLastException)
-				LogMessage("STATUS", "Bluetooth Failed! @ " & address)
-			End If
-		Else
-			xui.Msgbox2Async("Please select Bluetooth fom the list!", "Select Bluetooth", "Ok", "", "", Null)
-		End If
-	' Disconnect
+		ConnectHM10
 	Else
-		' If its flashing inform with msgbox
-		If btnFlash.Text = "Stop" Then
-			Dim sf3 As Object = xui.Msgbox2Async("Flash in progress! Do you want to stop?", "Flashing", "Yes", "", "No", Null)
-			Wait For (sf3) Msgbox_Result(ret2 As Int)
-			If ret2 = xui.DialogResponse_Positive Then
-				LogMessage("STATUS", "User stop flash!")
-				If StartFlashVerify = True Then
-					xui.Msgbox2Async("Verify is running in background with PIC.  It has to complete before starting a new flash!", "Flash Verfiy Canceled!", "OK", "", "", Null)
-				Else
-					LogMessage("WARNING!", "Minimum 20 seconds delay before another flash attempt!")
-				End If
-				EnableFunction
-			Else
-				Return
-			End If
-		End If
-		
-		bkHM10Client.Disconnect
-		LogMessage("STATUS", "Disconnect")
-		btnConnectHM10.Text = "Connect"
+		PerformUserAbort(DEVICE_BLE)
 	End If
 
+End Sub
+Private Sub ConnectHM10
+	If ListView1HM10.SelectedIndex <> - 1 Then
+		If btHC05.IsEnabled = False Then
+			xui.Msgbox2Async("Bluetooth is disabled. Please turn it on!", "Bluetooth", "Ok", "", "", Null)
+			Return
+		End If
+			
+		' Close any open connections
+		CloseConnection(False, True, True, True)
+			
+		BLE_useUUID = ""
+			
+		' Connect Bluetooth with Address selected from listview
+		Dim address As String = ListView1HM10.SelectedItem
+		bkHM10Client = btHM10.CreateClient(foundDevices.Get(address))
+		LogMessage("STATUS", "Connecting to " & ListView1HM10.SelectedItem & "...")
+		Wait For (bkHM10Client.Connect) Complete (Success As Boolean)
+		If Success Then
+				
+			'----------------------------------------------------------------
+			' Check MTU amount allowed
+			Dim mtu As PyWrapper = bkHM10Client.client.GetField("mtu_size")
+			Wait For (mtu.Fetch) Complete (mtu As PyWrapper)
+			' Step 1: Get MTU Size
+			Dim RawMTU As Int = mtu.Value
+			' Step 2: Remove ATT header
+			Dim PayloadMTU As Int = RawMTU - 3
+			' Step 3: Align for PIC (multiple of 4 and compatible with 2 in Verify_Flash Firmware (Future reserved))
+			Dim UniversalMTU As Int = Bit.And(PayloadMTU, 0xFFFC)
+			If UniversalMTU > 0 Then
+				BLE_useMTUSize = UniversalMTU
+			End If
+			Log("Negotiated MTU: " & RawMTU)
+			Log("Payload MTU (MTU-3): " & PayloadMTU)
+			Log("Universal MTU for PIC: " & UniversalMTU)
+			LogMessage("BLUETOOTH", "MTU Size = " & UniversalMTU)
+			'-----------------------------------------------------------------
+				
+			WhichDeviceConnection = DEVICE_BLE
+			btnConnectHM10.Text = "Disconnect"
+			btnStopScanHM10_Click
+			LogMessage("STATUS", "Bluetooth Connected! @ " & address)
+			For Each service As BleakService In bkHM10Client.Services.Values
+				Log("---------------------------------")
+				Log("Service: " & service.UUID)
+				For Each Chara As BleakCharacteristic In service.Characteristics
+					Log(Chara.Properties)
+					Log(Chara.UUID)
+					If Chara.UUID.ToLowerCase.Contains("ffe1") = True And Chara.Properties.IndexOf("notify") <> -1 Then
+						BLE_useUUID = Chara.UUID
+						Wait For (bkHM10Client.SetNotify(BLE_useUUID)) Complete (Result As PyWrapper)
+						If Result.IsSuccess = False Then
+							LogMessage("BLUETOOTH", "Failed to set notify!")
+						Else
+							LogMessage("BLUETOOTH", "Notify set @ " & BLE_useUUID)
+							LogMessage("Status", "Ready Flash")
+						End If
+					End If
+				Next
+			Next
+				
+			If BLE_useUUID = "" Then
+				LogMessage("BLUETOOTH", "Characteristic UUID not found!")
+			End If
+		Else
+			Log(Py.PyLastException)
+			LogMessage("STATUS", "Bluetooth Failed! @ " & address)
+		End If
+	Else
+		xui.Msgbox2Async("Please select Bluetooth fom the list!", "Select Bluetooth", "Ok", "", "", Null)
+	End If
 End Sub
 
 Private Sub btnConnectWIFI_Click
 	If btnConnectWIFI.Text = "Connect" Then
-		
-		CloseConnection(True, True, True, False)
-		
-		Dim c As Socket
-		c.Initialize("client")
-		c.Connect(txtHostIPWIFI.text, txtPortWIFI.text, 5000)
-		LogMessage("STATUS", "Connecting @ " & txtHostIPWIFI.Text & ":" & txtPortWIFI.Text)
-		Wait For client_Connected (Successful As Boolean)
-		If Successful Then
-			WIFIClient = c
-			astream.Initialize(WIFIClient.InputStream, WIFIClient.OutputStream, "astream")
-			btnConnectWIFI.Text = "Disconnect"
-			LogMessage("STATUS", "WIFI connected!")
-			LogMessage("Status", "Ready Flash")
-		Else
-			LogMessage("STATUS", "WIFI connection failed!")
-		End If
+		ConnectWIFI
 	Else
-		If btnFlash.Text = "Stop" Then
-			Dim sf3 As Object = xui.Msgbox2Async("Flash in progress! Do you want to stop?", "Flashing", "Yes", "", "No", Null)
-			Wait For (sf3) Msgbox_Result(ret2 As Int)
-			If ret2 = xui.DialogResponse_Positive Then
-				LogMessage("STATUS", "User stop flash!")
-				If StartFlashVerify = True Then
-					xui.Msgbox2Async("Verify is running in background with PIC.  It has to complete before starting a new flash!", "Flash Verfiy Canceled!", "OK", "", "", Null)
-				Else
-					LogMessage("WARNING!", "Minimum 20 seconds delay before another flash attempt!")
-				End If
-				EnableFunction
-			Else
-				Return
-			End If
-		End If
-		
-		If astream.IsInitialized Then
-			astream.Close
-			If WIFIClient.Connected = True Then 
-				WIFIClient.Close
-			End If
-			LogMessage("STATUS", "Disconnect")
-		End If
-		btnConnectWIFI.Text = "Connect"
+		PerformUserAbort(DEVICE_WIFI)
 	End If
 
 End Sub
-
-Private Sub btnOpenUSBTTL_Click
-	' Open Port (57600 Baud)
-	If btnOpenUSBTTL.Text = "Open Port" Then
-
-		CloseConnection(True, True, False, True)
+Private Sub ConnectWIFI
+	CloseConnection(True, True, True, False)
 		
-		Try
-			Dim serial1 As Serial
-			serial1.Initialize("serial1")
-			serial1.Open(cmbPortUSBTTL.Value)
-			serial1.SetParams(serial1.BAUDRATE_57600, serial1.DATABITS_8, intStopBit, serial1.PARITY_NONE)  ' Set baud=57600, 8 data bits, config value, no parity
-			If astream.IsInitialized Then astream.Close
-			astream.Initialize(serial1.GetInputStream, serial1.GetOutputStream, "astream")
-			serialUSBTTL = serial1
-		Catch
-			LogMessage("STATUS", "Error opening port" & LastException)
-			Return
-		End Try
-		btnOpenUSBTTL.Text = "Close Port"
-		btnRefreshComUSBTTL.Enabled = False
-		LogMessage("STATUS", "Serial COM opened")
+	Dim c As Socket
+	c.Initialize("client")
+	c.Connect(txtHostIPWIFI.text, txtPortWIFI.text, 5000)
+	LogMessage("STATUS", "Connecting @ " & txtHostIPWIFI.Text & ":" & txtPortWIFI.Text)
+	Wait For client_Connected (Successful As Boolean)
+	If Successful Then
+		WIFIClient = c
+		astream.Initialize(WIFIClient.InputStream, WIFIClient.OutputStream, "astream")
+		WhichDeviceConnection = DEVICE_WIFI
+		btnConnectWIFI.Text = "Disconnect"
+		LogMessage("STATUS", "WIFI connected!")
 		LogMessage("Status", "Ready Flash")
-		
-		' Close Port
 	Else
-		If btnFlash.Text = "Stop" Then
-			Dim sf3 As Object = xui.Msgbox2Async("Flash in progress! Do you want to stop?", "Flashing", "Yes", "", "No", Null)
-			Wait For (sf3) Msgbox_Result(ret2 As Int)
-			If ret2 = xui.DialogResponse_Positive Then
-				LogMessage("STATUS", "User stop flash!")
-				If StartFlashVerify = True Then
-					xui.Msgbox2Async("Verify is running in background with PIC.  It has to complete before starting a new flash!", "Flash Verfiy Canceled!", "OK", "", "", Null)
-				Else
-					LogMessage("WARNING!", "Minimum 20 seconds delay before another flash attempt!")
-				End If
-				EnableFunction
-			Else
-				Return
-			End If
-		End If
-		
-		If astream.IsInitialized Then
-			astream.Close
-			serialUSBTTL.Close
-			LogMessage("STATUS", "Serial COM closed")
-		End If
-		btnOpenUSBTTL.Text = "Open Port"
-		btnRefreshComUSBTTL.Enabled = True
-		
+		LogMessage("STATUS", "WIFI connection failed!")
 	End If
 End Sub
+
 Private Sub btnRefreshComUSBTTL_Click
 	' Load all available COM Ports
 	cmbPortUSBTTL.Items.Clear
@@ -741,6 +652,34 @@ Private Sub btnRefreshComUSBTTL_Click
 End Sub
 Private Sub cmbPortUSBTTL_SelectedIndexChanged(Index As Int, Value As Object)
 	btnOpenUSBTTL.Enabled = Index > -1 'enable the button if there is a selected item
+End Sub
+Private Sub btnOpenUSBTTL_Click
+	If btnOpenUSBTTL.Text = "Open Port" Then
+		OpenUSBTLL
+	Else
+		PerformUserAbort(DEVICE_TTLSERIAL)
+	End If
+End Sub
+Private Sub OpenUSBTLL
+	CloseConnection(True, True, False, True)
+		
+	Try
+		Dim serial1 As Serial
+		serial1.Initialize("serial1")
+		serial1.Open(cmbPortUSBTTL.Value)
+		serial1.SetParams(serial1.BAUDRATE_57600, serial1.DATABITS_8, intStopBit, serial1.PARITY_NONE)  ' Set baud=57600, 8 data bits, config value, no parity
+		If astream.IsInitialized Then astream.Close
+		astream.Initialize(serial1.GetInputStream, serial1.GetOutputStream, "astream")
+		serialUSBTTL = serial1
+	Catch
+		LogMessage("STATUS", "Error opening port" & LastException)
+		Return
+	End Try
+	WhichDeviceConnection = DEVICE_TTLSERIAL
+	btnOpenUSBTTL.Text = "Close Port"
+	btnRefreshComUSBTTL.Enabled = False
+	LogMessage("STATUS", "Serial COM opened")
+	LogMessage("Status", "Ready Flash")
 End Sub
 
 Private Sub cmbPicList_SelectedIndexChanged(Index As Int, Value As Object)
@@ -772,7 +711,7 @@ Private Sub MenuBar1_Action
 			Dim fx As JFX
 			fx.ShowExternalDocument("https://github.com/Issac567/PIC_Bootloader/blob/main/B4J_BootloaderUploader/Help/ATMode.md")
 		Case "_About"
-			xui.Msgbox2Async("Bootloader Uploader Deluxe" & Chr(10) & "Version: " & Version, "About", "Ok", "", "", Null)
+			xui.Msgbox2Async("Bootloader Uploader Deluxe" & Chr(10) & "Version: " & VERSION, "About", "Ok", "", "", Null)
 	
 	
 		' Tools
@@ -817,6 +756,104 @@ Sub CloseConnection(BLE As Boolean, SSP As Boolean, TTLUSB As Boolean, WIFI As B
 			Sleep(200)
 		End If
 	End If
+End Sub
+Sub PerformUserAbort(WhichDevice As Int)
+	' 1. --- Confirm with User ---
+	If btnFlash.Text = "Stop" Then
+		Dim sf3 As Object = xui.Msgbox2Async("Flash in progress! Do you want to stop?", "Flashing", "Yes", "", "No", Null)
+		Wait For (sf3) Msgbox_Result(ret2 As Int)
+		If ret2 = xui.DialogResponse_Positive Then
+			LogMessage("STATUS", "User stop flash!")
+			If blnStartFlashVerify = False Then
+				LogMessage("WARNING!", "Minimum 20 seconds delay before another flash attempt!")
+			End If
+		Else
+			Return
+		End If
+	End If
+
+	
+	' 3. --- If in blnStartFlashVerify then send 0xCA byte to cancel in PIC
+	Dim CancelByte(1) As Byte
+	CancelByte(0) = 0xCA
+	
+	If blnStartFlashVerify Then
+		Select Case WhichDeviceConnection
+			Case DEVICE_BLE
+				Dim rs As Object
+				rs = bkHM10Client.Write(BLE_useUUID, CancelByte)
+				Wait For (rs) Complete (Result2 As PyWrapper)
+				
+			Case DEVICE_CLASSIC_BT
+				astream.Write(CancelByte)
+				
+			Case DEVICE_WIFI
+				astream.Write(CancelByte)
+				
+			Case DEVICE_TTLSERIAL
+				astream.Write(CancelByte)
+				
+		End Select
+		
+		Sleep(500)		' Give time for PIC to ACK before disconnecting!
+		
+	End If
+
+	
+	' 3. --- Enable the functions ---
+	EnableFunction
+	
+	' 4. --- Close the connection! ---
+	Select Case WhichDevice
+		Case DEVICE_BLE
+			bkHM10Client.Disconnect
+			LogMessage("STATUS", "Disconnect")
+			btnConnectHM10.Text = "Connect"
+			
+		Case DEVICE_CLASSIC_BT
+			If astream.IsInitialized Then
+				astream.Close
+				btHC05Connection.Disconnect
+				LogMessage("STATUS", "Disconnected")
+			End If
+			btnConnectHC05.Text = "Connect"
+			
+		Case DEVICE_WIFI
+			If astream.IsInitialized Then
+				astream.Close
+				If WIFIClient.Connected = True Then
+					WIFIClient.Close
+				End If
+				LogMessage("STATUS", "Disconnect")
+			End If
+			btnConnectWIFI.Text = "Connect"
+			
+		Case DEVICE_TTLSERIAL
+			If astream.IsInitialized Then
+				astream.Close
+				serialUSBTTL.Close
+				LogMessage("STATUS", "Serial COM closed")
+			End If
+			btnOpenUSBTTL.Text = "Open Port"
+			btnRefreshComUSBTTL.Enabled = True
+			
+	End Select
+End Sub
+Sub GetWhichDeviceUsing As Int
+	' Specifically for Stop Button on whom did it!
+	Dim DeviceType As Int = 0
+	
+	If btnConnectHC05.Text = "Disconnect" Then
+		DeviceType = DEVICE_CLASSIC_BT
+	Else If btnConnectHM10.Text = "Disconnect" Then
+		DeviceType = DEVICE_BLE
+	Else If btnConnectWIFI.Text = "Disconnect" Then
+		DeviceType = DEVICE_WIFI
+	Else If btnOpenUSBTTL.Text = "Close Port" Then
+		DeviceType = DEVICE_TTLSERIAL
+	End If
+	
+	Return DeviceType
 End Sub
 
 '--------------------------------------------------------
@@ -1016,17 +1053,8 @@ Private Sub btnFlash_Click
 		End If
 	' Flash Stop Logic
 	Else If btnFlash.Text = "Stop" Then
-		Dim sf3 As Object = xui.Msgbox2Async("Flash in progress! Do you want to stop?", "Flashing", "Yes", "", "No", Null)
-		Wait For (sf3) Msgbox_Result(ret2 As Int)		
-		If ret2 = xui.DialogResponse_Positive Then
-			LogMessage("STATUS", "User stop flash!")
-			If StartFlashVerify = True Then
-				xui.Msgbox2Async("Verify is running in background with PIC.  It has to complete before starting a new flash!", "Flash Verfiy Canceled!", "OK", "", "", Null)
-			Else
-				LogMessage("WARNING!", "Minimum 20 seconds delay before another flash attempt!")
-			End If
-			EnableFunction
-		End If
+		WhichDeviceConnection = GetWhichDeviceUsing
+		PerformUserAbort(DEVICE_NONE)
 	End If
 End Sub
 Sub SendHandShakeBytes
@@ -1336,7 +1364,7 @@ Sub EnableFunction
 	btnFlash.Text = "Flash"
 	
 	blnWriteACK = False
-	StartFlashVerify = False
+	blnStartFlashVerify = False
 	
 	
 End Sub
