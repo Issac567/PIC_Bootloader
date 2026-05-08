@@ -1,6 +1,6 @@
 /*
  * File:   bootloader.c
- * Version: 4.04
+ * Version: 4.10
  * Created on January 19, 2026, 2:50 PM
  * Family: 16F13145
  * PACKS: USE 1.29.444
@@ -36,7 +36,7 @@ uint16_t BLE_MTU_Delay = 20;                // Min delay for each packet sent
 void INTOSC_Init(void)
 {
     // Select HFINTOSC, no divider (NDIV = 1)
-    OSCCON1 = 0x60;   // NOSC = 110 (HFINTOSC), NDIV = 0000 (÷1)
+    OSCCON1 = 0x60;   // NOSC = 110 (HFINTOSC), NDIV = 0000 ( 1)
 
     // Set frequency to 32 MHz
     OSCFRQ = 0x06;    // HFFRQ = 110 ? 32 MHz
@@ -142,6 +142,7 @@ void Flash_Verify(void)
 {
     uint16_t addr;
     uint8_t ble_counter = 0;
+    uint8_t b;
     
     // Send to host
     UART_TxString("<StartFlashVerify>");
@@ -150,6 +151,21 @@ void Flash_Verify(void)
     // Loop through all flash from start to end
     for (addr = FLASH_START; addr + FLASH_WRITE_BLOCK - 1 <= FLASH_END; addr += FLASH_WRITE_BLOCK)
     {
+    // --- NEW CANCEL CHECK ---
+        // Check if data is available in the hardware UART buffer
+        if (PIR4bits.RC1IF)
+        {
+            b = UART_Rx();
+            if (b == 0xCA) // Read the byte to clear the flag
+            {
+                __delay_ms(MSG_MS_DELAY); 
+                UART_TxString("<VerifyCancelled>");
+                __delay_ms(MSG_MS_DELAY); 
+                return; 
+            }
+        }
+        // -------------------------
+        
         // Prepare 32-word packet
         uint16_t packet[FLASH_WRITE_BLOCK];
         for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
@@ -355,7 +371,8 @@ void ReceiveConfig(void)
 
    // ----- FLush -----
     uint8_t dummy;
-    while (PIR4bits.RC1IF) {
+    while (PIR4bits.RC1IF) 
+    {
         dummy = RC1REG;         // discard
     }
     
