@@ -117,7 +117,7 @@ Updating the application device firmware requires the ESP32 uploader tool, but b
 
 ---
 
-> **Note:** When canceling a flash write, you must wait at least 10 seconds for the PIC to reach its internal timeout before proceeding. If you cancel during a flash verify, please be aware that there is currently no mechanism to stop the PIC from sending bytes to the host; you must wait until the green LED begins flashing to confirm the device is ready. A cancel command for the verification phase is planned for a future update, which will require a bootloader patch to implement.
+> **Note:** **(ESP32 Only)** When canceling a flash write, you must wait at least 10 seconds for the PIC to reach its internal timeout before proceeding. If you cancel during a flash verify, please be aware that there is currently no mechanism to stop the PIC from sending bytes to the host; you must wait until the green LED begins flashing to confirm the device is ready. A cancel command for the verification phase is planned for a future update, which will require a bootloader patch to implement.
 
 ---
 
