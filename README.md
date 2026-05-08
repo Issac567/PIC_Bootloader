@@ -79,7 +79,7 @@ Follow these steps to correctly link the Application and Bootloader projects:
 5. Make sure minimal bootloader is flashed before `B4J` or `ESP32` usage.  **Chip with download icon** to flash.
 
 ### 2. Update Application Firmware (B4J) `Option 1`
-Updating the application device firmware requires the B4J uploader tool, but bootloader must be flashed with MPLAB first:
+e.g. using **TTL Serial Com**.  Updating the application device firmware requires the B4J uploader tool, but bootloader must be flashed with MPLAB first:
 1. Connect your target PIC device to your PC.
 2. Open the **B4J Uploader** utility.
 3. Select `Com Port` and click `Open Port`.
