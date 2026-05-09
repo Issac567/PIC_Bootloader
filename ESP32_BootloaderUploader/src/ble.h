@@ -12,9 +12,9 @@ void bleDoScan();
 void handleConnection();
 void handleBleScan();
 void handleMessage(String msg, uint8_t* rawBytes, size_t len);
-void readDataIn();
 
 extern NimBLEAdvertisedDevice* myDevice;                    // display_logic.cpp needs access to info
 extern NimBLERemoteCharacteristic* pRemoteCharacteristic;   // flash.cpp needs access to write
+extern uint16_t intMTUSize;
 
 #endif

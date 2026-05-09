@@ -53,7 +53,7 @@ void handleTouch()
             if (x > 250 && x < 460 && y > 60 && y < 170)   changeMenu(BT_CHECK);
             if (x > 20 && x < 230 && y > 190 && y < 300)   changeMenu(SYSTEM);
             if (x > 250 && x < 460 && y > 190 && y < 300)  changeMenu(ABOUT);
-        } else if (currentMenu == FLASH) {
+        } else if (currentMenu == FLASH) {                                                  // HAS Config info!
             if (x > 250 && x < 350 && y > 260 && y < 305)  handleFlashStart();              // FIRMWARE Flash button
             if (x > 360 && x < 460 && y > 260 && y < 305)  handleFlashBack();               // Back button
         } else if (currentMenu == FIRMWARESTART) {                                          
@@ -132,14 +132,10 @@ void drawMainMenu()
 void drawFlashMenu() 
 {
     tft.fillScreen(TFT_BLACK);
-
     isFlashBtn_Visible = false;
 
     if (myPicStatus.blnStartFlashVerify == true)
     {
-        // Critical must inform user verify is running. can't stop it once its running!!!
-        //updateCriticalLabel("Verify in progress.  Wait until finish!", false);
-        
         // Continue back the progressbar with Flash Verify (Was crashing i changed to vTaskDelay so far good!)
         tft.setTextColor(TFT_WHITE, TFT_BLACK);
         tft.drawCentreString(myConfig.strPicName, 240, 20, 4);
@@ -340,8 +336,6 @@ void drawFlashFirmwareMenu()
 
     drawBack2Button();
 
-    Serial.println("HANDSHAKE Function Called");
-
     // Check connection or it will crash!!
     if (bleIsConnected() == true) 
     {
@@ -472,5 +466,5 @@ void updateCriticalLabel(String msg, bool isSuccess)
 
 void ResetProgressBar()
 {
-    tft.fillRect(0, 75, 480, 160, TFT_BLACK);  // Clear screen below top label and before Back button!
+    tft.fillRect(0, 75, 480, 160, TFT_BLACK);  // Clear screen below top header and before Back button!
 }

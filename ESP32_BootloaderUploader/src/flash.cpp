@@ -5,7 +5,6 @@
 #include "sdcard.h"
 
 PicStatus myPicStatus;
-uint16_t intMTUSize = 20;                               // will make this adjustable by requesting mtu in future!
 const unsigned long INTERVAL_FLASH_DELAY = 20000;       // Minimum 20 seconds wait required when user cancels flash!        
 unsigned long previousMillis = -20000;                  // Set it to a matching negative-offset value to intervalFlashdelay. For initial startup!
 
@@ -24,7 +23,9 @@ void sendHandShakeBytes()
         long timeLeft = (long)INTERVAL_FLASH_DELAY - (long)elapsed;
         if (timeLeft < 0) timeLeft = 0;
 
-        if (myPicStatus.blnUserCancel == true) return;      // Only usercancel no blntimeouterror
+        if (myPicStatus.blnUserCancel == true) return;      // no isOperationFailed??? WHY?
+        // We want user to click BACK button so it can account for millis!
+        //if (isOperationFailed() == true) return;
 
         // Update UI with countdown
         updateProgressLabel(("   Wait... " + String(timeLeft / 1000) + "s   ").c_str());
@@ -120,25 +121,19 @@ void sendConfigBytes()
     while (myPicStatus.blnConfigOK == false)
     {
         handleTouch();
-        
         if (isOperationFailed() == true) return;
-        
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 
     while (myPicStatus.blnEndFlashErase == false)
     {
         handleTouch();
-
         if (isOperationFailed() == true) return;
-        
-
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 
     ResetProgressBar();
-    // give PIC time to enter Receive firmware mode!
-    vTaskDelay(pdMS_TO_TICKS(300));
+    vTaskDelay(pdMS_TO_TICKS(300));       // give PIC time to enter Receive firmware mode!
     sendFirmwareBytes();
 }
 
@@ -247,9 +242,8 @@ void sendFirmwareBytes()
     }
 
     dataFile.close();
-    Serial.println("FIRMWAREUPLOAD: Firmware upload completed!");
-
     ResetProgressBar();  // for verifyflash!
+    Serial.println("FIRMWAREUPLOAD: Firmware upload completed!");
 }
 
 bool isOperationFailed()

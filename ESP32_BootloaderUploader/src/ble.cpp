@@ -7,6 +7,7 @@ bool doConnect = false;
 bool doScan = true;
 String rxBufferString;
 File verifyFile;
+uint16_t intMTUSize = 20;                         
 
 // Shared variables (extern from header)
 NimBLEAdvertisedDevice* myDevice = nullptr;
@@ -28,13 +29,39 @@ class MyClientCallback : public NimBLEClientCallbacks
     void onConnect(NimBLEClient* pClient) override
     {
         Serial.println(" - onConnect");
+        Serial.println(" - Requesting larger MTU...");
+        pClient->exchangeMTU();
     }
 
     void onDisconnect(NimBLEClient* pClient, int reason) override
     {
         myPicStatus.blnUserCancel = true;
-        Serial.println(" - onDisconnect");
+        Serial.println(" - onDisconnect: " + String(reason));
         doScan = true; 
+    }
+
+    // This is the event that triggers when negotiation finishes
+    void onMTUChange(NimBLEClient* pClient, uint16_t MTU) override 
+    {
+        Serial.println(" - onMTUChange -");
+
+        // Step 1: Get Raw MTU
+        uint16_t RawMTU = MTU;
+        
+        // Step 2: Remove ATT header (always 3 bytes)
+        int PayloadMTU = RawMTU - 3;
+        
+        // Step 3: Align for PIC (Multiple of 4)
+        // Bitwise AND with 0xFFFC clears the last two bits
+        int UniversalMTU = PayloadMTU & 0xFFFC; 
+        
+        if (UniversalMTU > 0) {
+            intMTUSize = (uint16_t)UniversalMTU;
+        }
+
+        Serial.printf(" - Negotiated MTU: %d\n", RawMTU);
+        Serial.printf(" - Payload MTU (MTU-3): %d\n", PayloadMTU);
+        Serial.printf(" - Universal MTU for PIC: %d\n", UniversalMTU);
     }
 };
 
@@ -192,6 +219,21 @@ bool bleconnectToServer()
     return true;
 }
 
+void bleDoScan() 
+{
+    Serial.println("Starting Arduino NimBLE Client application...");
+    doScan = false;     // prevent repeated attempts
+
+    NimBLEDevice::init("");
+    NimBLEScan* pBLEScan = NimBLEDevice::getScan();
+
+    pBLEScan->setScanCallbacks(new MyAdvertisedDeviceCallbacks(), true);
+    pBLEScan->setActiveScan(true);
+    pBLEScan->setInterval(100);
+    pBLEScan->setWindow(90);
+    pBLEScan->start(0, false);
+}
+
 void handleConnection()
 {
     if (doConnect == true && doScan == false) 
@@ -217,21 +259,6 @@ void handleBleScan()
         Serial.println("BLE is not connected, attempting to reconnect...");
         bleDoScan();
     }
-}
-
-void bleDoScan() 
-{
-    Serial.println("Starting Arduino NimBLE Client application...");
-    doScan = false;     // prevent repeated attempts
-
-    NimBLEDevice::init("");
-    NimBLEScan* pBLEScan = NimBLEDevice::getScan();
-
-    pBLEScan->setScanCallbacks(new MyAdvertisedDeviceCallbacks(), true);
-    pBLEScan->setActiveScan(true);
-    pBLEScan->setInterval(100);
-    pBLEScan->setWindow(90);
-    pBLEScan->start(0, false);
 }
 
 bool bleIsConnected()
@@ -270,7 +297,6 @@ void handleMessage(String msg, uint8_t* rawBytes, size_t length)
         {
             // Without this, Last iteration will cause issues! Due to low 150ms delay in PIC after msg send!
             myPicStatus.blnStartFlashVerify = false;
-
             // we let <EndFlashVerify> handle the UI transition.
             Serial.println("STATUS: All verify bytes received.");
         }
@@ -347,15 +373,13 @@ void handleMessage(String msg, uint8_t* rawBytes, size_t length)
         }
         else if (msg.indexOf("<EndFlashVerify>") > -1)
         {
-            myPicStatus.blnEndFlashVerify = true;
-
+            myPicStatus.blnEndFlashVerify = true;       // used in display_logic.cpp where it deals with millis
             if (verifyFile) 
             {
                 verifyFile.close();
-                // Important: Zero out the file object so we don't use it again
-                verifyFile = File(); 
+                verifyFile = File();                    // Important: Zero out the file object so we don't use it again
             }
-            verifyStatus();             // Display the result on your ILI9488
+            verifyStatus();                             // Display the result on your ILI9488
         }
     }
 
