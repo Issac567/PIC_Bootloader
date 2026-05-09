@@ -4,21 +4,21 @@
 **AT MODE**
 ![ATMode](./Help/ATModeScreen.jpg)
 **Scan BLE**
-![Image](./Help/ImageMain/scan.jpg)
+![Image](./Help/scan.jpg)
 **Connect BLE**
-![Image](./Help/ImageMain/connectble.jpg)
+![Image](./Help/connectble.jpg)
 **Select PIC**
-![Image](./Help/ImageMain/selectpic.jpg)
+![Image](./Help/selectpic.jpg)
 **Config Data**
-![Image](./Help/ImageMain/config.jpg)
+![Image](./Help/config.jpg)
 **Load Firmware**
-![Image](./MPLab_Projects/ImageMain/loadfirmware.jpg)
+![Image](./Help/loadfirmware.jpg)
 **Flash Firmware**
-![Image](./Help/ImageMain/flash.jpg)
+![Image](./Help/flash.jpg)
 **Verify Firmware**
-![Image](./Help/ImageMain/verify.jpg)
+![Image](./Help/verify.jpg)
 **Flash Success!**
-![Image](./Help/ImageMain/successflash.jpg)
+![Image](./Help/successflash.jpg)
 
 ---
 
