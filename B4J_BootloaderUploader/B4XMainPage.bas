@@ -26,7 +26,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Const VERSION As String = "11.02"
+	Private Const VERSION As String = "11.04"
 	
 	Private Const DEVICE_NONE As Int = 0
 	Private Const DEVICE_BLE As Int = 1
@@ -782,13 +782,12 @@ Sub PerformUserAbort(WhichButton As Int)
 			Return
 		End If
 	End If
-
 	
-	' 3. --- If in blnStartFlashVerify then send 0xCA byte to cancel in PIC
-	Dim CancelByte(1) As Byte
-	CancelByte(0) = 0xCA
-	
+	' 2. --- If in blnStartFlashVerify then send 0xCA byte to cancel in PIC
 	If myPicStatus.blnStartFlashVerify Then
+		Dim CancelByte(1) As Byte
+		CancelByte(0) = 0xCA
+		
 		Select Case WhichDeviceConnection
 			Case DEVICE_BLE
 				Dim rs As Object
@@ -817,9 +816,11 @@ Sub PerformUserAbort(WhichButton As Int)
 	' 4. --- Close the connection! ---
 	Select Case WhichButton
 		Case DEVICE_BLE
-			bkHM10Client.Disconnect
-			LogMessage("STATUS", "Disconnect")
-			btnConnectHM10.Text = "Connect"
+			If bkHM10Client.IsInitialized Then
+				bkHM10Client.Disconnect
+				LogMessage("STATUS", "Disconnect")
+				btnConnectHM10.Text = "Connect"
+			End If
 			
 		Case DEVICE_CLASSIC_BT
 			If astream.IsInitialized Then
@@ -1343,7 +1344,7 @@ Sub DisableFunction
 	myPicStatus.blnISRTimeOut = False
 	myPicStatus.blnConfigOK = False
 	myPicStatus.blnStartFlashVerify = False
-	myPicStatus.cntVerify = 0
+	myPicStatus.blnWriteACK = False
 	
 	txtLog.Text = ""
 	prgBar.Progress = 0		
