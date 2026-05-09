@@ -373,7 +373,7 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 	'If blnStartFlashVerify <> True And msg <> "<ACK>" Then
 	If msg <> "<ACK>" Then
 		If myPicStatus.blnStartFlashVerify = True Then
-			If msg = "<VerifyCancelled>" Or msg.Contains("VerifyCancelled") Then
+			If msg = "<VerifyCancelled>" Or msg.Contains("Cancelled") Then
 				'Contains is workaround for HC-05!
 				LogMessage("PIC", msg)
 			End If
