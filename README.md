@@ -83,6 +83,12 @@ Follow these steps to correctly link the Application and Bootloader projects:
 ![Image](./MPLab_Projects/ImageMain/resolve.jpg)
 **Clean and Build**
 ![Image](./MPLab_Projects/ImageMain/build.jpg)
+**Select Programmer**
+![Image](./MPLab_Projects/ImageMain/selectdevice.jpg)
+**Download Bootloader Firmware**
+![Image](./MPLab_Projects/ImageMain/uploadfirmware.jpg)
+**Flash Success!**
+![Image](./MPLab_Projects/ImageMain/firmwaresuccess.jpg)
 
 ### 1. Build the Project (MPLAB) `Required`
 1. Open the specific project folder in **MPLAB X IDE**.
