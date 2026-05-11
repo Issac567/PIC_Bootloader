@@ -36,7 +36,6 @@ This repository contains a collection of firmware projects for various **PIC mic
 * [Aliexpress - USB-to-TTL serial adapter](https://www.aliexpress.us/w/wholesale-USB%2525252dto%2525252dTTL-serial-adapter.html?spm=a2g0o.productlist.search.0)
 * [Aliexpress - HC-05 Bluetooth SSP adapter ](https://www.aliexpress.us/w/wholesale-hc05-bluetooth-module.html?osf=auto_suggest&spm=a2g0n.productlist.header.0)
 * [Aliexpress - HM-10 Bluetooth BLE adapter ](https://www.aliexpress.us/w/wholesale-hM10-bluetooth-module.html?spm=a2g0o.productlist.auto_suggest.2.bf20493bPXGW1g)
-* [Aliexpress - DT-06 WIFI TCP/IP adapter (Not Tested!)](https://www.aliexpress.us/w/wholesale-dt-06-wifi-module.html?spm=a2g0o.productlist.auto_suggest.2.459d36cbgTXSe1)
 
 ### ⚡ Flashing Speed Comparison
 The firmware flashing duration varies significantly based on the hardware interface used. For the fastest experience, use a wired connection.
@@ -44,7 +43,6 @@ The firmware flashing duration varies significantly based on the hardware interf
 | Interface | Tech | MTU / Bandwidth | Speed Rank |
 | :--- | :--- | :--- | :--- |
 | **TTL USB** | Wired | No MTU Limit (High Baud) | 🚀 **Fastest** |
-| **DT-06** | WiFi | High Throughput | 🟢 Fast |
 | **HC-05** | BT Classic | Continuous Stream | 🟡 Moderate |
 | **HM-10** | BLE 4.0 | **20-byte MTU Limit** | 🔴 **Very Slow** |
 | **ESP32 S3 UI** | BLE 5.0 | **20-byte MTU Limit** | 🔴 **Very Slow** |
