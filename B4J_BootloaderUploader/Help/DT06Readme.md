@@ -2,11 +2,6 @@
 This project provides software support for **DT-06 WIFI modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over TCP/IP.
 
 > **Note:** This software communicates via WIFI to serial COM ports to PIC. It requires a properly connected **DT-06 WIFI adapter** to the PIC target device.
-
-## **Corrected DT-06 Configuration Guide**
-
-**1. Establish Connection**
-* Ensure your B4J ServerSocket is initialized to 192.168.4.1 at Port 8080.*
   
 ## 🔌 DT-06 to Microchip Diagram
 ![Wiring diagram](WIFItoPIC.jpg)
@@ -36,7 +31,7 @@ Connect your `DT-06` WIFI module to the PIC microcontroller as follows:
 ## How to Use  
 1. Open the **B4J Bootloader Uploader** software.
 2. Set Host IP to **192.168.4.1**
-3. Set Port to **9000**  
+3. Set Port to **8080**  
 4. **Click Connect** and wait for success connection.
 5. **Select the PIC device** you want to program.
 6. Click **Load Firmware** to select the **firmware file** (.hex) you want to upload.  
