@@ -12,3 +12,4 @@ Notes=24-bit Architecture
 ExpectedBytes=339968
 UseDoubleHexAddr=true
 Use4Padding=true
+UseCheckSum=false
