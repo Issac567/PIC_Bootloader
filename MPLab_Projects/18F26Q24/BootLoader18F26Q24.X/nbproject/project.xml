@@ -13,6 +13,7 @@
             <sourceRootList>
                 <sourceRootElem>../Shared18F27Q43</sourceRootElem>
                 <sourceRootElem>../Shared18F26Q24</sourceRootElem>
+                <sourceRootElem>.</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>

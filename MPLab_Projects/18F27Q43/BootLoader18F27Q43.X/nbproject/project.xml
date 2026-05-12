@@ -12,6 +12,7 @@
             </make-dep-projects>
             <sourceRootList>
                 <sourceRootElem>../Shared18F27Q43</sourceRootElem>
+                <sourceRootElem>.</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>

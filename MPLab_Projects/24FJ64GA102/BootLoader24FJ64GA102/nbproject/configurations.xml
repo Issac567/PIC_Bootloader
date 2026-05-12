@@ -22,10 +22,12 @@
       <itemPath>../Shared24FJ64GA102/uart.c</itemPath>
       <itemPath>../Shared24FJ64GA102/config.h</itemPath>
       <itemPath>../Shared24FJ64GA102/uart.h</itemPath>
+      <itemPath>bootloader.h</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
     <Elem>../Shared24FJ64GA102</Elem>
+    <Elem>.</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>

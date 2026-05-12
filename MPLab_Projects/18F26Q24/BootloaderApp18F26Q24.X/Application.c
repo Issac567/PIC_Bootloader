@@ -145,10 +145,10 @@ void __interrupt(high_priority) App_ISR(void)
 }
 
 
-// The __at(0xC00) attribute forces the linker to place this code at address 0xC00.
-// Can't place it in 0xB00 to 0xB02 will build with errors. place 0xB04 or higher ok
+// The __at(0xD00) attribute forces the linker to place this code at address 0xD00.
+// Can't place it in 0xC00 to 0xC02 will build with errors. place 0xC04 or higher ok
 // This also avoids the compiler add FFFC GOTO function
-void __at(0xC00) main(void)  
+void __at(0xD00) main(void)  
 {
     uint8_t b;                          // Variable to hold the received handshake byte
     

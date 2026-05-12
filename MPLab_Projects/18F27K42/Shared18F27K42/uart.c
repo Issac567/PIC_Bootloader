@@ -1,6 +1,6 @@
 /*
  * File:   uart.c
- * Version: 3.01
+ * Author: issac
  * Created on January 18, 2026, 12:13 PM
  * Family: 18F27K42
  */
@@ -65,7 +65,8 @@ void UART_Init(void)
 
     // 9. Clear pending RX bytes
     uint8_t dummy;
-    while (PIR3bits.U1RXIF) {
+    while (PIR3bits.U1RXIF) 
+    {
         dummy = U1RXB;          // Discard any data in the FIFO
     }
 }

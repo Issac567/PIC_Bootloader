@@ -59,7 +59,8 @@ void UART_Init(void)
     // 9. Clear pending RX bytes
     // CHANGE: UART1 RX Flag moved to PIR6
     uint8_t dummy;
-    while (PIR4bits.U1RXIF) {
+    while (PIR4bits.U1RXIF) 
+    {
         dummy = U1RXB;        
     }
 }

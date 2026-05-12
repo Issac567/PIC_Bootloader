@@ -21,11 +21,13 @@
       <itemPath>../Shared18F26Q24/config.h</itemPath>
       <itemPath>../Shared18F26Q24/uart.c</itemPath>
       <itemPath>../Shared18F26Q24/uart.h</itemPath>
+      <itemPath>bootloader.h</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
     <Elem>../Shared18F27Q43</Elem>
     <Elem>../Shared18F26Q24</Elem>
+    <Elem>.</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -143,7 +145,7 @@
         <property key="checksum-flash-options-widthc" value="2"/>
         <property key="clear-bss" value="true"/>
         <property key="code-model-external" value="wordwrite"/>
-        <property key="code-model-rom" value="20-AFF"/>
+        <property key="code-model-rom" value="20-BFF"/>
         <property key="create-html-files" value="false"/>
         <property key="data-model-ram" value=""/>
         <property key="data-model-size-of-double" value="32"/>

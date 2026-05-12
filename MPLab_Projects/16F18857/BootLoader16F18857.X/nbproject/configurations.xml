@@ -21,6 +21,7 @@
       <itemPath>../Shared16F18857/uart.c</itemPath>
       <itemPath>../Shared16F18857/uart.h</itemPath>
       <itemPath>../Shared16F18857/config.h</itemPath>
+      <itemPath>bootloader.h</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
@@ -142,7 +143,7 @@
         <property key="checksum-flash-options-widthc" value="2"/>
         <property key="clear-bss" value="true"/>
         <property key="code-model-external" value="wordwrite"/>
-        <property key="code-model-rom" value="20-5FF"/>
+        <property key="code-model-rom" value="20-6FF"/>
         <property key="create-html-files" value="false"/>
         <property key="data-model-ram" value=""/>
         <property key="data-model-size-of-double" value="32"/>
@@ -718,6 +719,8 @@
         <property key="periphComp5.gte" value="gt"/>
         <property key="periphComp6.gte" value="gt"/>
         <property key="poweroptions.powerenable" value="true"/>
+        <property key="programmerToGoFilePath"
+                  value="D:/MPLab_Projects/16F18857/BootLoader16F18857.X/debug/default/BootLoader16F18857_ptg"/>
         <property key="programmertogo.imagename" value=""/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>
@@ -1243,6 +1246,8 @@
                   value="${memories.instruction.ram.ranges}"/>
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-fff"/>
+        <property key="programmerToGoFilePath"
+                  value="D:/MPLab_Projects/16F18857/BootLoader16F18857.X/debug/default/BootLoader16F18857_ptg"/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.pgmentry.voltage" value="low"/>

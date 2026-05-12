@@ -1,6 +1,6 @@
 /*
  * File:   bootloader.c
- * Version: 4.10
+ * Version: 4.50
  * Created on January 19, 2026, 2:50 PM
  * Family: 16F18857
  * PACKS: USE 1.29.444
@@ -10,12 +10,14 @@
 #include <xc.h>
 #include <stdint.h>                         // for standard integer types 
 #include <stdbool.h>                        // for bool, true, false
+#include "bootloader.h"
 #include "config.h"
 #include "uart.h" 
 
-// Note: B4J Expected bytes = 0x7FFF - 0x600 = 0x79FF + 1 = 0x7A00(31,232) * 2 = 62,464 BYTES (Each address is 1 WORD!))
+// Note: B4J Expected bytes = 0x7FFF - 0x700 = 0x78FF + 1 = 0x7A00(30,976) * 2 = 61,952 BYTES (Each address is 1 WORD!))
+// @0x600 remaining less then 20 address code space available.  
 
-#define FLASH_START 0x0600                  // Flash start address
+#define FLASH_START 0x0700                  // Flash start address
 #define FLASH_END 0x7FFF                    // Flash end address for 4-word block
 #define FLASH_ERASE_BLOCK 32                // Runtime can only do 32 word block erase max!
 #define FLASH_WRITE_BLOCK 32                // Can only do 32 word block write max with PIC 16F18857!
@@ -24,11 +26,21 @@
 #define LED_PIN   LATBbits.LATB4            // Use LAT for Output / Bootloader Led Status 
 #define LED_TRIS  TRISBbits.TRISB4          // Output PortB.4 pin
 
+#define DEVICE_BLE 0x01
+#define DEVICE_CLASSIC_BT 0x02
+#define DEVICE_WIFI 0x03
+#define DEVICE_TTLSERIAL 0x04
+            
 uint16_t flash_packet[FLASH_WRITE_BLOCK];   // 32 words, 64 bytes total
-bool isBLE = false;                         // BLE Detection uses different verify_flash process
-uint16_t BLE_MTU_Size = 20;                 // BLE MTU Size (B4J sends the value from configuration function)
-uint16_t BLE_MTU_Delay = 20;                // Min delay for each packet sent
 
+FlashConfig_t flashSettings = {             // Initialize the struct with your default values
+   .isVerify_Checksum = false,
+   .WhichDevice = 0x01,
+   .BLE_MTU_Size = 20,
+   .BLE_MTU_Delay = 20,
+   .WhichFlashRequest = 0x00
+};  
+    
 //-------------------------------------------------------
 // INTERNAL OSCILLATOR CLK CONFIG
 //-------------------------------------------------------
@@ -174,6 +186,7 @@ void Flash_Verify(void)
     uint16_t addr;
     uint8_t ble_counter = 0;
     uint8_t b;  
+    uint8_t totalChecksum = 0;
      
     // Send to host
     UART_TxString("<StartFlashVerify>");
@@ -182,8 +195,7 @@ void Flash_Verify(void)
     // Loop through all flash from start to end
     for (addr = FLASH_START; addr + FLASH_WRITE_BLOCK - 1 <= FLASH_END; addr += FLASH_WRITE_BLOCK)
     {
-        // --- NEW CANCEL CHECK ---
-        // Check if data is available in the hardware UART buffer
+        // Check if data is available in the hardware UART buffer for cancel operation
         if (PIR3bits.RCIF)
         {
             b = UART_Rx();
@@ -195,46 +207,67 @@ void Flash_Verify(void)
                 return; 
             }
         }
-        // -------------------------
         
         // Prepare 32-word packet
         uint16_t packet[FLASH_WRITE_BLOCK];
         for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
         {
             packet[i] = Flash_ReadInstruction(addr + i);  // Read word from flash
+            totalChecksum += (packet[i] & 0xFF);
+            totalChecksum += (packet[i] >> 8);
         }
-
-        // Send packet to B4J 
-        for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
-        {
-            // eg. 0x3FFF = FF first then 3F second (B4J binary is backwards!)
-            UART_Tx(packet[i] & 0xFF);              // First Byte (LSB)
-            UART_Tx(packet[i] >> 8);                // Second Byte (MSB) Shift upper to lower
-            // BLE can only send MTU Limits usually 20 bytes per session
-            /**/
-            if (isBLE) 
-            {
-                ble_counter += 2;
         
-                // 2. Every xx bytes, we must pause for the HM-10 radio
-                if (ble_counter >= BLE_MTU_Size) 
+        // Byte for Byte comparison
+        if (flashSettings.isVerify_Checksum == false)
+        {
+            // Send packet to B4J 
+            for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
+            {
+                // eg. 0x3FFF = FF first then 3F second (B4J binary is backwards!)
+                UART_Tx(packet[i] & 0xFF);              // First Byte (LSB)
+                UART_Tx(packet[i] >> 8);                // Second Byte (MSB) Shift upper to lower
+                // BLE can only send MTU Limits usually 20 bytes per session
+                /**/
+                if (flashSettings.WhichDevice == DEVICE_BLE) 
                 {
-                    // Loop until value of MTU_Delay has achieved.
-                    uint16_t temp = BLE_MTU_Delay;
-                    while (temp--)
+                    ble_counter += 2;
+
+                    // 2. Every xx bytes, we must pause for the HM-10 radio
+                    if (ble_counter >= flashSettings.BLE_MTU_Size) 
                     {
-                        __delay_ms(1);
-                    }    
-                    ble_counter = 0;
+                        // Loop until value of MTU_Delay has achieved.
+                        uint16_t temp = flashSettings.BLE_MTU_Delay;
+                        while (temp--)
+                        {
+                            __delay_ms(1);
+                        }    
+                        ble_counter = 0;
+                    }
                 }
             }
+        }       
+        if (flashSettings.isVerify_Checksum == false)
+        {
+            // WIFI DT06 requires higher delay or will cause issues!
+            if (flashSettings.WhichDevice == DEVICE_WIFI) 
+            {
+                __delay_ms(100);     // tested min 100ms ok.  Disappointing! Maybe improve the custom DT06 rom?   
+            } else {
+                __delay_ms(1);
+            }  
+        // No Delay for checksum result.
         }
-
-        __delay_ms(1);                              // tested 1 ms ok!  as long below first delay is there!
+    }
+    
+    // Checksum comparison only
+    if (flashSettings.isVerify_Checksum == true)
+    {
+        UART_Tx(totalChecksum);
+        __delay_ms(MSG_MS_DELAY); 
     }
 
     // Send to host
-    __delay_ms(MSG_MS_DELAY);                       // Must do this delay first helps alot.  does not interfere with last packet sent! (tested with 1 ms delay above and works flawless!)
+    __delay_ms(MSG_MS_DELAY);                       // Must do this delay first. helps alot.  does not interfere with last packet sent!
     UART_TxString("<EndFlashVerify>");
     __delay_ms(MSG_MS_DELAY);
 }
@@ -399,8 +432,10 @@ void ReceiveConfig(void)
 {
     // First Byte = 0x01 = BLE, 0x00 <> BLE
     // Second and Third Byte = MTU Size
+    // Fourth Byte = 0x00 = Flash and Verify (Byte for Byte): 0x01 = Flash and Verify Checksum))
+    // Fourth byte = In future! 0x02 = Verify (Byte for Byte only): 0x03 = Verify Checksum only))
     
-    uint8_t temp[3];  
+    uint8_t temp[4];  
     uint16_t byteCount = 0;
     uint32_t timeoutCounter = 0;
     
@@ -413,7 +448,8 @@ void ReceiveConfig(void)
         dummy = RC1REG;         // discard
     }
     
-    while (byteCount < 3)
+    // Wait for all 4 configuration bytes from HOST.
+    while (byteCount < 4)
     {
         if(PIR3bits.RCIF)  
         {
@@ -425,34 +461,54 @@ void ReceiveConfig(void)
         {
             timeoutCounter++;
             
+            // CRITICAL: Do not proceed to erase/write flash if config failed
             if (timeoutCounter > TIMEOUT_MAX)
             {
                 UART_TxString("<ConfigTimeout>");
                 __delay_ms(MSG_MS_DELAY);
-                
-                // CRITICAL: Do not proceed to erase/write flash if config failed
                 return; 
             }
         }
     }
 
     // --- PROCESS CONFIG BYTES ---
-    // Byte 0: BLE Toggle (1 = True, 0 = False)
-    isBLE = (temp[0] != 0); 
-
-    // Bytes 1 & 2: Set the MTU Size and MTU_Delay
-    BLE_MTU_Size = ((uint16_t)temp[1] << 8) | temp[2];
+    // BYTE 0: 0x01 = BLE: 0x02 = BT CLassic: 0x03 = WIFI: 0x04 = TTL Serial
+    flashSettings.WhichDevice = (temp[0]);
+    
+    // BYTE 1 & 2: Set the MTU Size and MTU_Delay
+    flashSettings.BLE_MTU_Size = ((uint16_t)temp[1] << 8) | temp[2];
     // Linear mapping:
     // 20 bytes  -> 20 ms
     // 400 bytes -> 100 ms
-    BLE_MTU_Delay = (uint16_t)((BLE_MTU_Size * 211UL) / 1000UL + 16);
+    flashSettings.BLE_MTU_Delay = (uint16_t)((flashSettings.BLE_MTU_Size * 211UL) / 1000UL + 16);
     
+    // BYTE 3: Which Flash Process?
+    flashSettings.WhichFlashRequest = (temp[3]);
+    
+    // Is it Checksum or not!
+    if (flashSettings.WhichFlashRequest == 0x01 || flashSettings.WhichFlashRequest == 0x03)
+    {
+        flashSettings.isVerify_Checksum = true;        
+    }
+    else
+    {
+        flashSettings.isVerify_Checksum = false;
+    }
+
+   // Configuration received acknowledge         
     __delay_ms(MSG_MS_DELAY);
     UART_TxString("<ConfigOK>");
     __delay_ms(MSG_MS_DELAY);
-                
-    Flash_EraseApplication();  
-    DoFirmwareUpdate();    
+          
+    // Which type of flash request?  Flash + Verify or Verify alone.
+    if (flashSettings.WhichFlashRequest == 0x00 || flashSettings.WhichFlashRequest == 0x01)   
+    {
+        Flash_EraseApplication();  
+        DoFirmwareUpdate();     
+    } else {
+        Flash_Verify();
+    }
+ 
 }
 
 //-------------------------------------------------------
@@ -511,7 +567,7 @@ void main(void) {
 
     LED_TRIS = 0;                   // LED Output
     LED_PIN  = 1;                   // LED On (bootloader led))
-       
+     
     INTOSC_Init();                  // Must set internal Oscillator
     UART_Init();                    // Init Hardware UART   
     
@@ -519,9 +575,9 @@ void main(void) {
     
     LED_PIN  = 0;                   // LED Off (bootloader led))
     
-    asm("PAGESEL 0x600");           // Ensure PCLATH is correct for the jump
-    asm("goto 0x600");              // If bootloader is not init from PC, then continue to application
+    asm("PAGESEL 0x700");           // Ensure PCLATH is correct for the jump
+    asm("goto 0x700");              // If bootloader is not init from PC, then continue to application
     
     
-    // Good news is when bootloader goes to 0x0600 and is invalid, causes pic to reset and main repeated over and over till handshake and flash success!
+    // Good news is when bootloader goes to 0x0700 and is invalid, causes pic to reset and main repeated over and over till handshake and flash success!
 }

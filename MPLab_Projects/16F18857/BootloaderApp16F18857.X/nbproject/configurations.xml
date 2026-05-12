@@ -108,7 +108,7 @@
         <property key="additional-options-checksum" value=""/>
         <property key="additional-options-checksumAVR" value=""/>
         <property key="additional-options-checksumAVR2" value="0"/>
-        <property key="additional-options-code-offset" value="600"/>
+        <property key="additional-options-code-offset" value="700"/>
         <property key="additional-options-command-line" value=""/>
         <property key="additional-options-errata" value=""/>
         <property key="additional-options-extend-address" value="false"/>
@@ -127,7 +127,7 @@
         <property key="checksum-flash-options-widthc" value="2"/>
         <property key="clear-bss" value="true"/>
         <property key="code-model-external" value="wordwrite"/>
-        <property key="code-model-rom" value="600-7FFF"/>
+        <property key="code-model-rom" value="700-7FFF"/>
         <property key="create-html-files" value="false"/>
         <property key="data-model-ram" value=""/>
         <property key="data-model-size-of-double" value="32"/>

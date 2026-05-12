@@ -12,6 +12,7 @@
             </make-dep-projects>
             <sourceRootList>
                 <sourceRootElem>../Shared24FJ64GA102</sourceRootElem>
+                <sourceRootElem>.</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>

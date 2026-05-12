@@ -53,7 +53,8 @@ void UART_Init(void)
 
     // ----- Clear pending RX bytes -----
     uint8_t dummy;
-    while (PIR3bits.RCIF) {
+    while (PIR3bits.RCIF) 
+    {
         dummy = RC1REG;         // discard
     }
 }

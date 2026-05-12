@@ -6,16 +6,16 @@
  * PACKS: USE 1.7.162
  */
 
-
 #include <xc.h>
 #include <stdint.h>                         // for standard integer types 
 #include <stdbool.h>                        // for bool, true, false
+#include "bootloader.h"
 #include "config.h"
 #include "uart.h"
 
-// Note: B4J Expected bytes = 0xFFF - 0x600 = 0x9FF + 1 = 0xA00(2560) * 2 = 5120 BYTES (Each address is 1 WORD!))
+// Note: B4J Expected bytes = 0xFFF - 0x700 = 0x8FF + 1 = 0x900(2304) * 2 = 4608 BYTES (Each address is 1 WORD!))
 
-#define FLASH_START 0x0600                  // Flash start address
+#define FLASH_START 0x0700                  // Flash start address
 #define FLASH_END 0x0FFF                    // Flash end address
 #define FLASH_ERASE_BLOCK 32                // Runtime can only do 32 word block erase max!
 #define FLASH_WRITE_BLOCK 4                 // Can only do 4 word block write max with PIC 16F88!              
@@ -24,9 +24,19 @@
 #define LED_PIN PORTBbits.RB4               // Bootloader Led Status    
 #define LED_TRIS TRISBbits.TRISB4           // Output PortB.4 pin
 
+#define DEVICE_BLE 0x01
+#define DEVICE_CLASSIC_BT 0x02
+#define DEVICE_WIFI 0x03
+#define DEVICE_TTLSERIAL 0x04
+
 uint16_t flash_packet[FLASH_WRITE_BLOCK];   // 4 words, 8 bytes total
-bool isBLE = false;                         // BLE Detection uses different verify_flash process
-uint16_t BLE_MTU_Size = 20;                 // NOT USED with 16F88.
+FlashConfig_t flashSettings = {             // Initialize the struct with your default values
+   .isVerify_Checksum = false,
+   .WhichDevice = 0x01,                         
+   .BLE_MTU_Size = 20,                      // NOt USED!
+   .BLE_MTU_Delay = 20,                     // Not USED!
+   .WhichFlashRequest = 0x00
+}; 
 
 //-------------------------------------------------------
 // INTERNAL OSCILLATOR CLK CONFIG
@@ -131,6 +141,7 @@ void Flash_Verify(void)
 {
     uint16_t addr;
     uint8_t b;
+    uint8_t totalChecksum = 0;
     
     // Send to host
     UART_TxString("<StartFlashVerify>");
@@ -159,25 +170,40 @@ void Flash_Verify(void)
         for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
         {
             packet[i] = Flash_ReadInstruction(addr + i);  // Read word from flash
+            totalChecksum += (packet[i] & 0xFF);
+            totalChecksum += (packet[i] >> 8);
         }
 
-        // Send packet to B4J 
-        for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
+        // Byte for Byte comparison
+        if (flashSettings.isVerify_Checksum == false)
         {
-            // eg. 0x3FFF = FF first then 3F second (B4J binary is backwards!)
-            UART_Tx(packet[i] & 0xFF);              // First Byte (LSB)
-            UART_Tx(packet[i] >> 8);                // Second Byte (MSB) Shift upper to lower
+            // Send packet to B4J 
+            for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
+            {
+                // eg. 0x3FFF = FF first then 3F second (B4J binary is backwards!)
+                UART_Tx(packet[i] & 0xFF);              // First Byte (LSB)
+                UART_Tx(packet[i] >> 8);                // Second Byte (MSB) Shift upper to lower
+            }
+
+            if (flashSettings.isVerify_Checksum == false)
+            {
+                if (flashSettings.WhichDevice == DEVICE_BLE)  
+                {
+                   __delay_ms(20);                             
+                }
+                else
+                {
+                   __delay_ms(5);                       
+                }
+            }
         }
-        
-        if (isBLE) 
-        {
-           __delay_ms(20);                             
-        }
-        else
-        {
-           __delay_ms(5);                             // tested 1 ms ok!  as long below first delay is there!
-        }
-            
+    }
+    
+    // Checksum comparison only
+    if (flashSettings.isVerify_Checksum == true)
+    {
+        UART_Tx(totalChecksum);
+        __delay_ms(MSG_MS_DELAY); 
     }
 
     // Send to host
@@ -341,22 +367,26 @@ void ReceiveConfig(void)
 {
     // First Byte = 0x01 = BLE, 0x00 <> BLE
     // Second and Third Byte = MTU Size
+    // Fourth Byte = 0x00 = Flash and Verify (Byte for Byte): 0x01 = Flash and Verify Checksum))
+    // Fourth byte = In future! 0x02 = Verify (Byte for Byte only): 0x03 = Verify Checksum only))
     
-    uint8_t temp[3];  
+    uint8_t temp[4];  
     uint16_t byteCount = 0;
     uint32_t timeoutCounter = 0;
     
     const uint32_t TIMEOUT_MAX = 200000; 
-
+    
    // ----- FLush -----
     uint8_t dummy;
-    while (PIR1bits.RCIF) {
+    while (PIR1bits.RCIF) 
+    {
         dummy = RCREG;         // discard
     }
     
-    while (byteCount < 3)
+    // Wait for all 4 configuration bytes from HOST.
+    while (byteCount < 4)
     {
-        if(PIR1bits.RCIF) 
+        if(PIR1bits.RCIF)  
         {
             temp[byteCount] = UART_Rx();  
             byteCount++;
@@ -366,31 +396,54 @@ void ReceiveConfig(void)
         {
             timeoutCounter++;
             
+            // CRITICAL: Do not proceed to erase/write flash if config failed
             if (timeoutCounter > TIMEOUT_MAX)
             {
                 UART_TxString("<ConfigTimeout>");
                 __delay_ms(MSG_MS_DELAY);
-                
-                // CRITICAL: Do not proceed to erase/write flash if config failed
                 return; 
             }
         }
     }
 
     // --- PROCESS CONFIG BYTES ---
-    // Byte 0: BLE Toggle (1 = True, 0 = False)
-    isBLE = (temp[0] != 0); 
+    // BYTE 0: 0x01 = BLE: 0x02 = BT CLassic: 0x03 = WIFI: 0x04 = TTL Serial
+    flashSettings.WhichDevice = (temp[0]);
 
-    // Bytes 1 & 2: Set the MTU Size
-    BLE_MTU_Size = ((uint16_t)temp[1] << 8) | temp[2];
-    //BLE_DELAY Variable not required. Its only 8 bytes total!
+    // BYTE 1 & 2: Set the MTU Size and MTU_Delay
+    flashSettings.BLE_MTU_Size = ((uint16_t)temp[1] << 8) | temp[2];
+    // Linear mapping:
+    // 20 bytes  -> 20 ms
+    // 400 bytes -> 100 ms
+    flashSettings.BLE_MTU_Delay = (uint16_t)((flashSettings.BLE_MTU_Size * 211UL) / 1000UL + 16);
     
+    // BYTE 3: Which Flash Process?
+    flashSettings.WhichFlashRequest = (temp[3]);
+    
+    // Is it Checksum or not!
+    if (flashSettings.WhichFlashRequest == 0x01 || flashSettings.WhichFlashRequest == 0x03)
+    {
+        flashSettings.isVerify_Checksum = true;        
+    }
+    else
+    {
+        flashSettings.isVerify_Checksum = false;
+    }
+
+   // Configuration received acknowledge         
     __delay_ms(MSG_MS_DELAY);
     UART_TxString("<ConfigOK>");
     __delay_ms(MSG_MS_DELAY);
-                
-    Flash_EraseApplication();  
-    DoFirmwareUpdate();    
+          
+    // Which type of flash request?  Flash + Verify or Verify alone.
+    if (flashSettings.WhichFlashRequest == 0x00 || flashSettings.WhichFlashRequest == 0x01)   
+    {
+        Flash_EraseApplication();  
+        DoFirmwareUpdate();     
+    } else {
+        Flash_Verify();
+    }
+ 
 }
 
 //-------------------------------------------------------
@@ -454,9 +507,9 @@ void main(void)
     
     LED_PIN  = 0;                   // LED Off (bootloader led))
   
-    asm("PAGESEL 0x600");           // Ensure PCLATH is correct for the jump
-    asm("goto 0x600");              // If bootloader is not init from PC, then continue to application
+    asm("PAGESEL 0x700");           // Ensure PCLATH is correct for the jump
+    asm("goto 0x700");              // If bootloader is not init from PC, then continue to application
     
     
-    // Good news is when bootloader goes to 0x0600 and is invalid, causes PIC to reset and main repeated over and over till handshake and flash success!
+    // Good news is when bootloader goes to 0x0700 and is invalid, causes PIC to reset and main repeated over and over till handshake and flash success!
 }

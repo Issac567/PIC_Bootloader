@@ -23,6 +23,7 @@
 #include <xc.h>
 #include <stdint.h>                         // for standard integer types 
 #include <stdbool.h>                        // for bool, true, false
+#include "bootloader.h"
 #include "config.h"
 #include "uart.h"
 
@@ -47,10 +48,19 @@
 #define LED_PIN   LATBbits.LATB4                // Use LAT for Output / Bootloader Led Status 
 #define LED_TRIS  TRISBbits.TRISB4              // Output PortB.4 pin
 
+#define DEVICE_BLE 0x01
+#define DEVICE_CLASSIC_BT 0x02
+#define DEVICE_WIFI 0x03
+#define DEVICE_TTLSERIAL 0x04
+
 uint16_t flash_packet[FLASH_WRITE_BLOCK * 2];   // Array of 256 words
-bool isBLE = false;                             // BLE Detection uses different verify_flash process
-uint16_t BLE_MTU_Size = 20;                     // BLE MTU Size (B4J sends the value from configuration function)
-uint16_t BLE_MTU_Delay = 20;                    // Min delay for each packet sent
+FlashConfig_t flashSettings = {             // Initialize the struct with your default values
+   .isVerify_Checksum = false,
+   .WhichDevice = 0x01,
+   .BLE_MTU_Size = 20,
+   .BLE_MTU_Delay = 20,
+   .WhichFlashRequest = 0x00
+}; 
 
 //-------------------------------------------------------
 // INTERNAL OSCILLATOR CLK CONFIG
@@ -151,6 +161,7 @@ void Flash_Verify(void)
     uint32_t addr;
     uint8_t ble_counter = 0;
     uint8_t b;
+    uint8_t totalChecksum = 0;
     
     UART_TxString("<StartFlashVerify>");
     __delay_ms(MSG_MS_DELAY);
@@ -173,42 +184,57 @@ void Flash_Verify(void)
         // -------------------------
         
         uint32_t packet[FLASH_WRITE_BLOCK];
-
         // Read block (24-bit instructions)
         for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
         {
             packet[i] = Flash_ReadInstruction(addr + (uint32_t)(i * 2));
+            totalChecksum += (packet[i] & 0xFF);
+            totalChecksum += (packet[i] >> 8);
         }
         
+        // Byte for Byte comparison
+        if (flashSettings.isVerify_Checksum == false)
+        {   
         // Send block
-        for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
-        {
-            UART_Tx((packet[i] >>  0) & 0xFF);
-            UART_Tx((packet[i] >>  8) & 0xFF);
-            UART_Tx((packet[i] >> 16) & 0xFF);
-            UART_Tx((packet[i] >> 24) & 0xFF);
-            
-            // BLE can only send MTU Limits usually 20 bytes per session
-            if (isBLE) 
+            for (uint8_t i = 0; i < FLASH_WRITE_BLOCK; i++)
             {
-                ble_counter += 4;
-        
-                // 2. Every xx bytes, we must pause for the HM-10 radio
-                if (ble_counter >= BLE_MTU_Size) // will use BLE_MTU_Size in future!
+                UART_Tx((packet[i] >>  0) & 0xFF);
+                UART_Tx((packet[i] >>  8) & 0xFF);
+                UART_Tx((packet[i] >> 16) & 0xFF);
+                UART_Tx((packet[i] >> 24) & 0xFF);
+
+                // BLE can only send MTU Limits usually 20 bytes per session
+                if (flashSettings.WhichDevice == DEVICE_BLE) 
                 {
-                    // Wait for the HM-10 to clear its internal UART-to-BLE buffer
-                   // Loop until value of MTU_Delay has achieved.
-                    uint16_t temp = BLE_MTU_Delay;
-                    while (temp--)
+                    ble_counter += 4;
+
+                    // 2. Every xx bytes, we must pause for the HM-10 radio
+                    if (ble_counter >= flashSettings.BLE_MTU_Size) // will use BLE_MTU_Size in future!
                     {
-                        __delay_ms(1);
-                    }   
-                    ble_counter = 0;
+                        // Wait for the HM-10 to clear its internal UART-to-BLE buffer
+                       // Loop until value of MTU_Delay has achieved.
+                        uint16_t temp = flashSettings.BLE_MTU_Delay;
+                        while (temp--)
+                        {
+                            __delay_ms(1);
+                        }   
+                        ble_counter = 0;
+                    }
                 }
             }
         }
-
-        __delay_ms(1);
+        if (flashSettings.isVerify_Checksum == false)
+        {
+            __delay_ms(1);
+        // No Delay for checksum result.
+        }  
+    }
+    
+    // Checksum comparison only
+    if (flashSettings.isVerify_Checksum == true)
+    {
+        UART_Tx(totalChecksum);
+        __delay_ms(MSG_MS_DELAY); 
     }
 
     __delay_ms(MSG_MS_DELAY);
@@ -352,23 +378,26 @@ void ReceiveConfig(void)
 {
     // First Byte = 0x01 = BLE, 0x00 <> BLE
     // Second and Third Byte = MTU Size
+    // Fourth Byte = 0x00 = Flash and Verify (Byte for Byte): 0x01 = Flash and Verify Checksum))
+    // Fourth byte = In future! 0x02 = Verify (Byte for Byte only): 0x03 = Verify Checksum only))
     
-    uint8_t temp[3];  
+    uint8_t temp[4];  
     uint16_t byteCount = 0;
     uint32_t timeoutCounter = 0;
     
     const uint32_t TIMEOUT_MAX = 6000000; 
- 
-    // ----FLUSH------
-    uint16_t dummy;
+    
+   // ----- FLush -----
+    uint8_t dummy;
     while (U1STAbits.URXDA) 
-    { 
-        dummy = U1RXREG; 
+    {
+        dummy = U1RXREG;         // discard
     }
     
-    while (byteCount < 3)
+    // Wait for all 4 configuration bytes from HOST.
+    while (byteCount < 4)
     {
-        if (U1STAbits.URXDA) 
+        if(U1STAbits.URXDA)  
         {
             temp[byteCount] = UART_Rx();  
             byteCount++;
@@ -378,34 +407,54 @@ void ReceiveConfig(void)
         {
             timeoutCounter++;
             
+            // CRITICAL: Do not proceed to erase/write flash if config failed
             if (timeoutCounter > TIMEOUT_MAX)
             {
                 UART_TxString("<ConfigTimeout>");
                 __delay_ms(MSG_MS_DELAY);
-                
-                // CRITICAL: Do not proceed to erase/write flash if config failed
                 return; 
             }
         }
     }
 
     // --- PROCESS CONFIG BYTES ---
-    // Byte 0: BLE Toggle (1 = True, 0 = False)
-    isBLE = (temp[0] != 0); 
+    // BYTE 0: 0x01 = BLE: 0x02 = BT CLassic: 0x03 = WIFI: 0x04 = TTL Serial
+    flashSettings.WhichDevice = (temp[0]);
 
-    // Bytes 1 & 2: Set the MTU Size
-    BLE_MTU_Size = ((uint16_t)temp[1] << 8) | temp[2];
+    // BYTE 1 & 2: Set the MTU Size and MTU_Delay
+    flashSettings.BLE_MTU_Size = ((uint16_t)temp[1] << 8) | temp[2];
     // Linear mapping:
     // 20 bytes  -> 20 ms
     // 400 bytes -> 100 ms
-    BLE_MTU_Delay = (uint16_t)((BLE_MTU_Size * 211UL) / 1000UL + 16);
+    flashSettings.BLE_MTU_Delay = (uint16_t)((flashSettings.BLE_MTU_Size * 211UL) / 1000UL + 16);
     
+    // BYTE 3: Which Flash Process?
+    flashSettings.WhichFlashRequest = (temp[3]);
+    
+    // Is it Checksum or not!
+    if (flashSettings.WhichFlashRequest == 0x01 || flashSettings.WhichFlashRequest == 0x03)
+    {
+        flashSettings.isVerify_Checksum = true;        
+    }
+    else
+    {
+        flashSettings.isVerify_Checksum = false;
+    }
+
+   // Configuration received acknowledge         
     __delay_ms(MSG_MS_DELAY);
     UART_TxString("<ConfigOK>");
     __delay_ms(MSG_MS_DELAY);
-                
-    Flash_EraseApplication();  
-    DoFirmwareUpdate();    
+          
+    // Which type of flash request?  Flash + Verify or Verify alone.
+    if (flashSettings.WhichFlashRequest == 0x00 || flashSettings.WhichFlashRequest == 0x01)   
+    {
+        Flash_EraseApplication();  
+        DoFirmwareUpdate();     
+    } else {
+        Flash_Verify();
+    }
+ 
 }
 
 // 0x55 and 0XAA handshake expected from Host to start firmware update

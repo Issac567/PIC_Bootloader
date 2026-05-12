@@ -55,7 +55,8 @@ void UART_Init(void)
 
     // 9. Clear pending RX bytes
     uint16_t dummy;
-    while (U1STAbits.URXDA) { // While UART1 Receive Data Available
+    while (U1STAbits.URXDA) 
+    { // While UART1 Receive Data Available
         dummy = U1RXREG; 
     }
 }

@@ -22,6 +22,7 @@
       <itemPath>../Shared24FJ256GA702/config.h</itemPath>
       <itemPath>../Shared24FJ256GA702/uart.c</itemPath>
       <itemPath>../Shared24FJ256GA702/uart.h</itemPath>
+      <itemPath>bootloader.h</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
