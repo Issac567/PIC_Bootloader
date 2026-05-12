@@ -79,14 +79,15 @@ Connect your `DT-06` WIFI module to the PIC microcontroller as follows:
 
 
 ## How to Use  
-1. Open the **B4J Bootloader Uploader** software.
-2. Set Host IP to **192.168.4.1**
-3. Set Port to **8080**  
-4. **Click Connect** and wait for success connection.
-5. **Select the PIC device** you want to program.
-6. Click **Load Firmware** to select the **firmware file** (.hex) you want to upload.  
-7. Press **Flash** to start the programming process.  
-8. Wait until the software reports **success**. Do not disconnect the device during flashing. 
+1. Windows WIFI Setting, Connect to **GoBox_Bridge** with password **12345678**");
+2. Open the **B4J Bootloader Uploader** software.
+3. Set Host IP to **192.168.4.1**
+4. Set Port to **8080**  
+5. **Click Connect** and wait for success connection.
+6. **Select the PIC device** you want to program.
+7. Click **Load Firmware** to select the **firmware file** (.hex) you want to upload.  
+8. Press **Flash** to start the programming process.  
+9. Wait until the software reports **success**. Do not disconnect the device during flashing. 
 
 
 ## Notes  
