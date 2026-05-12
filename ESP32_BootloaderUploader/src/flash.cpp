@@ -92,6 +92,16 @@ void sendConfigBytes()
     uint8_t byteONE[1];
     uint8_t byteTWO[1];
     uint8_t byteTHREE[1];
+    uint8_t byteFOUR[1];
+
+    // Byte 1: 		    0x01 = BLE: 0x00 = Other
+	// Byte 2 and 3:    0x00 and 0x14 = 16Bit Number MTU Size
+	// Byte 4: 		    0x00 = Flash and Verify Byte for Byte
+	//				    0x01 = Flash and Verify Checksum
+	// 				    0x02 = Verify Byte for Byte only (Future Reserved)
+	// 				    0x03 = Verify Checksum only (Future Reserved)
+
+    // byteFOUR currently does not support 0x01, 0x02, 0x03 for flash types.  we can add in the future if needed! For now just set to 0x00 for default flash type!
 
     // 1. Set the BLE Flag (0x01)
     byteONE[0] = 0x01;
@@ -104,6 +114,9 @@ void sendConfigBytes()
     // Mask to keep only the bottom 8 bits
     byteTHREE[0] = (uint8_t)(intMTUSize & 0x00FF);
 
+    // 4. Set the Flash Type
+    byteFOUR[0] = (uint8_t)(0x00);
+
     // Write packets with 50ms gaps as per your B4J logic
     pRemoteCharacteristic->writeValue(byteONE, 1, false);
     vTaskDelay(pdMS_TO_TICKS(50));
@@ -114,8 +127,11 @@ void sendConfigBytes()
     pRemoteCharacteristic->writeValue(byteTHREE, 1, false);
     vTaskDelay(pdMS_TO_TICKS(50));
 
+    pRemoteCharacteristic->writeValue(byteFOUR, 1, false);
+    vTaskDelay(pdMS_TO_TICKS(50));
+
     // Debugging output to Serial Monitor
-    Serial.printf("CFG BYTES: Sending: 0x%02X, 0x%02X, 0x%02X\n", byteONE[0], byteTWO[0], byteTHREE[0]);
+    Serial.printf("CFG BYTES: Sending: 0x%02X, 0x%02X, 0x%02X, 0x%02X\n", byteONE[0], byteTWO[0], byteTHREE[0], byteFOUR[0]);
 
     // Wait for the PIC to confirm configuration via notifyCallback
     while (myPicStatus.blnConfigOK == false)
