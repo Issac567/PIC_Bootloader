@@ -6,20 +6,7 @@ This project provides software support for **DT-06 WIFI modules**, enabling easy
 ## **Corrected DT-06 Configuration Guide**
 
 **1. Establish Connection**
-* Connect to the DT-06 WiFi in your OS settings (usually named `DT-06_XXXXXX`).
-* Open a browser and type `http://192.168.4.1` into the address bar.
-
-**2. Configure Serial-to-PIC Communication**
-* Navigate to **MODULE** > **Serial**.
-* Set **BaudRate** to `57600`.
-* Leave remaining fields at defaults: `8, NONE, 1, 50`.
-* **Click Save.**
-
-**3. Configure Network Protocol**
-* Navigate to **MODULE** > **Networks**.
-* **Socket Type:** Select `TCP Server` from the dropdown.
-* **Port:** Enter `9000`.
-* **Click Save.** *Note: Ensure your B4J ServerSocket is initialized to Port 9000.*
+* Ensure your B4J ServerSocket is initialized to 192.168.4.1 at Port 8080.*
   
 ## 🔌 DT-06 to Microchip Diagram
 ![Wiring diagram](WIFItoPIC.jpg)
