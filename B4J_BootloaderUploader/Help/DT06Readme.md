@@ -1,4 +1,56 @@
-# DT-06 WIFI TCP/IP
+# DT06 Custom Flash Firmware
+DT06 requires a custom flash image and will not work correctly with the original ROM firmware.
+
+
+## Requirements
+- Visual Studio Code
+- PlatformIO extension installed in Visual Studio Code
+- USB TTL adapter connected to DT06 RX/TX lines
+
+
+## Flashing Instructions
+1. Install Visual Studio Code  
+2. Install the PlatformIO extension  
+3. Open the attached DT06 Flashing folder in Visual Studio Code  
+4. Connect the DT06 module to a USB TTL adapter:
+   - TX -> RX
+   - RX -> TX
+   - GND -> GND
+   - 3.3V power
+5. Put the DT06 into flashing mode by powering off, push and hold G button (not R), power on DT06 while holding button for 2 seconds and release.
+6. Click the PlatformIO Upload button (right arrow icon)
+7. Compile and upload the firmware
+
+
+## PlatformIO Board Configuration
+Recommended PlatformIO board:
+
+```ini
+board = esp8285
+
+## Notes
+- Generic ESP8266 AT firmware does not properly work with DT06 modules
+- DT06 uses a custom flash layout and firmware structure
+- Full flash images are recommended for recovery
+
+## B4J Support
+DT-06 in B4J Uploader is deprecated but still supports DT06 using the attached custom flash firmware.
+
+## Performance Notes
+- B4J to WIFI communication is optimized and can send bytes without delay
+- PIC to WIFI communication may require a small delay in PIC firmware
+- PIC delays have not yet been implemented because the current PIC firmware is shared with multiple devices
+
+Current supported devices:
+- HM10
+- HC05
+- USB TTL adapters
+
+These devices currently operate flawlessly without delays from PIC.
+
+---
+
+## DT-06 WIFI TCP/IP
 This project provides software support for **DT-06 WIFI modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over TCP/IP.
 
 > **Note:** This software communicates via WIFI to serial COM ports to PIC. It requires a properly connected **DT-06 WIFI adapter** to the PIC target device.
