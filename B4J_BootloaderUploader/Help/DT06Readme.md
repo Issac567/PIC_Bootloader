@@ -11,7 +11,7 @@ DT06 requires a custom flash image and will not work correctly with the original
 ## Flashing Instructions
 1. Install Visual Studio Code  
 2. Install the PlatformIO extension  
-3. Open the attached DT06 Flashing folder in Visual Studio Code  
+3. Open the attached  [DT06 Flashing folder](https://github.com/ElectronicFan/PlatformIO_Projects/tree/main/DT06%20Flashing) in Visual Studio Code 
 4. Connect the DT06 module to a USB TTL adapter:
    - TX -> RX
    - RX -> TX
