@@ -7,6 +7,15 @@ Version=9.85
 ' Features: Bluetooth SSP 2.0, Bluetooth BLE 4.0, WIFI TCP/IP and USB TTL Serial (COM)
 
 '------------------------------------------------------------------------------------------------------
+' DT-06 NOTES:
+' DT-06 Support Status: Deprecated
+' The factory DT-06 firmware proved incompatible with the uploader’s timing 
+' requirements. While custom firmware successfully optimized the B4J-To-WiFi 
+' downlink, the reverse path (PIC-To-WiFi) struggled with high-speed, non-blocking 
+' data polling. To maintain reliability, communication was restricted To simple 1-byte 
+' checksum validation, which does Not meet the project's long-term standards for data integrity.
+
+'------------------------------------------------------------------------------------------------------
 'BUILD STANALONE INSTRUCTIONS!
 ' Using .Exe from Build Standalone Package you must include the .map files in 
 ' \BootloaderUploader\Objects\temp\build\bin\configs
@@ -26,7 +35,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Const VERSION As String = "11.04"
+	Private Const VERSION As String = "12.01"
 	
 	Private Const DEVICE_NONE As Int = 0
 	Private Const DEVICE_BLE As Int = 1
@@ -34,6 +43,9 @@ Sub Class_Globals
 	Private Const DEVICE_WIFI As Int = 3
 	Private Const DEVICE_TTLSERIAL As Int = 4
 	Private WhichDeviceConnection As Int = 0
+	
+	Private Const BUTTON_FLASH As Int = 1
+	Private Const BUTTON_VERIFY As Int = 2
 	
 	'---------------------------------------
 	' Map Config Variables
@@ -51,6 +63,7 @@ Sub Class_Globals
 		blnUseWriteBurst  As Boolean, _						' True = Tx Write Packet as whole, no delays in between!
 		blnUseDoubleHexAddr As Boolean, _					' 16F, 24F = Increment 2 Hex Address, 18F = Increment 1 Hex Address. Used with Intel Hex Conversion
 		blnUse4Padding As Boolean, _						' 24 Bit need step 4, others step 2. Used with Intel Hex Conversion
+		blnUseCheckSum As Boolean, _						' Will enable or disable checksum usage
 		strPicName As String)								' Name of PIC
 	Private myConfigMap As ConfigMap
 
@@ -98,6 +111,7 @@ Sub Class_Globals
 	Private txtLog As TextArea
 	Private prgBar As ProgressBar
 	Private cmbPicList As ComboBox
+	Private chkCheckSum As CheckBox
 	
 	'Tab1 Elements (Bluetooth SSP)
 	Private ListView1HC05 As ListView							
@@ -123,6 +137,8 @@ Sub Class_Globals
 	
 	Private firmwareFile() As Byte							' firmware binary from FILE
 	Private firmwareVerify() As Byte						' firmware binary from PIC
+	Private intFileTotalChecksum As Int 					' firmware Checksum from FILE
+	Private intVerifyTotalChecksum As Int					' Verify Checksum from PIC
 	
 	Private rxBufferString As String						' Buffer Newdata in string format PIC Message only
 	Private strLastFilePath As String						' Reloads firmware from FILE when PIC name changed so Firmware array be corrected
@@ -132,6 +148,8 @@ Sub Class_Globals
 	Private BLE_useMTUSize As Int = 20						' Write Flash support, Verify Flash in firmware will default at 20 now!
 	
 	
+
+	Private btnVerify As Button
 End Sub
 
 Public Sub Initialize
@@ -155,7 +173,7 @@ Private Sub B4XPage_Created (Root1 As B4XView)
 	TabPane1.LoadLayout("TabPane1", "Bluetooth HC-05")
 	TabPane1.LoadLayout("TabPane3", "Bluetooth HM-10")
 	TabPane1.LoadLayout("TabPane2", "Serial Com - TTL USB")
-	TabPane1.LoadLayout("TabPane4", "WIFI DT-06")
+	TabPane1.LoadLayout("TabPane4", "WIFI DT-06")		'DROP SUPPORT!
 
 	'B4XPages.AddPageAndCreate("AT Command Mode", ATCommandMode)
 	B4XPages.AddPage("AT Command Mode", ATCommandMode)
@@ -370,7 +388,6 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 	
 	' We dont want to log Incoming <ACK> while Firmware upload!
 	' We dont want to log Incoming PIC VERIFY bytes, but just <VerifyCancelled>!
-	'If blnStartFlashVerify <> True And msg <> "<ACK>" Then
 	If msg <> "<ACK>" Then
 		If myPicStatus.blnStartFlashVerify = True Then
 			If msg = "<VerifyCancelled>" Or msg.Contains("Cancelled") Then
@@ -384,24 +401,37 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 	
 	' This is triggered by <StartFlashVerify> from PIC after Flash Write is completed
 	If myPicStatus.blnStartFlashVerify = True Then
-		'LogMessage("INCOMMING", BytesToHexString(buffer))  ' debugging only!!!					
-		For x = 0 To buffer.Length - 1  ' This method is better.  Newdata does not guarantee all block in one event
-			' This array will compare to firmware() which is Converted FILE binary
-			firmwareVerify(myPicStatus.cntVerify) = buffer(x)
-										
-			' Update progress bar
-			prgBar.Progress = Min(1, myPicStatus.cntVerify / myConfigMap.intExpectedFirmwareBytes)
-			myPicStatus.cntVerify = myPicStatus.cntVerify + 1
-					
-			' Check if we reached the expected firmware size
-			If myPicStatus.cntVerify >= myConfigMap.intExpectedFirmwareBytes Then
-				myPicStatus.blnStartFlashVerify = False
-				' Let <EndFlashVerify> display the status of Verify!
-				' Just enable button here
-				EnableFunction
-				Exit
+		'LogMessage("INCOMMING", BytesToHexString(buffer))  ' debugging only!!!	
+		
+		' Checksum comparison performed here
+		If chkCheckSum.Checked = True Then
+			myPicStatus.blnStartFlashVerify = False
+			If buffer.Length = 1 Then	' expecting no more then 1 byte returned!
+				intVerifyTotalChecksum = Bit.And(buffer(0), 0xFF)
 			End If
+			' Let <EndFlashVerify> display the status of Verify!
+			' Just enable button here
+			EnableFunction
+		' Byte for Byte comparison performed here				
+		Else
+			For x = 0 To buffer.Length - 1  
+				' This array will compare to firmware() which is Converted FILE binary
+				firmwareVerify(myPicStatus.cntVerify) = buffer(x)
+											
+				' Update progress bar
+				prgBar.Progress = Min(1, myPicStatus.cntVerify / myConfigMap.intExpectedFirmwareBytes)
+				myPicStatus.cntVerify = myPicStatus.cntVerify + 1
+						
+				' Check if we reached the expected firmware size
+				If myPicStatus.cntVerify >= myConfigMap.intExpectedFirmwareBytes Then
+					myPicStatus.blnStartFlashVerify = False
+					' Let <EndFlashVerify> display the status of Verify!
+					' Just enable button here
+					EnableFunction
+					Exit
+				End If
 			Next
+		End If
 	' This is PIC MESSAGES excluding blnVerifyRequest (Verify bytes)!
 	Else
 			' Bootloader firmware confirmed handshake received
@@ -455,7 +485,11 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 			' End of verify flash program code
 		Else If msg.Contains("<EndFlashVerify>") Then
 			EnableFunction
-			VerifyStatus
+			If chkCheckSum.Checked = True Then
+				VerifyStatusChecksum
+			Else
+				VerifyStatus
+			End If
 			
 		End If
 	
@@ -512,7 +546,7 @@ Private Sub ConnectHC05
 			WhichDeviceConnection = DEVICE_CLASSIC_BT
 			btnConnectHC05.Text = "Disconnect"
 			LogMessage("STATUS", "Bluetooth Connected! @ " & address)
-			LogMessage("Status", "Ready Flash")
+			LogMessage("STATUS", "Ready Flash")
 		Else
 			LogMessage("STATUS", "Bluetooth Failed! @ " & address)
 		End If
@@ -978,12 +1012,15 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
         
 		If blnDetectRecord Then
 			btnFlash.Enabled = True
+			btnVerify.Enabled = True
 			LogMessage("STATUS", "Conversion success.")
 			' This will be used for future esp32 project.  Use binary instead of Intel Hex
 			ExportBinaryFile(firmwareData)
 			ExportConfigFile
+			intFileTotalChecksum = CalculateSum8(firmwareData)
 		Else
 			btnFlash.Enabled = False
+			btnVerify.Enabled = False
 			LogMessage("STATUS", "Error: No valid data found above start address.")
 		End If
 		        
@@ -1000,7 +1037,7 @@ Sub ExportBinaryFile(binData() As Byte)
 		File.Delete(File.DirApp, "flash.bin")
 	End If
 	File.WriteBytes(File.DirApp, "flash.bin", binData)
-	LogMessage("Status", "export @ " & File.DirApp & "\flash.bin")
+	LogMessage("STATUS", "export @ " & File.DirApp & "\flash.bin")
 End Sub
 Sub ExportConfigFile
 	If File.Exists(File.DirApp, "config.map") Then
@@ -1025,34 +1062,32 @@ Sub ExportConfigFile
 	cfg.Put("PicName", myConfigMap.strPicName)
 	
 	File.WriteMap(File.DirApp, "config.map", cfg)
-	LogMessage("Status", "export @ " & File.DirApp & "\config.map")
+	LogMessage("STATUS", "export @ " & File.DirApp & "\config.map")
+End Sub
+Sub CalculateSum8(Data() As Byte) As Int
+	Dim checksum As Int = 0
+	For Each b As Byte In Data
+		' Convert signed byte to unsigned 0-255 and add
+		checksum = (checksum + Bit.And(b, 0xFF))
+	Next
+	Dim toHexStr As String
+	toHexStr = Bit.ToHexString(Bit.And(checksum, 0xFF)).ToUpperCase
+	If toHexStr.Length = 1 Then toHexStr = "0" & toHexStr
+	LogMessage("STATUS", "File Checksum: 0x" & toHexStr & " (" & Bit.And(checksum, 0xFF) & ")")
+	
+	Return Bit.And(checksum, 0xFF) ' Keep only the last 8 bits (0-255); return int
 End Sub
 
 '--------------------------------------------------------
 ' Start Handshake and Firmware Upload
 '--------------------------------------------------------
 Private Sub btnFlash_Click
-	' Check if configuration .map available
-	If cmbPicList.Items.Size = 0 Then
-		xui.Msgbox2Async("Configuration is missing!", "Configuration", "Ok", "", "", Null)
-	' Validation Checks
-	Else If btnConnectHC05.Text = "Connect" And btnOpenUSBTTL.Text = "Open Port" And btnConnectHM10.Text = "Connect" Then
-		xui.Msgbox2Async("Please connect or open port!", "Connection Required!", "Ok", "", "", Null)
-	' Flashing Logic
-	Else If btnFlash.Text = "Flash" Then
-		Dim sf2 As Object = xui.Msgbox2Async("If the PIC application is running, it will enter bootloader mode automatically. " & _
-  											 "If not, please click OK and then power cycle.", _
-                                      		 "Attention!", "Ok", "Cancel", "", Null)
-		Wait For (sf2) Msgbox_Result(ret As Int)
-		If ret = xui.DialogResponse_Positive Then
-			SendHandShakeBytes
-		End If
-	' Flash Stop Logic
-	Else If btnFlash.Text = "Stop" Then
-		PerformUserAbort(DEVICE_NONE)
-	End If
+	ProcessFlashType(BUTTON_FLASH)
 End Sub
-Sub SendHandShakeBytes
+Private Sub btnVerify_Click
+	ProcessFlashType(BUTTON_VERIFY)
+End Sub
+Sub SendHandShakeBytes(WhichButton As Int)
 	Dim rs As Object
 	Dim blnToggle As Boolean
 	Dim b() As Byte = Array As Byte(0x55)
@@ -1067,12 +1102,13 @@ Sub SendHandShakeBytes
 		' Exit and Start Config upload
 		If myPicStatus.blnHandShakeSuccess = True Then
 			Sleep(300) ' give firmware time to call ReceiveConfig.
-			SendConfigBytes
+			SendConfigBytes(WhichButton)
 			Return
 		Else
 			If blnToggle = False Then
 				' BLE
-				If btnConnectHM10.Text = "Disconnect" Then
+				'If btnConnectHM10.Text = "Disconnect" Then
+				If WhichDeviceConnection = DEVICE_BLE Then
 					rs = bkHM10Client.Write(BLE_useUUID, b)
 					Wait For (rs) Complete (Result2 As PyWrapper)
 				' OTHERS (SSP, WIFI and TTL USB)
@@ -1082,7 +1118,8 @@ Sub SendHandShakeBytes
 				LogMessage("HANDSHAKE", "Sending: 0x55")
 			Else
 				' BLE
-				If btnConnectHM10.Text = "Disconnect" Then
+				'If btnConnectHM10.Text = "Disconnect" Then
+				If WhichDeviceConnection = DEVICE_BLE Then
 					rs = bkHM10Client.Write(BLE_useUUID, b2)
 					Wait For (rs) Complete (Result2 As PyWrapper)
 				' OTHERS (SSP, WIFI and TTL USB)
@@ -1100,29 +1137,65 @@ Sub SendHandShakeBytes
 		blnToggle = Not(blnToggle)
 	Loop
 End Sub
-Sub SendConfigBytes
+Sub SendConfigBytes(WhichButton As Int)
 	' One time shot. The PIC will be ready to poll!
+	' Byte 1: 		0x01 = BLE: 0x00
+	'				0x02 = BT Classic
+	' 				0x03 = WIFI
+	' 				0x04 = TTL Serial
+	' Byte 2 and 3: 0x00 and 0x14 = 16Bit Number MTU Size
+	' Byte 4: 		0x00 = Flash and Verify Byte for Byte
+	'				0x01 = Flash and Verify Checksum
+	' 				0x02 = Verify Byte for Byte only (Future Reserved)
+	' 				0x03 = Verify Checksum only (Future Reserved)
 	
 	Dim rs As Object
-	Dim byteONE(1), byteTWO(1), byteTHREE(1) As Byte
+	Dim byteONE(1), byteTWO(1), byteTHREE(1), byteFourth(1) As Byte
 
-	' 1. Set the BLE Flag
-	If btnConnectHM10.Text = "Disconnect" Then
-		byteONE(0) = 0x01	'BLE
-	Else
-		byteONE(0) = 0x00   'OTHERS
-	End If
+	' 1. --- Set the Flag ---
+	Select Case WhichDeviceConnection
+		Case DEVICE_BLE:		byteONE(0) = 0x01		
+		Case DEVICE_CLASSIC_BT: byteONE(0) = 0x02	
+		Case DEVICE_WIFI:		byteONE(0) = 0x03	
+		Case DEVICE_TTLSERIAL:  byteONE(0) = 0x04
+	End Select
 
-	' 2. Extract High Byte (Most Significant Byte)
+	' 2. --- Extract High Byte (Most Significant Byte) ---
 	' Shift right by 8 bits to move the top 8 bits into the bottom 8 bits
 	byteTWO(0) = Bit.ShiftRight(Bit.And(BLE_useMTUSize, 0xFF00), 8)
 
-	' 3. Extract Low Byte (Least Significant Byte)
+	' 3. --- Extract Low Byte (Least Significant Byte) ---
 	' Use a mask to keep only the bottom 8 bits
 	byteTHREE(0) = Bit.And(BLE_useMTUSize, 0xFF)
 
+	' 4. --- Which Flash Type using ---
+	If WhichButton = BUTTON_FLASH Then
+		If chkCheckSum.Checked = True Then
+			byteFourth(0) = 0x01
+		Else
+			If WhichDeviceConnection = DEVICE_WIFI Then
+				chkCheckSum.Checked = True
+				byteFourth(0) = 0x01			' (WORKAROUND) WIFI will not perform properly in custom rom. Just return 1 byte Checksum
+			Else
+				byteFourth(0) = 0x00
+			End If
+		End If
+	Else
+		If chkCheckSum.Checked = True Then
+			byteFourth(0) = 0x03
+		Else
+			If WhichDeviceConnection = DEVICE_WIFI Then
+				chkCheckSum.Checked = True
+				byteFourth(0) = 0x03			' (WORKAROUND) WIFI will not perform properly in custom rom. Just return 1 byte Checksum
+			Else
+				byteFourth(0) = 0x02	
+			End If				
+		End If
+	End If
+
 	' BLE
-	If btnConnectHM10.Text = "Disconnect" Then
+	'If btnConnectHM10.Text = "Disconnect" Then
+	If WhichDeviceConnection = DEVICE_BLE Then
 		rs = bkHM10Client.Write(BLE_useUUID, byteONE)
 		Wait For (rs) Complete (Result2 As PyWrapper)
 		Sleep(50)
@@ -1130,6 +1203,9 @@ Sub SendConfigBytes
 		Wait For (rs) Complete (Result2 As PyWrapper)
 		Sleep(50)
 		rs = bkHM10Client.Write(BLE_useUUID, byteTHREE)
+		Wait For (rs) Complete (Result2 As PyWrapper)
+		Sleep(50)
+		rs = bkHM10Client.Write(BLE_useUUID, byteFourth)
 		Wait For (rs) Complete (Result2 As PyWrapper)
 		Sleep(50)
 	' OTHERS (SSP, WIFI and TTL USB)
@@ -1141,9 +1217,11 @@ Sub SendConfigBytes
 			Sleep(50)
 			astream.Write(byteTHREE)
 			Sleep(50)
+			astream.Write(byteFourth)
+			Sleep(50)
 		End If
 	End If
-	LogMessage("CFG BYTES", "Sending: 0x" & Bit.ToHexString(byteONE(0)).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTWO(0)).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTHREE(0)).ToUpperCase)
+	LogMessage("CFG BYTES", "Sending: 0x" & Bit.ToHexString(byteONE(0)).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTWO(0)).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTHREE(0)).ToUpperCase& ", " & "0x" & Bit.ToHexString(byteFourth(0)).ToUpperCase)
 					
 	Do While myPicStatus.blnConfigOK = False
 		If isOperationFailed = True Then Return
@@ -1211,7 +1289,8 @@ Sub SendFirmwareBytes
 				'------------------------------------------------------------------------
 				' BLE (Never configure .map to use this!
 				'------------------------------------------------------------------------
-				If btnConnectHM10.Text = "Disconnect" Then
+				'If btnConnectHM10.Text = "Disconnect" Then
+				If WhichDeviceConnection = DEVICE_BLE Then
 					rs = bkHM10Client.Write(BLE_useUUID, b)
 					Wait For (rs) Complete (Result2 As PyWrapper)
 				'------------------------------------------------------------------------
@@ -1231,7 +1310,8 @@ Sub SendFirmwareBytes
 			'-----------------------------------------------------------------------------
 			' BLE
 			'-----------------------------------------------------------------------------
-			If btnConnectHM10.Text = "Disconnect" Then
+			'If btnConnectHM10.Text = "Disconnect" Then
+			If WhichDeviceConnection = DEVICE_BLE Then
 				' BLE Flash Write is supported by MTU Size requested
 				' Need to test HM-20 supports over 400 mtu size!  
 				' HM-10 tested at 20 mtu really sucks!
@@ -1263,7 +1343,6 @@ Sub SendFirmwareBytes
 			End If
 			
 			Sleep(myConfigMap.intPacketDelayMS)
-			
 		End If
 
 		' Update progress bar
@@ -1274,6 +1353,27 @@ Sub SendFirmwareBytes
 	Loop
 
 	LogMessage("FIRMWAREUPLOAD", "Firmware upload completed!")
+End Sub
+Sub ProcessFlashType(WhichButton As Int)
+	' Check if configuration .map available
+	If cmbPicList.Items.Size = 0 Then
+		xui.Msgbox2Async("Configuration is missing!", "Configuration", "Ok", "", "", Null)
+		' Validation Checks
+	Else If btnConnectHC05.Text = "Connect" And btnOpenUSBTTL.Text = "Open Port" And btnConnectHM10.Text = "Connect"  And btnConnectWIFI.Text = "Connect" Then
+		xui.Msgbox2Async("Please connect or open port!", "Connection Required!", "Ok", "", "", Null)
+		' Flashing Logic
+	Else If btnFlash.Text = "Flash" Then
+		Dim sf2 As Object = xui.Msgbox2Async("If the PIC application is running, it will enter bootloader mode automatically. " & _
+  											 "If not, please click OK and then power cycle.", _
+                                      		 "Attention!", "Ok", "Cancel", "", Null)
+		Wait For (sf2) Msgbox_Result(ret As Int)
+		If ret = xui.DialogResponse_Positive Then
+			SendHandShakeBytes(WhichButton)
+		End If
+		' Flash Stop Logic
+	Else If btnFlash.Text = "Stop" Then
+		PerformUserAbort(DEVICE_NONE)
+	End If
 End Sub
 Sub isOperationFailed As Boolean
 	' PIC reported timeout error (Handshake does not have this!)
@@ -1323,6 +1423,29 @@ Sub CompareFirmware() As Boolean
 	' All bytes match
 	Return True
 End Sub
+Sub VerifyStatusChecksum
+	If CompareChecksum = True Then
+		LogMessage("STATUS", "Programming/Verify Success")
+	Else
+		LogMessage("STATUS", "Programming/Verify Failed!")
+	End If
+End Sub
+Sub CompareChecksum As Boolean
+	Dim toHexStr, toHexStr2 As String
+	toHexStr = Bit.ToHexString(intFileTotalChecksum).ToUpperCase
+	toHexStr2 = Bit.ToHexString(intVerifyTotalChecksum).ToUpperCase
+	If toHexStr.Length = 1 Then toHexStr = "0" & toHexStr
+	If toHexStr2.Length = 1 Then toHexStr2 = "0" & toHexStr2
+	LogMessage("STATUS", "File Checksum: 0x" & toHexStr & " (" & intFileTotalChecksum & ")" & " / " & "Verify Checksum: 0x" & toHexStr2 & " (" & intVerifyTotalChecksum & ")")
+
+	' If not same return false
+	If intFileTotalChecksum <> intVerifyTotalChecksum Then
+		Return False
+	End If
+
+	' All bytes match
+	Return True
+End Sub
 
 '--------------------------------------------------------
 ' Disable/Enable
@@ -1335,6 +1458,8 @@ Sub DisableFunction
 	btnStartScanHM10.Enabled = False
 	btnLoadFile.Enabled = False
 	cmbPicList.Enabled = False
+	chkCheckSum.Enabled = False
+	btnVerify.Visible = False
 	btnFlash.Text = "Stop"
 
 	myPicStatus.blnUserCancel = False
@@ -1357,7 +1482,9 @@ Sub EnableFunction
 	btnStartScanHM10.Enabled = True
 	btnLoadFile.Enabled = True
 	cmbPicList.Enabled = True
+	chkCheckSum.Enabled = True
 	btnFlash.Text = "Flash"
+	btnVerify.Visible = True
 	
 	myPicStatus.blnUserCancel = True
 End Sub
@@ -1433,6 +1560,7 @@ Sub LoadConfiguration(SelectedPicName As String) As Boolean
 						myConfigMap.blnUseDoubleHexAddr = cfg.Get("UseDoubleHexAddr") 	' For Intel Hex Conversion
 						myConfigMap.blnUse4Padding = cfg.Get("Use4Padding")				' For Intel Hex conversion
 						myConfigMap.strPicName = cfg.Get("PicName")						' PIC Name
+						myConfigMap.blnUseCheckSum = cfg.Get("UseCheckSum")				' Checksum usage
 						
 						' Set Proper Arrays to FirmwareVerfiy()
 						firmwareVerify = Array As Byte()
@@ -1443,6 +1571,9 @@ Sub LoadConfiguration(SelectedPicName As String) As Boolean
 						If strLastFilePath <> "" Then
 							firmwareFile = ConvertHexIntelToBinaryRange(strLastFilePath, myConfigMap.intStartAddrFlash, myConfigMap.intEndAddrFlash)
 						End If
+						
+						' Enable/Disable Checksum based on UseCheckSum
+						chkCheckSum.Checked = myConfigMap.blnUseCheckSum
 						
 						' If port already open update stop bit parameter!
 						If btnOpenUSBTTL.Text = "Close Port" Then
@@ -1516,4 +1647,5 @@ Sub BytesToHexString2(b As Byte) As String
 	
 	Return byteString.ToUpperCase
 End Sub
+
 
