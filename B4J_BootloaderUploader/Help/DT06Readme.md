@@ -1,5 +1,5 @@
 # DT06 Custom Flash Firmware
-DT06 requires a custom flash image and will not work correctly with the original ROM firmware.
+DT06 requires a custom flash image and will not work correctly with the original ROM firmware.  Make **backups** of your original rom before flashing custom rom! Your original rom will be erased!
 
 
 ## Requirements
