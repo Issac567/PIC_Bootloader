@@ -24,9 +24,7 @@ DT06 requires a custom flash image and will not work correctly with the original
 
 ## PlatformIO Board Configuration
 Recommended PlatformIO board:
-
-```ini
-board = esp8285
+- board = esp8285
 
 ## Notes
 - Generic ESP8266 AT firmware does not properly work with DT06 modules
