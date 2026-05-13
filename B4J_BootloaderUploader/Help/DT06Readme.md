@@ -18,8 +18,7 @@ DT06 requires a custom flash image and will not work correctly with the original
    - GND -> GND
    - 3.3V power
 5. Put the DT06 into flashing mode by **powering off**, **push and hold G button** (not R), **power on** DT06 while holding button for **2 seconds** and release.
-6. Click the PlatformIO Upload button (right arrow icon)
-7. Compile and upload the firmware
+6. Click the PlatformIO Upload button (right arrow icon in bottom status bar)
 
 
 ## PlatformIO Board Configuration
