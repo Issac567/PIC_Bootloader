@@ -32,8 +32,7 @@ Recommended PlatformIO board:
 
 ## Performance Notes
 - B4J to WIFI communication is optimized and can send bytes without delay
-- PIC to WIFI communication may require a small delay in PIC firmware
-- PIC delays have not yet been implemented because the current PIC firmware is shared with multiple devices
+- PIC to WIFI communication is optimized and can send bytes without delay
 
 Current supported devices:
 - HM10
