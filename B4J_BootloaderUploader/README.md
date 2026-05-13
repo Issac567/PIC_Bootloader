@@ -27,7 +27,7 @@
 * [2. HC-05 Bluetooth (SPP)](#hc-05-bluetooth-ssp)
 * [3. HM-10 Bluetooth (BLE)](#hm-10-bluetooth-ble)
 * [4a. DT-06 WIFI (Custom Rom)](#dt-06-wifi-custom-rom)
-* [4b. DT-06 (WIFI TCP/IP))](#dt-06-wifi-custom-rom)
+* [4b. DT-06 (WIFI TCP/IP))](#dt-06-wifitcp-ip)
 * [5. AT Command Mode](#hc-05hm-10-at-command-mode)
 * [Libraries & License](#libraries-required)
 
@@ -218,7 +218,7 @@ Recommended PlatformIO board:
 
 ---
 
-## DT-06 WIFI TCP/IP
+# DT-06 WIFI TCP/IP
 This project provides software support for **DT-06 WIFI modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over TCP/IP.
 
 > **Note:** This software communicates via WIFI to serial COM ports to PIC. It requires a properly connected **DT-06 WIFI adapter** to the PIC target device.
