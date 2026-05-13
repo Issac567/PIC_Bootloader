@@ -275,6 +275,8 @@ Connect your `DT-06` WIFI module to the PIC microcontroller as follows:
 - Make sure your `DT-06` **COM port baud rate** matches the software settings (default is usually **57600 bps**).  
 - Ensure the **PIC is powered properly** before attempting to flash firmware.
 
+[↑ Back to Table of Contents](#-table-of-contents)
+
 ---
 
 # HC-05/HM-10 AT Command Mode
