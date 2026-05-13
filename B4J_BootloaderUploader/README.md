@@ -216,6 +216,8 @@ Recommended PlatformIO board:
 - B4J to WIFI communication is optimized and can send bytes without delay
 - PIC to WIFI communication is optimized and can send bytes without delay
 
+[↑ Back to Table of Contents](#-table-of-contents)
+
 ---
 
 # DT-06 WIFI TCP/IP
