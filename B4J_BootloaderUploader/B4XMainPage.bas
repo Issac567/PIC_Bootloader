@@ -33,7 +33,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Const VERSION As String = "12.02"
+	Private Const VERSION As String = "12.04"
 	
 	Private Const DEVICE_NONE As Int = 0
 	Private Const DEVICE_BLE As Int = 1
@@ -106,6 +106,7 @@ Sub Class_Globals
 	Private TabPane1 As TabPane
 	Private btnFlash As Button
 	Private btnLoadFile As Button
+	Private btnVerify As Button
 	Private txtLog As TextArea
 	Private prgBar As ProgressBar
 	Private cmbPicList As ComboBox
@@ -145,9 +146,6 @@ Sub Class_Globals
 	Private BLE_useUUID As String							' What Characteristic for BLE
 	Private BLE_useMTUSize As Int = 20						' Write Flash support, Verify Flash in firmware will default at 20 now!
 	
-	
-
-	Private btnVerify As Button
 End Sub
 
 Public Sub Initialize
@@ -287,11 +285,9 @@ Sub astream_NewData (Buffer() As Byte)
 	If rxBufferString.Contains(">") Or myPicStatus.blnStartFlashVerify = True Then
 		HandleMessage(rxBufferString, Buffer)	
 		rxBufferString = ""
-		
-		' NOTE: HC05 data in < first run then VerifyCancelled>.  
-		' We need a workaround to fix this issue!
 	End If
 	
+	' Private Sub btHM10_CharNotify (Notification As BleakNotification)  BLE...Same as here!
 End Sub
 Sub astream_Error
 	LogMessage("STATUS", "Error: " & LastException)
@@ -825,16 +821,23 @@ Sub PerformUserAbort(WhichButton As Int)
 				Dim rs As Object
 				rs = bkHM10Client.Write(BLE_useUUID, CancelByte)
 				Wait For (rs) Complete (Result2 As PyWrapper)
+				Sleep(50)
+				rs = bkHM10Client.Write(BLE_useUUID, CancelByte)
+				Wait For (rs) Complete (Result2 As PyWrapper)
 				
 			Case DEVICE_CLASSIC_BT
+				astream.Write(CancelByte)
+				Sleep(50)
 				astream.Write(CancelByte)
 				
 			Case DEVICE_WIFI
 				astream.Write(CancelByte)
-				
+				Sleep(50)
+				astream.Write(CancelByte)
 			Case DEVICE_TTLSERIAL
 				astream.Write(CancelByte)
-				
+				Sleep(50)
+				astream.Write(CancelByte)
 		End Select
 		
 		Sleep(500)		' Give time for PIC to ACK before disconnecting!
@@ -1012,9 +1015,8 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
 			btnFlash.Enabled = True
 			btnVerify.Enabled = True
 			LogMessage("STATUS", "Conversion success.")
-			' This will be used for future esp32 project.  Use binary instead of Intel Hex
-			ExportBinaryFile(firmwareData)
-			ExportConfigFile
+			ExportBinaryFile(firmwareData)		' This will be used for esp32 project.  Use binary instead of Intel Hex
+			ExportConfigFile					' This will be used for esp32 project. 
 			intFileTotalChecksum = CalculateSum8(firmwareData)
 		Else
 			btnFlash.Enabled = False
@@ -1058,6 +1060,7 @@ Sub ExportConfigFile
 	cfg.Put("UseDoubleHexAddr", myConfigMap.blnUseDoubleHexAddr)
 	cfg.Put("Use4Padding", myConfigMap.blnUse4Padding)
 	cfg.Put("PicName", myConfigMap.strPicName)
+	cfg.Put("UseCheckSum", myConfigMap.blnUseCheckSum)
 	
 	File.WriteMap(File.DirApp, "config.map", cfg)
 	LogMessage("STATUS", "export @ " & File.DirApp & "\config.map")
@@ -1105,7 +1108,6 @@ Sub SendHandShakeBytes(WhichButton As Int)
 		Else
 			If blnToggle = False Then
 				' BLE
-				'If btnConnectHM10.Text = "Disconnect" Then
 				If WhichDeviceConnection = DEVICE_BLE Then
 					rs = bkHM10Client.Write(BLE_useUUID, b)
 					Wait For (rs) Complete (Result2 As PyWrapper)
@@ -1116,7 +1118,6 @@ Sub SendHandShakeBytes(WhichButton As Int)
 				LogMessage("HANDSHAKE", "Sending: 0x55")
 			Else
 				' BLE
-				'If btnConnectHM10.Text = "Disconnect" Then
 				If WhichDeviceConnection = DEVICE_BLE Then
 					rs = bkHM10Client.Write(BLE_useUUID, b2)
 					Wait For (rs) Complete (Result2 As PyWrapper)
@@ -1182,7 +1183,6 @@ Sub SendConfigBytes(WhichButton As Int)
 	End If
 
 	' BLE
-	'If btnConnectHM10.Text = "Disconnect" Then
 	If WhichDeviceConnection = DEVICE_BLE Then
 		rs = bkHM10Client.Write(BLE_useUUID, byteONE)
 		Wait For (rs) Complete (Result2 As PyWrapper)
@@ -1277,7 +1277,6 @@ Sub SendFirmwareBytes
 				'------------------------------------------------------------------------
 				' BLE (Never configure .map to use this!
 				'------------------------------------------------------------------------
-				'If btnConnectHM10.Text = "Disconnect" Then
 				If WhichDeviceConnection = DEVICE_BLE Then
 					rs = bkHM10Client.Write(BLE_useUUID, b)
 					Wait For (rs) Complete (Result2 As PyWrapper)
@@ -1298,7 +1297,6 @@ Sub SendFirmwareBytes
 			'-----------------------------------------------------------------------------
 			' BLE
 			'-----------------------------------------------------------------------------
-			'If btnConnectHM10.Text = "Disconnect" Then
 			If WhichDeviceConnection = DEVICE_BLE Then
 				' BLE Flash Write is supported by MTU Size requested
 				' Need to test HM-20 supports over 400 mtu size!  
