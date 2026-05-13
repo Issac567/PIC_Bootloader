@@ -34,13 +34,6 @@ Recommended PlatformIO board:
 - B4J to WIFI communication is optimized and can send bytes without delay
 - PIC to WIFI communication is optimized and can send bytes without delay
 
-Current supported devices:
-- HM10
-- HC05
-- USB TTL adapters
-
-These devices currently operate flawlessly without delays from PIC.
-
 ---
 
 ## DT-06 WIFI TCP/IP
