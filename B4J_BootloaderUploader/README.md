@@ -223,7 +223,7 @@ This project provides software support for **DT-06 WIFI modules**, enabling easy
 > **Note:** This software communicates via WIFI to serial COM ports to PIC. It requires a properly connected **DT-06 WIFI adapter** to the PIC target device.
   
 ## 🔌 DT-06 to Microchip Diagram
-![Wiring diagram](WIFItoPIC.jpg)
+![Wiring diagram](./Help/WIFItoPIC.jpg)
 
 
 ## Hardware Setup  
