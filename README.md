@@ -45,7 +45,7 @@ The firmware flashing duration varies significantly based on the hardware interf
 | :--- | :--- | :--- | :--- |
 | **TTL USB** | Wired | No MTU Limit (High Baud) | 🚀 **Fastest** |
 | **DT-06** | WIFI | Continuous Stream | 🟡 **Fast** |
-| **HC-05** | BT Classic | Continuous Stream | 🟡 Moderate |
+| **HC-05** | BT Classic | Continuous Stream | 🟡 **Moderate** |
 | **HM-10** | BLE 4.0 | **20-byte MTU Limit** | 🔴 **Very Slow** |
 | **ESP32 S3 UI** | BLE 5.0 | **20-byte MTU Limit** | 🔴 **Very Slow** |
 
