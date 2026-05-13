@@ -36,6 +36,7 @@ This repository contains a collection of firmware projects for various **PIC mic
 * [Aliexpress - USB-to-TTL serial adapter](https://www.aliexpress.us/w/wholesale-USB%2525252dto%2525252dTTL-serial-adapter.html?spm=a2g0o.productlist.search.0)
 * [Aliexpress - HC-05 Bluetooth SSP adapter ](https://www.aliexpress.us/w/wholesale-hc05-bluetooth-module.html?osf=auto_suggest&spm=a2g0n.productlist.header.0)
 * [Aliexpress - HM-10 Bluetooth BLE adapter ](https://www.aliexpress.us/w/wholesale-hM10-bluetooth-module.html?spm=a2g0o.productlist.auto_suggest.2.bf20493bPXGW1g)
+* [Aliexpress --DT-060WIFI adapter ](https://www.aliexpress.us/w/wholesale-dt-06-wifi-module.html?spm=a2g0o.productlist.auto_suggest.2.bf20493bPXGW1g)
 
 ### ⚡ Flashing Speed Comparison
 The firmware flashing duration varies significantly based on the hardware interface used. For the fastest experience, use a wired connection.
