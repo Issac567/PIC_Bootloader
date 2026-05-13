@@ -26,7 +26,7 @@
 * [1. USB TTL (Serial COM)](#serial-com---ttl-usb)
 * [2. HC-05 Bluetooth (SPP)](#hc-05-bluetooth-ssp)
 * [3. HM-10 Bluetooth (BLE)](#hm-10-bluetooth-ble)
-* [4. DT-06 WIFI (Custom Rom)](#dt-06-custom-flash-firmware)
+* [4. DT-06 WIFI (Custom Rom)](#dt-06-wifi-custom-rom)
 * [5. AT Command Mode](#hc-05hm-10-at-command-mode)
 * [Libraries & License](#libraries-required)
 
@@ -179,7 +179,7 @@ Connect your `HM-10` Bluetooth module to the PIC microcontroller as follows:
 
 ---
 
-# DT06 Custom Flash Firmware
+# DT-06 WIFI (Custom Rom)
 DT06 requires a custom flash image and will not work correctly with the original ROM firmware.  Make **backups** of your original rom before flashing custom rom! Your original rom will be erased!
 
 
