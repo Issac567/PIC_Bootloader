@@ -9,11 +9,9 @@ Version=9.85
 '------------------------------------------------------------------------------------------------------
 ' DT-06 NOTES:
 ' DT-06 Support Status: Deprecated
-' The factory DT-06 firmware proved incompatible with the uploader’s timing 
-' requirements. While custom firmware successfully optimized the B4J-To-WiFi 
-' downlink, the reverse path (PIC-To-WiFi) struggled with high-speed, non-blocking 
-' data polling. To maintain reliability, communication was restricted To simple 1-byte 
-' checksum validation, which does Not meet the project's long-term standards for data integrity.
+' The factory DT-06 firmware proved incompatible with the B4J uploader’s timing 
+' requirements. While DT06 Flashing custom firmware successfully optimized the B4J-To-WiFi 
+' downlink and PIC-To-WIFI uploadlink.
 
 '------------------------------------------------------------------------------------------------------
 'BUILD STANALONE INSTRUCTIONS!
@@ -35,7 +33,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Const VERSION As String = "12.01"
+	Private Const VERSION As String = "12.02"
 	
 	Private Const DEVICE_NONE As Int = 0
 	Private Const DEVICE_BLE As Int = 1
@@ -1173,23 +1171,13 @@ Sub SendConfigBytes(WhichButton As Int)
 		If chkCheckSum.Checked = True Then
 			byteFourth(0) = 0x01
 		Else
-			If WhichDeviceConnection = DEVICE_WIFI Then
-				chkCheckSum.Checked = True
-				byteFourth(0) = 0x01			' (WORKAROUND) WIFI will not perform properly in custom rom. Just return 1 byte Checksum
-			Else
-				byteFourth(0) = 0x00
-			End If
+			byteFourth(0) = 0x00
 		End If
 	Else
 		If chkCheckSum.Checked = True Then
 			byteFourth(0) = 0x03
 		Else
-			If WhichDeviceConnection = DEVICE_WIFI Then
-				chkCheckSum.Checked = True
-				byteFourth(0) = 0x03			' (WORKAROUND) WIFI will not perform properly in custom rom. Just return 1 byte Checksum
-			Else
-				byteFourth(0) = 0x02	
-			End If				
+			byteFourth(0) = 0x02				
 		End If
 	End If
 
