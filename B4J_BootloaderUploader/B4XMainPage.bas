@@ -8,7 +8,6 @@ Version=9.85
 
 '------------------------------------------------------------------------------------------------------
 ' DT-06 NOTES:
-' DT-06 Support Status: Deprecated
 ' The factory DT-06 firmware proved incompatible with the B4J uploader’s timing 
 ' requirements. While DT06 Flashing custom firmware successfully optimized the B4J-To-WiFi 
 ' downlink and PIC-To-WIFI uploadlink.
