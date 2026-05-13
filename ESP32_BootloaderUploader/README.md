@@ -76,7 +76,7 @@
 ## How to Use
 Updating the PIC application device firmware requires the ESP32 uploader tool:
 1.  Build circuit according to schematics above.
-2.  SD Card requires `flash.bin` and `config.map` exported by `B4J Uploader`.  In `B4J`, select **PIC Name** from list, click **Tools->Export for ESP32**.
+2.  SD Card requires `flash.bin` and `config.map` exported by `B4J Uploader`* [B4J](https://www.b4x.com/b4j.html).  In `B4J`, select **PIC Name** from list, click **Tools->Export for ESP32**.
 3.  Copy both files to SD Card formatted in fat32.
 4.  With `HM-10` connected to your choice of PIC.
 5.  Execute the **Flash** command to flash the device.  It will Erase, Flash and Verify in that order.
