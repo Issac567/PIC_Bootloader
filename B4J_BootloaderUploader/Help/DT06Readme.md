@@ -30,9 +30,6 @@ Recommended PlatformIO board:
 - DT06 uses a custom flash layout and firmware structure
 - Full flash images are recommended for recovery
 
-## B4J Support
-DT-06 in B4J Uploader is deprecated but still supports DT06 using the attached custom flash firmware.
-
 ## Performance Notes
 - B4J to WIFI communication is optimized and can send bytes without delay
 - PIC to WIFI communication may require a small delay in PIC firmware
