@@ -1137,7 +1137,7 @@ Sub SendHandShakeBytes(WhichButton As Int)
 End Sub
 Sub SendConfigBytes(WhichButton As Int)
 	' One time shot. The PIC will be ready to poll!
-	' Byte 1: 		0x01 = BLE: 0x00
+	' Byte 1: 		0x01 = BLE
 	'				0x02 = BT Classic
 	' 				0x03 = WIFI
 	' 				0x04 = TTL Serial
