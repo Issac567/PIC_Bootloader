@@ -6,6 +6,9 @@
  * USE 1.29.481
  */
 
+// Note: Both Bootloader.c and application.c should be flashed together due to 0x0008 Goto 0x1F000 is owned by application.c!
+// B4J Uploader does not flash bootloader range
+
 #include <xc.h>
 #include <stdint.h>                         // for standard integer types 
 #include <stdbool.h>                        // for bool, true, false
