@@ -6,7 +6,7 @@
  * USE 1.30.487
  */
 
-// Note: Both Bootloader.c and application.c should be flashed together due to 0x0008 Goto 0x1F000 is owned by application.c!
+// Note: Both Bootloader.c and application.c should be flashed together due to 0x0008 Goto 0xE000 is owned by application.c!
 // B4J Uploader does not flash bootloader range
 
 #include <xc.h>
