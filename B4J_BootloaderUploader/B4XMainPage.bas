@@ -32,7 +32,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Const VERSION As String = "12.04"
+	Private Const VERSION As String = "12.12"
 	
 	Private Const DEVICE_NONE As Int = 0
 	Private Const DEVICE_BLE As Int = 1
@@ -169,7 +169,17 @@ Private Sub B4XPage_Created (Root1 As B4XView)
 	TabPane1.LoadLayout("TabPane3", "Bluetooth HM-10")
 	TabPane1.LoadLayout("TabPane2", "Serial Com - TTL USB")
 	TabPane1.LoadLayout("TabPane4", "WIFI DT-06")		'DROP SUPPORT!
-
+	
+	' Set disable text default at startup matching designer status
+	btnFlash.Style = "-fx-text-fill: #808080;"
+	btnVerify.Style = "-fx-text-fill: #808080;"
+	btnConnectHC05.Style = "-fx-text-fill: #808080;"
+	btnOpenUSBTTL.Style = "-fx-text-fill: #808080;"
+	btnStopScanHM10.Style = "-fx-text-fill: #808080;"
+	btnConnectHM10.Style = "-fx-text-fill: #808080;"
+	btnFlash.Style = "-fx-text-fill: #808080;"
+	
+	
 	'B4XPages.AddPageAndCreate("AT Command Mode", ATCommandMode)
 	B4XPages.AddPage("AT Command Mode", ATCommandMode)
 	
@@ -320,7 +330,11 @@ Private Sub btHC05_DeviceFound (Name As String, MacAddress As String)
 End Sub
 Private Sub btHC05_DiscoveryFinished
 	btnSearchHC05.Enabled = True
-	If ListView1HC05.Items.Size > 0 Then btnConnectHC05.Enabled = True
+	btnSearchHC05.Style = ""
+	If ListView1HC05.Items.Size > 0 Then 
+		btnConnectHC05.Enabled = True
+		btnConnectHC05.Style = ""
+	End If
 	LogMessage("BLUETOOTH", "Discovery completed")
 End Sub
 
@@ -336,8 +350,10 @@ Private Sub btHM10_DeviceFound (Device As BleakDevice)
 		ListView1HM10.Items.Add(description)
 		If ListView1HM10.Items.Size > 0 Then
 			btnConnectHM10.Enabled = True
+			btnConnectHM10.Style = ""
 		Else
 			btnConnectHM10.Enabled = False
+			btnConnectHM10.Style = "-fx-text-fill: #808080;"
 		End If
 	End If
 	
@@ -500,7 +516,9 @@ Private Sub btnSearchHC05_Click
 			ListView1HC05.Items.Clear
 			foundDevices.Clear
 			btnSearchHC05.Enabled = False
+			btnSearchHC05.Style = "-fx-text-fill: #808080;"
 			btnConnectHC05.Enabled = False
+			btnConnectHC05.Style = "-fx-text-fill: #808080;"
 			LogMessage("BLUETOOTH", "Searching, please wait...")
 		Else
 			Log("Error starting discovery")
@@ -557,7 +575,9 @@ Private Sub btnStartScanHM10_Click
 			ListView1HM10.Items.Clear
 			foundDevices.Clear
 			btnStartScanHM10.Enabled = False
+			btnStartScanHM10.Style = "-fx-text-fill: #808080;"
 			btnStopScanHM10.Enabled = True
+			btnStopScanHM10.Style = ""
 			LogMessage("BLUETOOTH", "Searching, please wait...")
 		Else
 			LogMessage("Python", Py.PyLastException)
@@ -568,7 +588,9 @@ Private Sub btnStartScanHM10_Click
 End Sub
 Private Sub btnStopScanHM10_Click
 	btnStartScanHM10.Enabled = True
+	btnStartScanHM10.Style = ""
 	btnStopScanHM10.Enabled = False
+	btnStopScanHM10.Style = "-fx-text-fill: #808080;"
 	If btHM10.IsScanning = True Then
 		btHM10.StopScan
 		LogMessage("BLUETOOTH", "Scan has stopped")
@@ -690,6 +712,11 @@ Private Sub btnRefreshComUSBTTL_Click
 End Sub
 Private Sub cmbPortUSBTTL_SelectedIndexChanged(Index As Int, Value As Object)
 	btnOpenUSBTTL.Enabled = Index > -1 'enable the button if there is a selected item
+	If btnOpenUSBTTL.Enabled = True Then
+		btnOpenUSBTTL.Style = ""
+	Else
+		btnFlash.Style = "-fx-text-fill: #808080;"
+	End If
 End Sub
 Private Sub btnOpenUSBTTL_Click
 	If btnOpenUSBTTL.Text = "Open Port" Then
@@ -716,6 +743,7 @@ Private Sub OpenUSBTLL
 	WhichDeviceConnection = DEVICE_TTLSERIAL
 	btnOpenUSBTTL.Text = "Close Port"
 	btnRefreshComUSBTTL.Enabled = False
+	btnRefreshComUSBTTL.Style = "-fx-text-fill: #808080;"
 	LogMessage("STATUS", "Serial COM opened")
 	LogMessage("Status", "Ready Flash")
 End Sub
@@ -882,6 +910,7 @@ Sub PerformUserAbort(WhichButton As Int)
 			End If
 			btnOpenUSBTTL.Text = "Open Port"
 			btnRefreshComUSBTTL.Enabled = True
+			btnRefreshComUSBTTL.Style = ""
 			
 	End Select
 End Sub
@@ -1012,14 +1041,18 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
         
 		If blnDetectRecord Then
 			btnFlash.Enabled = True
+			btnFlash.Style = ""
 			btnVerify.Enabled = True
+			btnVerify.Style = ""
 			LogMessage("STATUS", "Conversion success.")
 			ExportBinaryFile(firmwareData)		' This will be used for esp32 project.  Use binary instead of Intel Hex
 			ExportConfigFile					' This will be used for esp32 project. 
 			intFileTotalChecksum = CalculateSum8(firmwareData)
 		Else
 			btnFlash.Enabled = False
+			btnFlash.Style = "-fx-text-fill: #808080;"
 			btnVerify.Enabled = False
+			btnVerify.Style = "-fx-text-fill: #808080;"
 			LogMessage("STATUS", "Error: No valid data found above start address.")
 		End If
 		        
@@ -1436,6 +1469,7 @@ End Sub
 ' Disable/Enable
 '--------------------------------------------------------
 Sub DisableFunction
+	' Buttons disabled and greyed
 	MenuBar1.Enabled = False
 	ListView1HC05.Enabled = False  
 	btnSearchHC05.Enabled = False  
@@ -1445,8 +1479,16 @@ Sub DisableFunction
 	cmbPicList.Enabled = False
 	chkCheckSum.Enabled = False
 	btnVerify.Visible = False
+	MenuBar1.Style = "-fx-text-fill: #808080;"
+	ListView1HC05.Style = "-fx-text-fill: #808080;"
+	btnSearchHC05.Style = "-fx-text-fill: #808080;"
+	ListView1HM10.Style = "-fx-text-fill: #808080;"
+	btnStartScanHM10.Style = "-fx-text-fill: #808080;"
+	btnLoadFile.Style = "-fx-text-fill: #808080;"
+	chkCheckSum.Style = "-fx-text-fill: #808080;"
 	btnFlash.Text = "Stop"
 
+	' Reset myPicStatus
 	myPicStatus.blnUserCancel = False
 	myPicStatus.blnHandShakeSuccess = False
 	myPicStatus.blnTimeoutError = False
@@ -1460,6 +1502,7 @@ Sub DisableFunction
 	prgBar.Progress = 0		
 End Sub
 Sub EnableFunction
+	' Buttons enabled and restore color
 	MenuBar1.Enabled = True
 	ListView1HC05.Enabled = True 
 	btnSearchHC05.Enabled = True 
@@ -1468,8 +1511,15 @@ Sub EnableFunction
 	btnLoadFile.Enabled = True
 	cmbPicList.Enabled = True
 	chkCheckSum.Enabled = True
-	btnFlash.Text = "Flash"
 	btnVerify.Visible = True
+	MenuBar1.Style = ""
+	ListView1HC05.Style = ""
+	btnSearchHC05.Style = ""
+	ListView1HM10.Style = ""
+	btnStartScanHM10.Style = ""
+	btnLoadFile.Style = ""
+	chkCheckSum.Style = ""
+	btnFlash.Text = "Flash"
 	
 	myPicStatus.blnUserCancel = True
 End Sub
