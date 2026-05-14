@@ -2,16 +2,18 @@
 Build1=Default,b4j.example
 File1=ATMode.bjl
 File2=MainPage.bjl
-File3=TabPane1.bjl
-File4=TabPane2.bjl
-File5=TabPane3.bjl
-File6=TabPane4.bjl
+File3=style.css
+File4=TabPane1.bjl
+File5=TabPane2.bjl
+File6=TabPane3.bjl
+File7=TabPane4.bjl
 FileGroup1=Default Group
 FileGroup2=New Group
 FileGroup3=Default Group
 FileGroup4=Default Group
 FileGroup5=Default Group
 FileGroup6=Default Group
+FileGroup7=Default Group
 Group=Default Group
 Library1=b4xpages
 Library10=jshell
@@ -27,7 +29,7 @@ Library8=jrandomaccessfile
 Library9=jserial
 Module1=ATMode
 Module2=B4XMainPage
-NumberOfFiles=6
+NumberOfFiles=7
 NumberOfLibraries=12
 NumberOfModules=2
 Version=10.5
@@ -48,6 +50,7 @@ Sub AppStart (Form1 As Form, Args() As String)
 	MainForm = Form1
 	MainForm.SetFormStyle("UTILITY")			' Better use UTILITY. Flashing requires App focus at all time or issues will rise
 	MainForm.Show
+	MainForm.Stylesheets.Add(File.GetUri(File.DirAssets, "style.css"))
 	Dim PagesManager As B4XPagesManager
 	PagesManager.Initialize(MainForm)
 End Sub

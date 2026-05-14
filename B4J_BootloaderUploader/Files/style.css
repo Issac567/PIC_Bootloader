@@ -1,0 +1,12 @@
+.button:disabled {
+  -fx-text-fill: #808080;
+}
+.button:enabled {
+  -fx-text-fill: black;
+}
+.check-box:disabled {
+  -fx-text-fill: #808080;
+}
+.check-box {
+  -fx-text-fill: black;
+}
