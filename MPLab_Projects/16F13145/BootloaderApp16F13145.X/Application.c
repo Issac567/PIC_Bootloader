@@ -84,10 +84,6 @@ void  __at(0x1000)App_ISR(void)
 
 }
 
-void GET(void)
-{
-    
-}
 void main(void) {    
     // Add application code here......
     App_ISR();
@@ -96,9 +92,6 @@ void main(void) {
     LED_TRIS = 0;                       // Output
     UART_Init();                        // Init UART
         
-    GET();
-    GET();
-    
     // Enable Demo For ISR Test
     //TIMER2_Init();            
     //Timer2_Start();
