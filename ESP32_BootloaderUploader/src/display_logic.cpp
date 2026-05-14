@@ -57,7 +57,7 @@ void handleTouch()
             if (x > 250 && x < 350 && y > 260 && y < 305)  handleFlashStart();              // FIRMWARE Flash button
             if (x > 360 && x < 460 && y > 260 && y < 305)  handleFlashBack();               // Back button
         } else if (currentMenu == FIRMWARESTART) {                                          
-            if (x > 360 && x < 460 && y > 260 && y < 305)  handleBack2();                   // Back2 button
+            if (x > 360 && x < 460 && y > 260 && y < 305)  handleFirmwareBack();            // Back2 button
         } else {
             if (x > 360 && x < 460 && y > 260 && y < 305)  changeMenu(MAIN);                // Back button
         }
@@ -71,15 +71,15 @@ void handleTouch()
 
 void handleFlashBack()
 {
-    myPicStatus.blnUserCancel == true;                                         
+    myPicStatus.blnUserCancel = true;                                         
     vTaskDelay(pdMS_TO_TICKS(100));                                             // For millis entry!
     changeMenu(MAIN);                                                           // Back button
 }
 
-void handleBack2()
+void handleFirmwareBack()
 {
     // If backed out before Verify Flash, then dont let user come back in unless specific seconds has exhausted!
-    // 3 timeouts = 9 seconds in PIC.  we need to wait it out!!!
+    // 3 timeouts = 9 seconds in PIC.  we need to wait it out before allowing user to click flash button again, otherwise they can cause instability by clicking flash button multiple times and causing multiple handshakes and multiple flash attempts which can crash the PIC or cause it to enter an unrecoverable state.  This is a safety mechanism to prevent that from happening.
     if ((myPicStatus.blnStartFlashVerify == false) && (myPicStatus.blnEndFlashVerify == false))
     {
         previousMillis = millis();                                              // Yes delay needed!
@@ -92,7 +92,7 @@ void handleBack2()
 
 void handleFlashStart()
 {
-    // Workaround so invisible button will not be detected in touchhandle!
+    // Workaround so invisible button will not be detected in touchhandler
     if ((isFlashBtn_Visible == true))
     {
         changeMenu(FIRMWARESTART);                                              
@@ -104,7 +104,7 @@ void drawUI()
 {    
     switch (currentMenu) 
     {
-        case MAIN:              drawMainMenu();         break;
+        case MAIN:              drawMainMenu();         break;  
         case FLASH:             drawFlashMenu();        break;
         case FIRMWARESTART:     drawFlashFirmwareMenu();break;
         case BT_CHECK:          drawBTMenu();           break;
@@ -267,7 +267,7 @@ void drawSystemMenu()
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawCentreString("System Check", 240, 20, 4);
  
-    // SD Card Check
+    // SD Card Check 
     if (checkSDMount() == true)
     {
         tft.setTextColor(TFT_GREEN, TFT_BLACK);

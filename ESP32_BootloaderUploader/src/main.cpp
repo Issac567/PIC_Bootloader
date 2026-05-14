@@ -1,8 +1,10 @@
 /* * =================================================================
- * PROJECT: Demo Uploader
+ * PROJECT: ESP32 Bootloader Uploader
+ * PURPOSE: Upload firmware to PIC microcontrollers via Bluetooth   
  * HARDWARE: ESP32 + XPT2046 Touch + TFT Display + SD Card(Optional)
  * CONFIGURATION: Dual SPI (Separate Buses)
  * TFT9488 Seperate Bus. Touch2046/SD Card Shared Bus.
+ * Version: 2.15
  * =================================================================
 * * --- TFT DISPLAY (Bus 1: FSPI) ---
  * MOSI/SDI:   13                       -> Master Out Slave In
@@ -33,23 +35,25 @@
 #include "ble.h"
 #include "sdcard.h"
 
-// TFT and Touch Pins defined in Platformio.ini!
+// TFT and Touch Pins defined in Platformio.ini with -D flags (e.g. -D TOUCH_MOSI=4)
 
 // Define the actual objects here (Allocation)
-TFT_eSPI tft = TFT_eSPI();
-XPT2046_Touchscreen touch(TOUCH_CS, TOUCH_IRQ);
-SPIClass touchSPI(HSPI); 
+TFT_eSPI tft = TFT_eSPI();                      // TFT instance (uses FSPI by default)
+XPT2046_Touchscreen touch(TOUCH_CS, TOUCH_IRQ); // CS and TIRQ pins for touch
+SPIClass touchSPI(HSPI);                        // Separate SPI bus for touch and SD card to avoid conflicts
 
 void setup() 
 {
     Serial.begin(115200);
-    delay(2500); // Good delay for the S3 USB Serial to catch up. Can remove if debugging not needed!
+    delay(2500);            // Good delay for the S3 USB Serial to catch up. Can remove if debugging not needed!
 
-    initDisplaySystem();
+    initDisplaySystem();    // Initializes TFT and Touchscreen
 
-    initSDSystem();
+    initSDSystem();         // Initializes SD Card (also needed for config and verification)  
+    
+    initBLESystem();        // Initializes BLE (NimBLE)
 
-    drawUI();
+    drawUI();               // Draw the initial UI (Main Menu)
     
     Serial.println("Engineer Go-Box Ready.");
 }
@@ -59,20 +63,20 @@ void loop()
   
 
     //-------------------------------------------------------------------------------------------------
-    // Check for touch
+    // Check for touch events in the main loop to ensure responsiveness during long operations
     //-------------------------------------------------------------------------------------------------
     handleTouch(); 
 
     //-------------------------------------------------------------------------------------------------
-    // Do connecting to server
+    // Do connecting to server and subscribing to notifications. This is separate from scanning logic to keep it organized.
     //-------------------------------------------------------------------------------------------------
     handleConnection();
 
     //-------------------------------------------------------------------------------------------------
-    // Do BLE scanning and find the device
+    // Do BLE scanning and find the device if not already connected. This is separate from connection logic to keep it organized.
     //-------------------------------------------------------------------------------------------------
     handleBleScan();
  
-    vTaskDelay(pdMS_TO_TICKS(10));
+    vTaskDelay(pdMS_TO_TICKS(10));  // Small delay to yield to other tasks and avoid watchdog resets
 }
 

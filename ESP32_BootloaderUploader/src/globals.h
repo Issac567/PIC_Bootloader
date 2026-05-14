@@ -41,9 +41,9 @@ struct PicStatus {
 };
 
 // External references so other files can see them (main.cpp)
-extern TFT_eSPI tft;
-extern XPT2046_Touchscreen touch;
-extern SPIClass touchSPI;
+extern TFT_eSPI tft;                // (display_logic.cpp)
+extern XPT2046_Touchscreen touch;   // (display_logic.cpp, sdcard.cpp)
+extern SPIClass touchSPI;           // (display_logic.cpp, sdcard.cpp)  
 
 
 extern ConfigMap myConfig;          // (sdcard.cpp)

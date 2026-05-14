@@ -10,5 +10,7 @@ String GetConfigInfo();
 
 extern const char* FLASH_FILE;
 extern const char* CONFIG_FILE;
+extern const char* VERIFY_FILE;
+
 
 #endif

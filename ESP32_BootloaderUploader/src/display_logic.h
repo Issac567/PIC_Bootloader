@@ -9,7 +9,7 @@ enum MenuState { MAIN, FLASH, FIRMWARESTART, BT_CHECK, SYSTEM, ABOUT };
 void initDisplaySystem();
 void handleTouch();
 void handleFlashBack();
-void handleBack2();
+void handleFirmwareBack();
 void handleFlashStart();
 void drawUI();
 void drawMainMenu();

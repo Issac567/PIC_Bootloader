@@ -22,6 +22,14 @@ static NimBLEClient* pClient = nullptr;
 static NimBLERemoteService* pRemoteService = nullptr;
 
 //-----------------------------------------------------------
+//Initialize BLE system
+//-----------------------------------------------------------
+void initBLESystem() 
+{
+    NimBLEDevice::init("");
+}
+
+//-----------------------------------------------------------
 //Connect/Disconnect event
 //-----------------------------------------------------------
 class MyClientCallback : public NimBLEClientCallbacks 
@@ -139,9 +147,9 @@ static void notifyCallback(NimBLERemoteCharacteristic* pRemoteCharacteristic, ui
 //-----------------------------------------------------------
 bool bleconnectToServer() 
 {
-    doConnect = false;          // prevent repeated attempts
+    doConnect = false;          // prevent repeated attempts to connect
 
-    // 1. Important to delete client or it will crash anytime you reconnect.
+    // 1. Important to delete client or it will crash anytime you reconnect. This is because the NimBLE library does not allow multiple clients to exist at the same time, so we need to make sure to clean up the old client before creating a new one.
     Serial.println("Cleaning up old client memory...");
     if (pClient != nullptr) 
     {
@@ -149,7 +157,7 @@ bool bleconnectToServer()
         NimBLEDevice::deleteClient(pClient); 
         pClient = nullptr; 
     }
-    // Clear old references
+    // Clear old references to service and characteristic since we are creating a new client and connecting to a new server, so we need to make sure to clear out the old references to avoid any issues with dangling pointers.
     pRemoteService = nullptr;
     pRemoteCharacteristic = nullptr;
         
@@ -157,14 +165,13 @@ bool bleconnectToServer()
     Serial.print("Forming a connection to ");
     Serial.println(myDevice->getAddress().toString().c_str());
 
-    // 2. NimBLE uses NimBLEDevice
+    // 2. NimBLE uses NimBLEDevice to create clients instead of directly instantiating them. This is because NimBLE manages the lifecycle of clients internally to ensure proper cleanup and resource management, which is especially important in embedded environments with limited resources.
     pClient = NimBLEDevice::createClient();
     Serial.println(" - Created client");
 
-    pClient->setClientCallbacks(new MyClientCallback()); // 'true' handles automatic deletion
+    pClient->setClientCallbacks(new MyClientCallback()); // 'true' handles automatic deletion of the callback object when the client is deleted. This is important to prevent memory leaks since the NimBLE library does not allow multiple clients to exist at the same time, so we need to make sure to clean up the old client and its callbacks before creating a new one.
 
     // 3. Connect to the remote server. 
-    // pClient->setConnectionParams(12, 24, 0, 400);
     if (!pClient->connect(myDevice)) 
     {
         Serial.println(" - Failed to connect to server");
@@ -174,7 +181,7 @@ bool bleconnectToServer()
     pClient->updateConnParams(16, 32, 0, 100);  // 1 seconds timeout.  when powered off it takes 1 seconds to update the status of connection
     Serial.println(" - Connected to server");
     
-    // 4. Obtain a reference to the service
+    // 4. Obtain a reference to the service we are after in the remote BLE server. We will need this to find the characteristic we want to read from and write to.
     pRemoteService = pClient->getService(serviceUUID);
     if (pRemoteService == nullptr) 
     {
@@ -185,7 +192,7 @@ bool bleconnectToServer()
     }
     Serial.println(" - Found our service");
     
-    // 5. Obtain a reference to the characteristic
+    // 5. Obtain a reference to the characteristic in the service of the remote BLE server that we are interested in. We will need this to read and write to the characteristic.
     pRemoteCharacteristic = pRemoteService->getCharacteristic(charUUID);
     if (pRemoteCharacteristic == nullptr) 
     {
@@ -197,7 +204,7 @@ bool bleconnectToServer()
     Serial.println(" - Found our characteristic");
 
     
-    // 6. Subscription Logic
+    // 6. Subscription Logic - Check if the characteristic supports notifications, and if so subscribe to it with our notifyCallback function. This will allow us to receive asynchronous updates from the BLE server whenever the characteristic value changes, which is essential for receiving messages from the PIC in real-time without having to constantly poll for updates.
     if (pRemoteCharacteristic->canNotify()) 
     {
         // NimBLE uses subscribe() instead of registerForNotify()
@@ -222,9 +229,8 @@ bool bleconnectToServer()
 void bleDoScan() 
 {
     Serial.println("Starting Arduino NimBLE Client application...");
-    doScan = false;     // prevent repeated attempts
+    doScan = false;     // prevent repeated attempts to scan
 
-    NimBLEDevice::init("");
     NimBLEScan* pBLEScan = NimBLEDevice::getScan();
 
     pBLEScan->setScanCallbacks(new MyAdvertisedDeviceCallbacks(), true);
@@ -248,7 +254,7 @@ void handleConnection()
 
     if (bleIsConnected() == false) 
     {
-        myPicStatus.blnStartFlashVerify = false;      // just in case verify is running and you power off the HM10!
+        myPicStatus.blnStartFlashVerify = false;      // just in case verify is running and you power off the HM10, we want to make sure to turn off verify mode since it relies on the connection to know when to end.
     }
 }
 
@@ -279,8 +285,8 @@ void bleDisconnect()
 // Used with flash.cpp
 void handleMessage(String msg, uint8_t* rawBytes, size_t length)
 {
-    // We dont want to log Incoming <ACK> while Firmware upload!
-	// We dont want to log Incoming PIC VERIFY bytes
+    // We dont want to log Incoming <ACK> while Firmware upload! 
+	// We dont want to log Incoming PIC VERIFY bytes 
     if (myPicStatus.blnStartFlashVerify != true && msg != "<ACK>")
     {
         // Print to the PlatformIO Serial Monitor
@@ -288,11 +294,11 @@ void handleMessage(String msg, uint8_t* rawBytes, size_t length)
         Serial.println(msg);
     }  
 
-    // Check if we are in Verification Mode
+    // Check if we are in Verification Mode (we know this because PIC will start sending raw bytes instead of messages, but it will still send a message to trigger the start of verify mode)
     if (myPicStatus.blnStartFlashVerify == true) {
         myPicStatus.cntVerify += length;
 
-        // Check for completion based on byte count
+        // Check for completion based on byte count 
         if (myPicStatus.cntVerify >= myConfig.intExpectedFirmwareBytes)
         {
             // Without this, Last iteration will cause issues! Due to low 150ms delay in PIC after msg send!
@@ -367,19 +373,19 @@ void handleMessage(String msg, uint8_t* rawBytes, size_t length)
         {
             myPicStatus.cntVerify = 0;
             myPicStatus.blnStartFlashVerify = true;
-            SD.remove("/verify.bin");
-            verifyFile = SD.open("/verify.bin", FILE_WRITE);         // OPEN ONCE
+            SD.remove(VERIFY_FILE);
+            verifyFile = SD.open(VERIFY_FILE, FILE_WRITE);          // OPEN ONCE AND APPEND ALL BYTES TO IT.  This is to save RAM since we are receiving bytes in chunks and not as a whole file.
             Serial.println("STATUS: Waiting for verification...");
         }
         else if (msg.indexOf("<EndFlashVerify>") > -1)
         {
-            myPicStatus.blnEndFlashVerify = true;       // used in display_logic.cpp where it deals with millis
+            myPicStatus.blnEndFlashVerify = true;                   // used in display_logic.cpp where it deals with millis
             if (verifyFile) 
             {
                 verifyFile.close();
-                verifyFile = File();                    // Important: Zero out the file object so we don't use it again
+                verifyFile = File();                                // Important: Zero out the file object so we don't use it again
             }
-            verifyStatus();                             // Display the result on your ILI9488
+            verifyStatus();                                         // Display the result on your ILI9488 UI (you will need to implement this function in sdcard.cpp or wherever you want since it just needs to read the VERIFY_FILE and compare it to flash.bin)
         }
     }
 

@@ -5,6 +5,7 @@
 #include <NimBLEDevice.h>   // This replaces ALL old BLE headers
 
 // Functions to be called from main.cpp
+void initBLESystem();
 bool bleconnectToServer();
 bool bleIsConnected();
 void bleDisconnect();

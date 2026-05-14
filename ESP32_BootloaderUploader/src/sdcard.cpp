@@ -3,8 +3,10 @@
 #include "display_logic.h"
 
 ConfigMap myConfig;
-const char* FLASH_FILE = "/flash.bin";
+const char* FLASH_FILE = "/flash.bin"; 
 const char* CONFIG_FILE = "/config.map";
+const char* VERIFY_FILE = "/verify.bin";    
+
 
 void initSDSystem() 
 {
@@ -62,14 +64,14 @@ bool compareFiles(const char* path1, const char* path2)
 
 String GetConfigInfo() 
 {
-    // Check for mount
+    // Check for mount first before trying to read files
     if (!SD.begin(SD_CS)) 
     {
         Serial.println("SD Card mount failed!");
         return "SD Card mount failed!";
     }
 
-    // Check flash.bin
+    // Check flash.bin first since it's more critical for the operation. No point checking config if flash.bin is missing.
     File binFile = SD.open(FLASH_FILE);
     if (!binFile) 
     {
@@ -77,7 +79,7 @@ String GetConfigInfo()
         return "flash.bin is missing!";
     }
 
-    // Check config.map
+    // Check config.map next since we need it to know how to do the flashing and verification
     File configFile = SD.open(CONFIG_FILE);
     if (!configFile) 
     {
@@ -85,7 +87,7 @@ String GetConfigInfo()
         return "config.map is missing!";
     }
 
-    // Parse the config.map into variables
+    // Parse the config.map into variables we can use in our program. This is a simple key=value format.
     while (configFile.available()) 
     {
         String line = configFile.readStringUntil('\n');
