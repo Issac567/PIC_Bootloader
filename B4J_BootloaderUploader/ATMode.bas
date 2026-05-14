@@ -46,6 +46,9 @@ Public Sub Initialize As Object
 End Sub
 
 Private Sub B4XPage_Created (Root1 As B4XView)
+	Dim f As Form = B4XPages.GetNativeParent(Me)
+	f.Stylesheets.Add(File.GetUri(File.DirAssets, "style.css"))
+	
 	Root = Root1
 	Root.LoadLayout("ATMode")
 	

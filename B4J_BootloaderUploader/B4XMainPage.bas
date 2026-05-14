@@ -32,7 +32,10 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Const VERSION As String = "12.13"
+	Private Const VERSION As String = "12.15"
+	
+	Private Const CONFIG_MAP As String = "config.map"
+	Private Const FLASH_BIN As String = "flash.bin"
 	
 	Private Const DEVICE_NONE As Int = 0
 	Private Const DEVICE_BLE As Int = 1
@@ -162,6 +165,9 @@ End Sub
 'This event will be called once, before the page becomes visible.
 '--------------------------------------------------------
 Private Sub B4XPage_Created (Root1 As B4XView)
+	Dim f As Form = B4XPages.GetNativeParent(Me)
+	f.Stylesheets.Add(File.GetUri(File.DirAssets, "style.css"))
+	
 	Root = Root1
 	Root.LoadLayout("MainPage")
 	
@@ -174,7 +180,7 @@ Private Sub B4XPage_Created (Root1 As B4XView)
 	B4XPages.AddPage("AT Command Mode", ATCommandMode)
 	
 	B4XPages.SetTitle(Me, "PIC Bootloader Upload Deluxe")
-	
+		
 	' Python Init
 	Py.Initialize(Me, "Py")
 	Dim opt As PyOptions = Py.CreateOptions("Python/python/python.exe")
@@ -1034,15 +1040,15 @@ Sub ConvertHexIntelToBinaryRange(filepath As String, startAddr As Int, endAddr A
 	End Try
 End Sub
 Sub ExportBinaryFile(binData() As Byte)
-	If File.Exists(File.DirApp, "flash.bin") Then 
-		File.Delete(File.DirApp, "flash.bin")
+	If File.Exists(File.DirApp, FLASH_BIN) Then
+		File.Delete(File.DirApp, FLASH_BIN)
 	End If
-	File.WriteBytes(File.DirApp, "flash.bin", binData)
-	LogMessage("STATUS", "export @ " & File.DirApp & "\flash.bin")
+	File.WriteBytes(File.DirApp, FLASH_BIN, binData)
+	LogMessage("STATUS", "export @ " & File.DirApp & "\" & FLASH_BIN)
 End Sub
 Sub ExportConfigFile
-	If File.Exists(File.DirApp, "config.map") Then
-		File.Delete(File.DirApp, "config.map")
+	If File.Exists(File.DirApp, CONFIG_MAP) Then
+		File.Delete(File.DirApp, CONFIG_MAP)
 	End If
 	
 	Dim cfg As Map
@@ -1063,12 +1069,12 @@ Sub ExportConfigFile
 	cfg.Put("PicName", myConfigMap.strPicName)
 	cfg.Put("UseCheckSum", myConfigMap.blnUseCheckSum)
 	
-	File.WriteMap(File.DirApp, "config.map", cfg)
-	LogMessage("STATUS", "export @ " & File.DirApp & "\config.map")
+	File.WriteMap(File.DirApp, CONFIG_MAP, cfg)
+	LogMessage("STATUS", "export @ " & File.DirApp & "\" & CONFIG_MAP)
 End Sub
-Sub CalculateSum8(Data() As Byte) As Int
+Sub CalculateSum8(binData() As Byte) As Int
 	Dim checksum As Int = 0
-	For Each b As Byte In Data
+	For Each b As Byte In binData
 		' Convert signed byte to unsigned 0-255 and add
 		checksum = (checksum + Bit.And(b, 0xFF))
 	Next

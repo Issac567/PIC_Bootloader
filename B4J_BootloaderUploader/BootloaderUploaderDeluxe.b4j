@@ -50,7 +50,6 @@ Sub AppStart (Form1 As Form, Args() As String)
 	MainForm = Form1
 	MainForm.SetFormStyle("UTILITY")			' Better use UTILITY. Flashing requires App focus at all time or issues will rise
 	MainForm.Show
-	MainForm.Stylesheets.Add(File.GetUri(File.DirAssets, "style.css"))
 	Dim PagesManager As B4XPagesManager
 	PagesManager.Initialize(MainForm)
 End Sub
