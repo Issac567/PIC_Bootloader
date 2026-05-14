@@ -90,7 +90,7 @@ void INTOSC_Init(void)
 void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
 {
     // High-speed assembly jump to the Application's entry point
-    __asm__("goto 0x908"); 
+    __asm__("goto 0xD08"); 
 }
 
 
