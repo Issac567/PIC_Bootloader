@@ -42,7 +42,6 @@
 #define FLASH_ERASE_BLOCK    1024                // Erase page size is 1024 instructions (standard for GA702)
 #define FLASH_WRITE_BLOCK    128                 // Write row size is 128 instructions (standard for GA702)
 
-#define TIMER2_COUNT        186                 // 3s 
 #define MSG_MS_DELAY 150                        // (min 150 for BT latency) Standard pacing delay 
 
 #define LED_PIN   LATBbits.LATB4                // Use LAT for Output / Bootloader Led Status 
