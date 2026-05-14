@@ -1,6 +1,6 @@
 /*
  * File:   bootloader.c
- * Version: 4.04
+ * Version: 4.15
  * Created on January 19, 2026, 2:50 PM
  * Family: 18F26Q24
  * USE 1.30.487
@@ -70,6 +70,11 @@ void INTOSC_Init(void)
         // CHANGE: On Q24, the bit is OSCSTATbits.HFOR (HFINTOSC Oscillator Ready)
         while (!OSCSTATbits.HFOR); 
     #endif
+}
+
+void __interrupt(high_priority) boot_ISR(void)
+{
+    asm("CALL 0xE000");
 }
 
 

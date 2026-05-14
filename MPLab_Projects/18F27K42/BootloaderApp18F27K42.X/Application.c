@@ -1,6 +1,6 @@
 /*
  * File:   application.c
- * Version: 4.04
+ * Version: 4.15
  * Created on January 18, 2026, 12:13 PM
  * Family: 18F27K42
  * USE 1.15.303
@@ -77,8 +77,9 @@ void Timer2_Stop(void)
 // The Bootloader remaps the hardware interrupt vector (0x0008) to this 
 // specific section ("my_isr_code") located in high memory.
 // 1F000 in Linker --> Additional Option --> Extra Linker Option -->   -Wl,-Pmy_isr_code=0x1F000
-__attribute__((section("my_isr_code"))) 
-void __interrupt(high_priority) App_ISR(void)
+//__attribute__((section("my_isr_code"))) 
+//void __interrupt(high_priority) App_ISR(void)
+void __at(0x1F000) App_ISR(void) 
 {
     // Best practice: Always check both the Flag (IF) AND the Enable (IE) bit
     if (PIE4bits.TMR2IE && PIR4bits.TMR2IF)
@@ -136,6 +137,8 @@ void EEPROM_WriteByte(uint16_t address, uint8_t data)
 // This also avoids the compiler add 1FFFC GOTO function
 void __at(0xD00) main(void) 
 {
+    App_ISR();                          // Must keep this for compiler to add the function at proper address!
+
     uint8_t b;                          // Variable to hold the received handshake byte
     
     // --- PERIPHERAL INITIALIZATION ---

@@ -1,6 +1,6 @@
 /*
  * File:   application.c
- * Version: 4.04
+ * Version: 4.15
  * Created on January 18, 2026, 12:13 PM
  * Family: 18F27Q43
  * USE 1.29.481
@@ -81,8 +81,9 @@ void Timer2_Stop(void)
 
 // Note: 'high_priority' is still supported for backward compatibility, 
 // but ensure MVECEN is set to OFF in your Configuration Bits if using this style.
-__attribute__((section("my_isr_code"))) 
-void __interrupt(high_priority) App_ISR(void)
+//__attribute__((section("my_isr_code"))) 
+//void __interrupt(high_priority) App_ISR(void
+void __at(0x1F000) App_ISR(void) 
 {
     // CHANGE: TMR2 shifted to PIE3/PIR3
     if (PIE3bits.TMR2IE && PIR3bits.TMR2IF)
@@ -168,6 +169,8 @@ void EEPROM_Write(uint16_t address, uint8_t data) {
 // This also avoids the compiler add 1FFFC GOTO function
 void __at(0xD00) main(void)  
 {
+    App_ISR();                          // Must keep this for compiler to add the function at proper address!
+    
     uint8_t b;                          // Variable to hold the received handshake byte
     
     // --- PERIPHERAL INITIALIZATION ---

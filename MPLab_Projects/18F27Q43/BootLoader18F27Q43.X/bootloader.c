@@ -1,11 +1,10 @@
 /*
  * File:   bootloader.c
- * Version: 4.10
+ * Version: 4.15
  * Created on January 19, 2026, 2:50 PM
  * Family: 18F27Q43
  * USE 1.29.481
  */
-
 // Note: Both Bootloader.c and application.c should be flashed together due to 0x0008 Goto 0x1F000 is owned by application.c!
 // B4J Uploader does not flash bootloader range
 
@@ -65,6 +64,11 @@ void INTOSC_Init(void)
         // CHANGE: On Q43, the bit is OSCSTATbits.HFOR (HFINTOSC Oscillator Ready)
         while (!OSCSTATbits.HFOR); 
     #endif
+}
+
+void __interrupt(high_priority) boot_ISR(void)
+{
+    asm("CALL 0x1F000");
 }
 
 

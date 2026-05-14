@@ -1,6 +1,6 @@
 /*
  * File:   bootloader.c
- * Version: 4.10
+ * Version: 4.15
  * Created on January 19, 2026, 2:50 PM
  * Family: 18F27K42
  * USE 1.15.303
@@ -60,6 +60,11 @@ void INTOSC_Init(void)
         while (OSCCON2 != OSCCON1);     // Wait for switch to complete
         while (!OSCSTATbits.HFOR);      // Wait for 64MHz to be stable
     #endif
+}
+
+void __interrupt(high_priority) boot_ISR(void)
+{
+    asm("CALL 0x1F000");
 }
 
 
