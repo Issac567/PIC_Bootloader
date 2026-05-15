@@ -7,6 +7,7 @@
 // Functions to be called from main.cpp
 void initBLESystem();
 bool bleconnectToServer();
+void setMTUSize(uint16_t mtu);
 bool bleIsConnected();
 void bleDisconnect();
 void bleDoScan();

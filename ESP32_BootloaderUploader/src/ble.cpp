@@ -15,7 +15,7 @@ NimBLERemoteCharacteristic* pRemoteCharacteristic = nullptr;
 
 // Internal (file-local) variables
 static String targetDeviceName = "HM10";
-static NimBLEUUID serviceUUID("0000ffe0-0000-1000-8000-00805f9b34fb");
+static NimBLEUUID serviceUUID("0000ffe0-0000-1000-8000-00805f9b34fb");    // HM-10 + HM-20 Service UUID
 static NimBLEUUID charUUID((uint16_t)0xFFE1);
 
 static NimBLEClient* pClient = nullptr;
@@ -35,9 +35,12 @@ void initBLESystem()
 class MyClientCallback : public NimBLEClientCallbacks 
 {
     void onConnect(NimBLEClient* pClient) override
-    {
+    {  
+        uint16_t RawMTU = pClient->getMTU();
+        setMTUSize(RawMTU);   // Call this for HM-20 Workaround. HM-20 does not properly handle MTU exchange, so we need to set the MTU size manually to ensure we can send larger packets. The MTU size will be negotiated in the onMTUChange callback, but we need to set it here first to ensure that the negotiation happens with the correct size. By default, NimBLE starts with a small MTU (23 bytes), which is not sufficient for our needs, so we set it to a larger value (e.g., 512) to allow for larger packets. The actual MTU size will be determined by the negotiation process, but this ensures that we start with a reasonable size for our application.
+
         Serial.println(" - onConnect");
-        Serial.println(" - Requesting larger MTU...");
+        Serial.println(" - Requesting larger MTU..."); 
         pClient->exchangeMTU();
     }
 
@@ -52,24 +55,7 @@ class MyClientCallback : public NimBLEClientCallbacks
     void onMTUChange(NimBLEClient* pClient, uint16_t MTU) override 
     {
         Serial.println(" - onMTUChange -");
-
-        // Step 1: Get Raw MTU
-        uint16_t RawMTU = MTU;
-        
-        // Step 2: Remove ATT header (always 3 bytes)
-        int PayloadMTU = RawMTU - 3;
-        
-        // Step 3: Align for PIC (Multiple of 4)
-        // Bitwise AND with 0xFFFC clears the last two bits
-        int UniversalMTU = PayloadMTU & 0xFFFC; 
-        
-        if (UniversalMTU > 0) {
-            intMTUSize = (uint16_t)UniversalMTU;
-        }
-
-        Serial.printf(" - Negotiated MTU: %d\n", RawMTU);
-        Serial.printf(" - Payload MTU (MTU-3): %d\n", PayloadMTU);
-        Serial.printf(" - Universal MTU for PIC: %d\n", UniversalMTU);
+        setMTUSize(MTU);
     }
 };
 
@@ -224,6 +210,24 @@ bool bleconnectToServer()
     }
     
     return true;
+}
+
+void setMTUSize(uint16_t RawMTU)
+{
+    // Step 1: Remove ATT header (always 3 bytes)
+    int PayloadMTU = RawMTU - 3;
+    
+    // Step 2: Align for PIC (Multiple of 4)
+    // Bitwise AND with 0xFFFC clears the last two bits
+    int UniversalMTU = PayloadMTU & 0xFFFC; 
+    
+    if (UniversalMTU > 0) {
+        intMTUSize = (uint16_t)UniversalMTU;
+    }
+
+    Serial.printf(" - Negotiated MTU: %d\n", RawMTU);
+    Serial.printf(" - Payload MTU (MTU-3): %d\n", PayloadMTU);
+    Serial.printf(" - Universal MTU for PIC: %d\n", UniversalMTU);
 }
 
 void bleDoScan() 

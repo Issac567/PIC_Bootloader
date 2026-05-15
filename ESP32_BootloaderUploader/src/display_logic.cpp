@@ -320,7 +320,7 @@ void drawAboutMenu()
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawCentreString("ABOUT", 240, 20, 4);
     tft.drawString("Author: First Last", 5, 80, 2);
-    tft.drawString("Firmware: v2.16", 5, 100, 2);
+    tft.drawString("Firmware: v2.17", 5, 100, 2);
     tft.drawString("Product: PIC Uploader", 5, 120, 2);
     tft.drawString("Hardware: ESP32 + ILI9488 + SD", 5, 140, 2);
     drawBackButton();
