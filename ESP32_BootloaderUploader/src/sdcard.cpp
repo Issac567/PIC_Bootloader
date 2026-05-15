@@ -16,6 +16,7 @@ void initSDSystem()
 
     // INITIALIZE SD CARD (Pass the shared SPI) ---
     // Note: SD.begin takes (SS_PIN, SPI_BUS, FREQUENCY)
+    SD.end(); // Ensure any previous SD instance is closed before reinitializing
     if (!SD.begin(SD_CS, touchSPI, 16000000)) { // 16MHz is stable for S3
         Serial.println("SD Card mount failed!");
     } else {
@@ -65,7 +66,8 @@ bool compareFiles(const char* path1, const char* path2)
 String GetConfigInfo() 
 {
     // Check for mount first before trying to read files
-    if (!SD.begin(SD_CS)) 
+    SD.end(); // Ensure any previous SD instance is closed before reinitializing
+    if (!SD.begin(SD_CS, touchSPI, 16000000)) 
     {
         Serial.println("SD Card mount failed!");
         return "SD Card mount failed!";

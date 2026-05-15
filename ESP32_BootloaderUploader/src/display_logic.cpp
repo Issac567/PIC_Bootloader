@@ -223,7 +223,7 @@ void drawFlashMenu()
             isFlashBtn_Visible = true;
             drawFlashButton();
         } else {
-            updateCriticalLabel(status, true);
+            updateCriticalLabel(status, false);
         } 
     }
 
@@ -320,7 +320,7 @@ void drawAboutMenu()
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawCentreString("ABOUT", 240, 20, 4);
     tft.drawString("Author: First Last", 5, 80, 2);
-    tft.drawString("Firmware: v1.0", 5, 80, 2);
+    tft.drawString("Firmware: v2.16", 5, 80, 2);
     tft.drawString("Product: PIC Uploader", 5, 100, 2);
     tft.drawString("Hardware: ESP32 + ILI9488 + SD", 5, 120, 2);
     drawBackButton();
@@ -388,6 +388,7 @@ bool checkTouchMount()
  
 bool checkSDMount()
  {
+    SD.end(); // Ensure any previous SD instance is closed before reinitializing
     if (!SD.begin(SD_CS, touchSPI, 16000000)) { 
         return false;
     } else {

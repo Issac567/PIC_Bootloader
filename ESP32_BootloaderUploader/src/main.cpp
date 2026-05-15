@@ -4,7 +4,7 @@
  * HARDWARE: ESP32 + XPT2046 Touch + TFT Display + SD Card(Optional)
  * CONFIGURATION: Dual SPI (Separate Buses)
  * TFT9488 Seperate Bus. Touch2046/SD Card Shared Bus.
- * Version: 2.15
+ * Version: 2.16
  * =================================================================
 * * --- TFT DISPLAY (Bus 1: FSPI) ---
  * MOSI/SDI:   13                       -> Master Out Slave In
