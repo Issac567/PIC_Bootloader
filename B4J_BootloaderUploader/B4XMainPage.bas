@@ -32,7 +32,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Const VERSION As String = "12.15"
+	Private Const VERSION As String = "12.16"
 	
 	Private Const CONFIG_MAP As String = "config.map"
 	Private Const FLASH_BIN As String = "flash.bin"
@@ -591,6 +591,10 @@ Private Sub btnConnectHM10_Click
 
 End Sub
 Private Sub ConnectHM10
+	' Note: HM-10 VS HM-20 in B4J! HM-10 (20 MTU) is faster then HM-20 (124 MTU).
+	' In ESP32, HM-20 is faster then HM-10.
+	' Can't figure out why B4J is sluggish with HM-20??
+	
 	If ListView1HM10.SelectedIndex <> - 1 Then
 		If btHC05.IsEnabled = False Then
 			xui.Msgbox2Async("Bluetooth is disabled. Please turn it on!", "Bluetooth", "Ok", "", "", Null)
@@ -1227,7 +1231,7 @@ End Sub
 Sub SendFirmwareBytes
 	' Firmware Binary file must include all flash data including empty addresses!
 	Dim intBlockSize As Int
-
+	
 	If myConfigMap.blnUse4Padding = True Then
 		intBlockSize = myConfigMap.intInstructionPacket * 4 ' eg. 64 words = 256 intBlockSize 24FJ64GA102
 	Else
