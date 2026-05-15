@@ -32,7 +32,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Const VERSION As String = "12.16"
+	Private Const VERSION As String = "12.20"
 	
 	Private Const CONFIG_MAP As String = "config.map"
 	Private Const FLASH_BIN As String = "flash.bin"
@@ -590,11 +590,7 @@ Private Sub btnConnectHM10_Click
 	End If
 
 End Sub
-Private Sub ConnectHM10
-	' Note: HM-10 VS HM-20 in B4J! HM-10 (20 MTU) is faster then HM-20 (124 MTU).
-	' In ESP32, HM-20 is faster then HM-10.
-	' Can't figure out why B4J is sluggish with HM-20??
-	
+Private Sub ConnectHM10	
 	If ListView1HM10.SelectedIndex <> - 1 Then
 		If btHC05.IsEnabled = False Then
 			xui.Msgbox2Async("Bluetooth is disabled. Please turn it on!", "Bluetooth", "Ok", "", "", Null)
@@ -1289,7 +1285,8 @@ Sub SendFirmwareBytes
 				' BLE (Never configure .map to use this!
 				'------------------------------------------------------------------------
 				If WhichDeviceConnection = DEVICE_BLE Then
-					rs = bkHM10Client.Write(BLE_useUUID, b)
+					'rs = bkHM10Client.Write(BLE_useUUID, b)	' too slow!
+					rs = bkHM10Client.WriteWithResponse(BLE_useUUID, b, False)
 					Wait For (rs) Complete (Result2 As PyWrapper)
 				'------------------------------------------------------------------------
 				' OTHERS (SSP, WIFI and TTL USB)
@@ -1326,7 +1323,8 @@ Sub SendFirmwareBytes
 						Dim tempChunk(currentChunkSize) As Byte
 						bc.ArrayCopy(block, x, tempChunk, 0, currentChunkSize)
         
-						rs = bkHM10Client.Write(BLE_useUUID, tempChunk)
+						rs = bkHM10Client.Write(BLE_useUUID, tempChunk) ' too slow!
+						'rs = bkHM10Client.WriteWithResponse(BLE_useUUID, tempChunk, False)
 						Wait For (rs) Complete (Result2 As PyWrapper)
 						
 						' No delay required. Tested successfully!
