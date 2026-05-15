@@ -25,7 +25,7 @@
 ## 📋 Table of Contents
 * [1. USB TTL (Serial COM)](#serial-com---ttl-usb)
 * [2. HC-05 Bluetooth (SPP)](#hc-05-bluetooth-ssp)
-* [3. HM-10 Bluetooth (BLE)](#hm-10-bluetooth-ble)
+* [3. HM-10/20 Bluetooth (BLE)](#hm-10-bluetooth-ble)
 * [4a. DT-06 WIFI (Custom Rom)](#dt-06-wifi-custom-rom)
 * ​[4b. DT-06 (WIFI TCP/IP)](#dt-06-wifi-tcpip)
 * [5. AT Command Mode](#hc-05hm-10-at-command-mode)
@@ -126,7 +126,7 @@ B4J does not show a password prompt — pairing is handled entirely by the OS
 
 ---
 
-# HM-10 Bluetooth BLE
+# HM-10/20 Bluetooth BLE
 This project provides software support for **HM-10 Bluetooth modules**, enabling easy communication with microcontrollers or PCs. The software will allow users to send and receive data over Bluetooth BLE with Bleak library.
 
 
