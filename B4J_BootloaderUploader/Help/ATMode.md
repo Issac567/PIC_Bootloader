@@ -1,5 +1,5 @@
-# HC-05/HM-10 AT Command Mode
-> Bootloader Uploader v8.04 now supports AT Command Mode. `DT-06` supports this mode, but use web browser option for simplicity. 
+# HC-05/HM-10/20 AT Command Mode
+> Bootloader Uploader v8.04 now supports AT Command Mode. 
 
 You need to set `HC05/HM10` baud to `57600` with Bootloader Uploader, alternative method online or https://www.deshide.com/News-detail_DSDTechTools.html .  The **Command Mode** allows you to configure the `HC-05` or HM-10 Bluetooth module, including changing:
 
