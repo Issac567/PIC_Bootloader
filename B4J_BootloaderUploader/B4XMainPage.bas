@@ -32,7 +32,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Const VERSION As String = "12.36"
+	Private Const VERSION As String = "12.37"
 	
 	Private Const CONFIG_MAP As String = "config.map"
 	Private Const FLASH_BIN As String = "flash.bin"
@@ -528,7 +528,7 @@ Private Sub ConnectHC05
 		End If
 			
 		CloseOtherConnection(True, False, True, True)
-		Sleep(50)	' Required!
+		Sleep(400)	' Min 400 ms. Let othe connection close properly!
 		
 		btHC05.CancelDiscovery
 			
@@ -596,7 +596,7 @@ Private Sub ConnectHM10
 			
 		' Close any open connections
 		CloseOtherConnection(False, True, True, True)
-		Sleep(50)	' Required!
+		Sleep(400)	' Min 400 ms. Let othe connection close properly!
 		
 		BLE_useUUID = ""
 			
@@ -671,7 +671,7 @@ Private Sub btnConnectWIFI_Click
 End Sub
 Private Sub ConnectWIFI
 	CloseOtherConnection(True, True, True, False)
-	Sleep(50)	' Required!
+	Sleep(400)	' Min 400 ms. Let othe connection close properly!
 	
 	Dim c As Socket
 	c.Initialize("client")
@@ -707,7 +707,7 @@ Private Sub btnOpenUSBTTL_Click
 End Sub
 Private Sub OpenUSBTLL
 	CloseOtherConnection(True, True, False, True)
-	Sleep(50)	' Required!
+	Sleep(400)	' Min 400 ms. Let othe connection close properly!
 	
 	Try
 		Dim serial1 As Serial
@@ -850,8 +850,6 @@ Sub PerformUserAbort(WhichButton As Int, useMSGBox As Boolean)
 				Sleep(50)
 				astream.Write(CancelByte)
 		End Select
-		
-		Sleep(500)		' Give time for PIC to ACK before disconnecting!
 		
 	End If
 
