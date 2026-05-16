@@ -530,7 +530,7 @@ Private Sub ConnectHC05
 		End If
 			
 		CloseOtherConnection(True, False, True, True)
-		Sleep(500)	' Required!
+		Sleep(200)	' Required!
 		
 		btHC05.CancelDiscovery
 			
@@ -598,7 +598,7 @@ Private Sub ConnectHM10
 			
 		' Close any open connections
 		CloseOtherConnection(False, True, True, True)
-		Sleep(500)	' Required!
+		Sleep(200)	' Required!
 		
 		BLE_useUUID = ""
 			
@@ -673,7 +673,7 @@ Private Sub btnConnectWIFI_Click
 End Sub
 Private Sub ConnectWIFI
 	CloseOtherConnection(True, True, True, False)
-	Sleep(500)	' Required!
+	Sleep(200)	' Required!
 	
 	Dim c As Socket
 	c.Initialize("client")
@@ -709,7 +709,7 @@ Private Sub btnOpenUSBTTL_Click
 End Sub
 Private Sub OpenUSBTLL
 	CloseOtherConnection(True, True, False, True)
-	Sleep(500)	' Required!
+	Sleep(200)	' Required!
 	
 	Try
 		Dim serial1 As Serial
