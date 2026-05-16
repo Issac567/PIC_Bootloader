@@ -32,7 +32,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Const VERSION As String = "12.31"
+	Private Const VERSION As String = "12.35"
 	
 	Private Const CONFIG_MAP As String = "config.map"
 	Private Const FLASH_BIN As String = "flash.bin"
@@ -310,12 +310,9 @@ Sub astream_Terminated
 		End If
 		serialUSBTTL.Close
 		btHC05Connection.Disconnect
-		btnConnectHC05.Text = "Connect"
-		btnOpenUSBTTL.Text = "Open Port"
-		btnConnectWIFI.Text = "Connect"
 	End If
 	'EnableFunction
-	LogMessage("STATUS", "Connection is terminated!")
+	LogMessage("STATUS", "Astream is terminated!")
 End Sub
 
 '--------------------------------------------------------
@@ -358,7 +355,7 @@ End Sub
 Private Sub btHM10_DeviceDisconnected (DeviceId As String)
 	btnConnectHM10.Text = "Connect"
 	'EnableFunction
-	LogMessage("STATUS", "Bluetooth Disconnected! @ " & DeviceId)
+	LogMessage("STATUS", "BLE Disconnected! @ " & DeviceId)
 End Sub
 Private Sub btHM10_CharNotify (Notification As BleakNotification)
 	Dim Buffer() As Byte = Notification.Value
@@ -522,7 +519,7 @@ Private Sub btnConnectHC05_Click
 	If btnConnectHC05.Text = "Connect" Then
 		ConnectHC05
 	Else
-		PerformUserAbort(DEVICE_CLASSIC_BT)
+		PerformUserAbort(DEVICE_CLASSIC_BT, False)
 	End If
 End Sub
 Private Sub ConnectHC05
@@ -532,7 +529,8 @@ Private Sub ConnectHC05
 			Return
 		End If
 			
-		CloseConnection(True, False, True, True)
+		CloseOtherConnection(True, False, True, True)
+		Sleep(500)	' Required!
 		
 		btHC05.CancelDiscovery
 			
@@ -587,7 +585,7 @@ Private Sub btnConnectHM10_Click
 	If btnConnectHM10.Text = "Connect" Then
 		ConnectHM10
 	Else
-		PerformUserAbort(DEVICE_BLE)
+		PerformUserAbort(DEVICE_BLE, False)
 	End If
 
 End Sub
@@ -599,8 +597,9 @@ Private Sub ConnectHM10
 		End If
 			
 		' Close any open connections
-		CloseConnection(False, True, True, True)
-			
+		CloseOtherConnection(False, True, True, True)
+		Sleep(500)	' Required!
+		
 		BLE_useUUID = ""
 			
 		' Connect Bluetooth with Address selected from listview
@@ -668,13 +667,14 @@ Private Sub btnConnectWIFI_Click
 	If btnConnectWIFI.Text = "Connect" Then
 		ConnectWIFI
 	Else
-		PerformUserAbort(DEVICE_WIFI)
+		PerformUserAbort(DEVICE_WIFI, False)
 	End If
 
 End Sub
 Private Sub ConnectWIFI
-	CloseConnection(True, True, True, False)
-		
+	CloseOtherConnection(True, True, True, False)
+	Sleep(500)	' Required!
+	
 	Dim c As Socket
 	c.Initialize("client")
 	c.Connect(txtHostIPWIFI.text, txtPortWIFI.text, 5000)
@@ -704,12 +704,13 @@ Private Sub btnOpenUSBTTL_Click
 	If btnOpenUSBTTL.Text = "Open Port" Then
 		OpenUSBTLL
 	Else
-		PerformUserAbort(DEVICE_TTLSERIAL)
+		PerformUserAbort(DEVICE_TTLSERIAL, False)
 	End If
 End Sub
 Private Sub OpenUSBTLL
-	CloseConnection(True, True, False, True)
-		
+	CloseOtherConnection(True, True, False, True)
+	Sleep(500)	' Required!
+	
 	Try
 		Dim serial1 As Serial
 		serial1.Initialize("serial1")
@@ -770,39 +771,43 @@ Private Sub MenuBar1_Action
 
 End Sub
 
-Sub CloseConnection(BLE As Boolean, SSP As Boolean, TTLUSB As Boolean, WIFI As Boolean)
-	
+Sub CloseOtherConnection(BLE As Boolean, SSP As Boolean, TTLUSB As Boolean, WIFI As Boolean)
+	' You cant use this when flashing is in progress due to tabpane1 disabled! 
+	' Only useful for switching from one connection device to another. Making sure all connection is closed 
+	' before opening new connection.  Switching from BLE to SSP requires scan or Search, if not
+	' it will crash!
 	If TTLUSB = True Then
 		' Close TTL USB Serial
 		If btnOpenUSBTTL.Text = "Close Port" Then
-			PerformUserAbort(DEVICE_TTLSERIAL)
+			PerformUserAbort(DEVICE_TTLSERIAL, False)
 		End If
 	End If
 	
 	If SSP = True Then
 		' Close SSP
 		If btnConnectHC05.Text = "Disconnect" Then
-			PerformUserAbort(DEVICE_CLASSIC_BT)
+			PerformUserAbort(DEVICE_CLASSIC_BT, False)
 		End If
 	End If
 	
 	If BLE = True Then	
 		' Close BLE
 		If btnConnectHM10.Text = "Disconnect" Then
-			PerformUserAbort(DEVICE_BLE)
+			PerformUserAbort(DEVICE_BLE, False)
 		End If
 	End If
 	
 	If WIFI = True Then
 		' Close BLE
 		If btnConnectWIFI.Text = "Disconnect" Then
-			PerformUserAbort(DEVICE_WIFI)
+			PerformUserAbort(DEVICE_WIFI, False)
 		End If
 	End If
 End Sub
-Sub PerformUserAbort(WhichButton As Int)
+Sub PerformUserAbort(WhichButton As Int, useMSGBox As Boolean)
 	' 1. --- Confirm with User ---
-	If btnFlash.Text = "Stop" Then
+	' msgbox triggers only for Stop button pressed!
+	If btnFlash.Text = "Stop" And useMSGBox = True Then
 		Dim sf3 As Object = xui.Msgbox2Async("Flash in progress! Do you want to stop?", "Flashing", "Yes", "", "No", Null)
 		Wait For (sf3) Msgbox_Result(ret2 As Int)
 		If ret2 = xui.DialogResponse_Positive Then
@@ -852,6 +857,7 @@ Sub PerformUserAbort(WhichButton As Int)
 	EnableFunction 
 	
 	' 4. --- Close the connection! ---
+	' Only closes with Connection Device Button not Stop Button!
 	Select Case WhichButton
 		Case DEVICE_BLE
 			If bkHM10Client.IsInitialized Then
@@ -1372,7 +1378,7 @@ Sub ProcessFlashType(WhichButton As Int)
 		End If
 		' Flash Stop Logic
 	Else If btnFlash.Text = "Stop" Then
-		PerformUserAbort(DEVICE_NONE)
+		PerformUserAbort(DEVICE_NONE, True)
 	End If
 End Sub
 Sub isOperationFailed As Boolean
@@ -1453,10 +1459,7 @@ End Sub
 Sub DisableFunction
 	' Buttons disabled and greyed
 	MenuBar1.Enabled = False
-	ListView1HC05.Enabled = False  
-	btnSearchHC05.Enabled = False  
-	ListView1HM10.Enabled = False
-	btnStartScanHM10.Enabled = False
+	TabPane1.Enabled = False
 	btnLoadFile.Enabled = False
 	cmbPicList.Enabled = False
 	chkCheckSum.Enabled = False
@@ -1475,14 +1478,12 @@ Sub DisableFunction
 	
 	txtLog.Text = ""
 	prgBar.Progress = 0		
+	
 End Sub
 Sub EnableFunction
 	' Buttons enabled and restore color
 	MenuBar1.Enabled = True
-	ListView1HC05.Enabled = True 
-	btnSearchHC05.Enabled = True 
-	ListView1HM10.Enabled = True
-	btnStartScanHM10.Enabled = True
+	TabPane1.Enabled = True
 	btnLoadFile.Enabled = True
 	cmbPicList.Enabled = True
 	chkCheckSum.Enabled = True
