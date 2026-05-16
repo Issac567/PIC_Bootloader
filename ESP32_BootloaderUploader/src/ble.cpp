@@ -377,7 +377,11 @@ void handleMessage(String msg, uint8_t* rawBytes, size_t length)
         {
             myPicStatus.cntVerify = 0;
             myPicStatus.blnStartFlashVerify = true;
-            SD.remove(VERIFY_FILE);
+            if (verifyFile) 
+			{
+                verifyFile.close();
+			}
+			SD.remove(VERIFY_FILE);
             verifyFile = SD.open(VERIFY_FILE, FILE_WRITE);          // OPEN ONCE AND APPEND ALL BYTES TO IT.  This is to save RAM since we are receiving bytes in chunks and not as a whole file.
             Serial.println("STATUS: Waiting for verification...");
         }
