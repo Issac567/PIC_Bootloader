@@ -1323,8 +1323,8 @@ Sub SendFirmwareBytes
 						Dim tempChunk(currentChunkSize) As Byte
 						bc.ArrayCopy(block, x, tempChunk, 0, currentChunkSize)
         
-						rs = bkHM10Client.Write(BLE_useUUID, tempChunk) ' too slow!
-						'rs = bkHM10Client.WriteWithResponse(BLE_useUUID, tempChunk, False)
+						'rs = bkHM10Client.Write(BLE_useUUID, tempChunk) ' too slow!
+						rs = bkHM10Client.WriteWithResponse(BLE_useUUID, tempChunk, False)
 						Wait For (rs) Complete (Result2 As PyWrapper)
 						
 						' No delay required. Tested successfully!
