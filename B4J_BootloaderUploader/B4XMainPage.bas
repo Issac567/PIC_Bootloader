@@ -32,7 +32,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Const VERSION As String = "12.20"
+	Private Const VERSION As String = "12.31"
 	
 	Private Const CONFIG_MAP As String = "config.map"
 	Private Const FLASH_BIN As String = "flash.bin"
@@ -135,19 +135,21 @@ Sub Class_Globals
 	Private txtHostIPWIFI As TextField
 	Private txtPortWIFI As TextField
 	
-	
+	'File integrity checker
 	Private firmwareFile() As Byte							' firmware binary from FILE
 	Private firmwareVerify() As Byte						' firmware binary from PIC
 	Private intFileTotalChecksum As Int 					' firmware Checksum from FILE
 	Private intVerifyTotalChecksum As Int					' Verify Checksum from PIC
-	
-	Private rxBufferString As String						' Buffer Newdata in string format PIC Message only
 	Private strLastFilePath As String						' Reloads firmware from FILE when PIC name changed so Firmware array be corrected
-	
+
+	'For BLE and SSP
 	Private foundDevices As Map								' Bluetooth list for both SSP and BLE		
 	Private BLE_useUUID As String							' What Characteristic for BLE
 	Private BLE_useMTUSize As Int = 20						' Write Flash support, Verify Flash in firmware will default at 20 now!
 	
+	Private rxBufferString As String						' Buffer Newdata in string format PIC Message only
+	
+
 End Sub
 
 Public Sub Initialize
@@ -312,7 +314,7 @@ Sub astream_Terminated
 		btnOpenUSBTTL.Text = "Open Port"
 		btnConnectWIFI.Text = "Connect"
 	End If
-	EnableFunction
+	'EnableFunction
 	LogMessage("STATUS", "Connection is terminated!")
 End Sub
 
@@ -355,7 +357,7 @@ Private Sub btHM10_DeviceFound (Device As BleakDevice)
 End Sub
 Private Sub btHM10_DeviceDisconnected (DeviceId As String)
 	btnConnectHM10.Text = "Connect"
-	EnableFunction
+	'EnableFunction
 	LogMessage("STATUS", "Bluetooth Disconnected! @ " & DeviceId)
 End Sub
 Private Sub btHM10_CharNotify (Notification As BleakNotification)
@@ -392,7 +394,7 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 	If msg <> "<ACK>" Then
 		If myPicStatus.blnStartFlashVerify = True Then
 			If msg = "<VerifyCancelled>" Or msg.Contains("Cancelled") Then
-				'Contains is workaround for HC-05!
+				'workaround For this! rxBufferString does Not concatenate due To blnStartVerifyFlash = true!
 				LogMessage("PIC", msg)
 			End If
 		Else
@@ -450,7 +452,6 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 			
 		Else If msg.Contains("<ConfigTimeout>") Then
 			myPicStatus.blnTimeoutError = True
-			EnableFunction
 			LogMessage("STATUS", "PIC reported timeout error, try again")
 			
 		Else If msg.Contains("<ConfigOK>") Then
@@ -472,7 +473,6 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 			' 3 ISR timeout = error by PIC
 		Else If msg.Contains("<ErrorTimeout>") Then
 			myPicStatus.blnTimeoutError = True
-			EnableFunction
 			LogMessage("STATUS", "PIC reported timeout error, try again")
 
 			' Start of verify flash program code
@@ -481,17 +481,18 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 			myPicStatus.blnStartFlashVerify = True
 			LogMessage("STATUS", "Waiting for verification...")
 				
-		'Else If msg.Contains("<VerifyCancelled>") Then
+		'Else If msg.Contains("Cancelled>") Then
+			' This will never trigger! due to blnStartVerifyFlash
+			
 			
 			' End of verify flash program code
 		Else If msg.Contains("<EndFlashVerify>") Then
-			EnableFunction
 			If chkCheckSum.Checked = True Then
 				VerifyStatusChecksum
 			Else
 				VerifyStatus
 			End If
-			
+			EnableFunction
 		End If
 	
 	End If
@@ -774,32 +775,28 @@ Sub CloseConnection(BLE As Boolean, SSP As Boolean, TTLUSB As Boolean, WIFI As B
 	If TTLUSB = True Then
 		' Close TTL USB Serial
 		If btnOpenUSBTTL.Text = "Close Port" Then
-			btnOpenUSBTTL_Click
-			Sleep(200)
+			PerformUserAbort(DEVICE_TTLSERIAL)
 		End If
 	End If
 	
 	If SSP = True Then
 		' Close SSP
 		If btnConnectHC05.Text = "Disconnect" Then
-			btnConnectHC05_Click
-			Sleep(200)
+			PerformUserAbort(DEVICE_CLASSIC_BT)
 		End If
 	End If
 	
 	If BLE = True Then	
 		' Close BLE
 		If btnConnectHM10.Text = "Disconnect" Then
-			btnConnectHM10_Click
-			Sleep(200)
+			PerformUserAbort(DEVICE_BLE)
 		End If
 	End If
 	
 	If WIFI = True Then
 		' Close BLE
 		If btnConnectWIFI.Text = "Disconnect" Then
-			btnConnectWIFI_Click
-			Sleep(200)
+			PerformUserAbort(DEVICE_WIFI)
 		End If
 	End If
 End Sub
@@ -818,11 +815,10 @@ Sub PerformUserAbort(WhichButton As Int)
 		End If
 	End If
 	
-	' 2. --- If in blnStartFlashVerify then send 0xCA byte to cancel in PIC
+	' 2. --- If in blnStartFlashVerify then send 0xCA byte to cancel in PIC ---
 	If myPicStatus.blnStartFlashVerify Then
 		Dim CancelByte(1) As Byte
-		CancelByte(0) = 0xCA
-		
+		CancelByte(0) = 0xCA		
 		Select Case WhichDeviceConnection
 			Case DEVICE_BLE
 				Dim rs As Object
@@ -853,14 +849,14 @@ Sub PerformUserAbort(WhichButton As Int)
 
 	
 	' 3. --- Enable the functions ---
-	EnableFunction
+	EnableFunction 
 	
 	' 4. --- Close the connection! ---
 	Select Case WhichButton
 		Case DEVICE_BLE
 			If bkHM10Client.IsInitialized Then
 				bkHM10Client.Disconnect
-				LogMessage("STATUS", "Disconnect")
+				LogMessage("STATUS", "BLE Disconnected")
 				btnConnectHM10.Text = "Connect"
 			End If
 			
@@ -868,7 +864,7 @@ Sub PerformUserAbort(WhichButton As Int)
 			If astream.IsInitialized Then
 				astream.Close
 				btHC05Connection.Disconnect
-				LogMessage("STATUS", "Disconnected")
+				LogMessage("STATUS", "BT SSP Disconnected")
 			End If
 			btnConnectHC05.Text = "Connect"
 			
@@ -878,7 +874,7 @@ Sub PerformUserAbort(WhichButton As Int)
 				If WIFIClient.Connected = True Then
 					WIFIClient.Close
 				End If
-				LogMessage("STATUS", "Disconnect")
+				LogMessage("STATUS", "WIFI Disconnected")
 			End If
 			btnConnectWIFI.Text = "Connect"
 			
@@ -1105,7 +1101,10 @@ Sub SendHandShakeBytes(WhichButton As Int)
 		
 	Do While True
 		' Status boolean
-		If isOperationFailed = True Then Return
+		If isOperationFailed = True Then 
+			EnableFunction
+			Return
+		End If
 		
 		' Exit and Start Config upload
 		If myPicStatus.blnHandShakeSuccess = True Then
@@ -1219,7 +1218,10 @@ Sub SendConfigBytes(WhichButton As Int)
 	LogMessage("CFG BYTES", "Sending: 0x" & Bit.ToHexString(byteONE(0)).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTWO(0)).ToUpperCase & ", " & "0x" & Bit.ToHexString(byteTHREE(0)).ToUpperCase& ", " & "0x" & Bit.ToHexString(byteFourth(0)).ToUpperCase)
 					
 	Do While myPicStatus.blnConfigOK = False
-		If isOperationFailed = True Then Return
+		If isOperationFailed = True Then
+			EnableFunction
+			Return
+		End If
 		Sleep(50)
 	Loop
 		
@@ -1256,11 +1258,17 @@ Sub SendFirmwareBytes
 		Next
 
 		' Check for global abort
-		If isOperationFailed = True Then Return
+		If isOperationFailed = True Then
+			EnableFunction
+			Return
+		End If
 
 		' Wait for ACK or handle timeout
 		Do While myPicStatus.blnWriteACK = False
-			If isOperationFailed = True Then Return
+			If isOperationFailed = True Then
+				EnableFunction
+				Return
+			End If
 
 			If myPicStatus.blnISRTimeOut = True Then
 				LogMessage("FIRMWAREUPLOAD", "Timeout detected, retrying at byte #" & i)
@@ -1285,7 +1293,6 @@ Sub SendFirmwareBytes
 				' BLE (Never configure .map to use this!
 				'------------------------------------------------------------------------
 				If WhichDeviceConnection = DEVICE_BLE Then
-					'rs = bkHM10Client.Write(BLE_useUUID, b)	' too slow!
 					rs = bkHM10Client.WriteWithResponse(BLE_useUUID, b, False)
 					Wait For (rs) Complete (Result2 As PyWrapper)
 				'------------------------------------------------------------------------
@@ -1321,9 +1328,7 @@ Sub SendFirmwareBytes
 					For x = 0 To intBlockSize - 1 Step chunkSize
 						Dim currentChunkSize As Int = Min(chunkSize, intBlockSize - x)
 						Dim tempChunk(currentChunkSize) As Byte
-						bc.ArrayCopy(block, x, tempChunk, 0, currentChunkSize)
-        
-						'rs = bkHM10Client.Write(BLE_useUUID, tempChunk) ' too slow!
+						bc.ArrayCopy(block, x, tempChunk, 0, currentChunkSize)      
 						rs = bkHM10Client.WriteWithResponse(BLE_useUUID, tempChunk, False)
 						Wait For (rs) Complete (Result2 As PyWrapper)
 						
