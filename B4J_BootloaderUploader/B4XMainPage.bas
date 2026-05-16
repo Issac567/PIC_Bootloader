@@ -32,7 +32,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Const VERSION As String = "12.35"
+	Private Const VERSION As String = "12.36"
 	
 	Private Const CONFIG_MAP As String = "config.map"
 	Private Const FLASH_BIN As String = "flash.bin"
@@ -311,7 +311,6 @@ Sub astream_Terminated
 		serialUSBTTL.Close
 		btHC05Connection.Disconnect
 	End If
-	'EnableFunction
 	LogMessage("STATUS", "Astream is terminated!")
 End Sub
 
@@ -354,7 +353,6 @@ Private Sub btHM10_DeviceFound (Device As BleakDevice)
 End Sub
 Private Sub btHM10_DeviceDisconnected (DeviceId As String)
 	btnConnectHM10.Text = "Connect"
-	'EnableFunction
 	LogMessage("STATUS", "BLE Disconnected! @ " & DeviceId)
 End Sub
 Private Sub btHM10_CharNotify (Notification As BleakNotification)
@@ -530,7 +528,7 @@ Private Sub ConnectHC05
 		End If
 			
 		CloseOtherConnection(True, False, True, True)
-		Sleep(200)	' Required!
+		Sleep(50)	' Required!
 		
 		btHC05.CancelDiscovery
 			
@@ -598,7 +596,7 @@ Private Sub ConnectHM10
 			
 		' Close any open connections
 		CloseOtherConnection(False, True, True, True)
-		Sleep(200)	' Required!
+		Sleep(50)	' Required!
 		
 		BLE_useUUID = ""
 			
@@ -673,7 +671,7 @@ Private Sub btnConnectWIFI_Click
 End Sub
 Private Sub ConnectWIFI
 	CloseOtherConnection(True, True, True, False)
-	Sleep(200)	' Required!
+	Sleep(50)	' Required!
 	
 	Dim c As Socket
 	c.Initialize("client")
@@ -709,7 +707,7 @@ Private Sub btnOpenUSBTTL_Click
 End Sub
 Private Sub OpenUSBTLL
 	CloseOtherConnection(True, True, False, True)
-	Sleep(200)	' Required!
+	Sleep(50)	' Required!
 	
 	Try
 		Dim serial1 As Serial
@@ -769,6 +767,11 @@ Private Sub MenuBar1_Action
 			btnLoadFile_Click
 	End Select
 
+End Sub
+
+Private Sub TabPane1_TabChanged (SelectedTab As TabPage)
+	ListView1HC05.Items.Clear
+	ListView1HM10.Items.Clear
 End Sub
 
 Sub CloseOtherConnection(BLE As Boolean, SSP As Boolean, TTLUSB As Boolean, WIFI As Boolean)
@@ -1651,5 +1654,6 @@ Sub BytesToHexString2(b As Byte) As String
 	
 	Return byteString.ToUpperCase
 End Sub
+
 
 
