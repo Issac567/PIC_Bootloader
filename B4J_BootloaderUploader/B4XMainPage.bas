@@ -850,7 +850,6 @@ Sub PerformUserAbort(WhichButton As Int, useMSGBox As Boolean)
 				Sleep(50)
 				astream.Write(CancelByte)
 		End Select
-		Sleep(100)
 	End If
 
 	
