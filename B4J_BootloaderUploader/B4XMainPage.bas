@@ -1386,17 +1386,17 @@ Sub SendFirmwareBytes(WhichDevice As Int)
 
 	LogMessage("FIRMWAREUPLOAD", "Firmware upload completed!")
 End Sub
-
 Sub isOperationFailed As Boolean
+	
+	' Astream error or terminated or BLE Disconnected!
+	If myPicStatus.blnAstreamError = True Then
+		EnableFunction(True)
+		Return True
+	End If
+	
 	' PIC reported timeout error (Handshake does not have this!)
 	If myPicStatus.blnTimeoutError = True Then
 		EnableFunction(False)
-		Return True
-	End If
-		
-	' Astream error or terminated
-	If myPicStatus.blnAstreamError = True Then
-		EnableFunction(True)
 		Return True
 	End If
 		
@@ -1466,7 +1466,7 @@ End Sub
 ' Disable/Enable
 '--------------------------------------------------------
 Sub DisableFunction
-	' Buttons disabled and greyed
+	' Buttons disabled
 	MenuBar1.Enabled = False
 	TabPane1.Enabled = False
 	btnLoadFile.Enabled = False
@@ -1490,7 +1490,7 @@ Sub DisableFunction
 	
 End Sub
 Sub EnableFunction(ResetConnectionState As Boolean)
-	' Buttons enabled and restore color
+	' Buttons Enabled
 	MenuBar1.Enabled = True
 	TabPane1.Enabled = True
 	btnLoadFile.Enabled = True
