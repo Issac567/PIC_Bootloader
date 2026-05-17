@@ -32,7 +32,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Const VERSION As String = "12.37"
+	Private Const VERSION As String = "12.40"
 	
 	Private Const CONFIG_MAP As String = "config.map"
 	Private Const FLASH_BIN As String = "flash.bin"
@@ -46,6 +46,11 @@ Sub Class_Globals
 	
 	Private Const BUTTON_FLASH As Int = 1
 	Private Const BUTTON_VERIFY As Int = 2
+	Private Const BUTTON_BLE As Int = 3
+	Private Const BUTTON_CLASSIC_BT As Int = 4
+	Private Const BUTTON_WIFI As Int = 5
+	Private Const BUTTON_TTLSERIAL As Int = 6
+	Private Const BUTTON_STOP As Int = 7
 	
 	'---------------------------------------
 	' Map Config Variables
@@ -352,7 +357,6 @@ Private Sub btHM10_DeviceFound (Device As BleakDevice)
 	
 End Sub
 Private Sub btHM10_DeviceDisconnected (DeviceId As String)
-	btnConnectHM10.Text = "Connect"
 	LogMessage("STATUS", "BLE Disconnected! @ " & DeviceId)
 End Sub
 Private Sub btHM10_CharNotify (Notification As BleakNotification)
@@ -409,7 +413,7 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 			End If
 			' Let <EndFlashVerify> display the status of Verify!
 			' Just enable button here
-			EnableFunction
+			EnableFunction(False)
 		' Byte for Byte comparison performed here				
 		Else
 			For x = 0 To buffer.Length - 1  
@@ -425,7 +429,7 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 					myPicStatus.blnStartFlashVerify = False
 					' Let <EndFlashVerify> display the status of Verify!
 					' Just enable button here
-					EnableFunction
+					EnableFunction(False)
 					Exit
 				End If
 			Next
@@ -455,7 +459,7 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 			' End of Erase Flash. When Pic sends this, delay a bit and start the flash upload
 		Else If msg.Contains("<EndFlashErase>") Then
 			Sleep(300)
-			SendFirmwareBytes
+			SendFirmwareBytes(WhichDeviceConnection)
 			
 			' B4J expects <ACK> from PIC so B4J sends next packets in Firmware Upload routine
 		Else If msg.Contains("<ACK>") Then
@@ -487,7 +491,7 @@ Sub HandleMessage(msg As String, buffer() As Byte)
 			Else
 				VerifyStatus
 			End If
-			EnableFunction
+			EnableFunction(False)
 		End If
 	
 	End If
@@ -517,7 +521,7 @@ Private Sub btnConnectHC05_Click
 	If btnConnectHC05.Text = "Connect" Then
 		ConnectHC05
 	Else
-		PerformUserAbort(DEVICE_CLASSIC_BT, False)
+		PerformUserAbort(BUTTON_CLASSIC_BT, WhichDeviceConnection, False)
 	End If
 End Sub
 Private Sub ConnectHC05
@@ -527,8 +531,9 @@ Private Sub ConnectHC05
 			Return
 		End If
 			
-		CloseOtherConnection(True, False, True, True)
-		Sleep(400)	' Min 400 ms. Let othe connection close properly!
+		If CloseOtherConnection(WhichDeviceConnection) = True Then
+			Sleep(500)	' Min 400 ms. Let other open connection close properly!
+		End If
 		
 		btHC05.CancelDiscovery
 			
@@ -583,7 +588,7 @@ Private Sub btnConnectHM10_Click
 	If btnConnectHM10.Text = "Connect" Then
 		ConnectHM10
 	Else
-		PerformUserAbort(DEVICE_BLE, False)
+		PerformUserAbort(BUTTON_BLE, WhichDeviceConnection, False)
 	End If
 
 End Sub
@@ -595,8 +600,9 @@ Private Sub ConnectHM10
 		End If
 			
 		' Close any open connections
-		CloseOtherConnection(False, True, True, True)
-		Sleep(400)	' Min 400 ms. Let othe connection close properly!
+		If CloseOtherConnection(WhichDeviceConnection)  = True Then
+			Sleep(500)	' Min 400 ms. Let other open connection close properly!
+		End If
 		
 		BLE_useUUID = ""
 			
@@ -665,13 +671,14 @@ Private Sub btnConnectWIFI_Click
 	If btnConnectWIFI.Text = "Connect" Then
 		ConnectWIFI
 	Else
-		PerformUserAbort(DEVICE_WIFI, False)
+		PerformUserAbort(BUTTON_WIFI, WhichDeviceConnection, False)
 	End If
 
 End Sub
 Private Sub ConnectWIFI
-	CloseOtherConnection(True, True, True, False)
-	Sleep(400)	' Min 400 ms. Let othe connection close properly!
+	If CloseOtherConnection(WhichDeviceConnection)  = True Then
+		Sleep(500)	' Min 400 ms. Let other open connection close properly!
+	End If
 	
 	Dim c As Socket
 	c.Initialize("client")
@@ -702,12 +709,13 @@ Private Sub btnOpenUSBTTL_Click
 	If btnOpenUSBTTL.Text = "Open Port" Then
 		OpenUSBTLL
 	Else
-		PerformUserAbort(DEVICE_TTLSERIAL, False)
+		PerformUserAbort(BUTTON_TTLSERIAL, WhichDeviceConnection, False)
 	End If
 End Sub
 Private Sub OpenUSBTLL
-	CloseOtherConnection(True, True, False, True)
-	Sleep(400)	' Min 400 ms. Let othe connection close properly!
+	If CloseOtherConnection(WhichDeviceConnection)  = True Then
+		Sleep(500)	' Min 400 ms. Let other open connection close properly!
+	End If
 	
 	Try
 		Dim serial1 As Serial
@@ -774,40 +782,42 @@ Private Sub TabPane1_TabChanged (SelectedTab As TabPage)
 	ListView1HM10.Items.Clear
 End Sub
 
-Sub CloseOtherConnection(BLE As Boolean, SSP As Boolean, TTLUSB As Boolean, WIFI As Boolean)
+Sub CloseOtherConnection(WhichDevice As Int) As Boolean
 	' You cant use this when flashing is in progress due to tabpane1 disabled! 
 	' Only useful for switching from one connection device to another. Making sure all connection is closed 
 	' before opening new connection.  Switching from BLE to SSP requires scan or Search, if not
 	' it will crash!
-	If TTLUSB = True Then
-		' Close TTL USB Serial
-		If btnOpenUSBTTL.Text = "Close Port" Then
-			PerformUserAbort(DEVICE_TTLSERIAL, False)
-		End If
+	
+	Dim State As Boolean = False
+	
+	' We can use WhichDevice but i prefer to look at the text!
+	' Close TTL USB Serial
+	If btnOpenUSBTTL.Text = "Close Port" Then
+		PerformUserAbort(BUTTON_TTLSERIAL, WhichDevice, False)
+		State = True
 	End If
 	
-	If SSP = True Then
-		' Close SSP
-		If btnConnectHC05.Text = "Disconnect" Then
-			PerformUserAbort(DEVICE_CLASSIC_BT, False)
-		End If
+	' Close SSP
+	If btnConnectHC05.Text = "Disconnect" Then
+		PerformUserAbort(BUTTON_CLASSIC_BT, WhichDevice, False)
+		State = True
+	End If
+
+	' Close BLE
+	If btnConnectHM10.Text = "Disconnect" Then
+		PerformUserAbort(BUTTON_BLE, WhichDevice, False)
+		State = True
+	End If
+
+	' Close BLE
+	If btnConnectWIFI.Text = "Disconnect" Then
+		PerformUserAbort(BUTTON_WIFI, WhichDevice, False)
+		State = True
 	End If
 	
-	If BLE = True Then	
-		' Close BLE
-		If btnConnectHM10.Text = "Disconnect" Then
-			PerformUserAbort(DEVICE_BLE, False)
-		End If
-	End If
-	
-	If WIFI = True Then
-		' Close BLE
-		If btnConnectWIFI.Text = "Disconnect" Then
-			PerformUserAbort(DEVICE_WIFI, False)
-		End If
-	End If
+	Return State
 End Sub
-Sub PerformUserAbort(WhichButton As Int, useMSGBox As Boolean)
+Sub PerformUserAbort(WhichButton As Int, WhichDevice As Int, useMSGBox As Boolean)
 	' 1. --- Confirm with User ---
 	' msgbox triggers only for Stop button pressed!
 	If btnFlash.Text = "Stop" And useMSGBox = True Then
@@ -827,7 +837,7 @@ Sub PerformUserAbort(WhichButton As Int, useMSGBox As Boolean)
 	If myPicStatus.blnStartFlashVerify Then
 		Dim CancelByte(1) As Byte
 		CancelByte(0) = 0xCA		
-		Select Case WhichDeviceConnection
+		Select Case WhichDevice
 			Case DEVICE_BLE
 				Dim rs As Object
 				rs = bkHM10Client.Write(BLE_useUUID, CancelByte)
@@ -850,23 +860,20 @@ Sub PerformUserAbort(WhichButton As Int, useMSGBox As Boolean)
 				Sleep(50)
 				astream.Write(CancelByte)
 		End Select
+		
 	End If
 
-	
-	' 3. --- Enable the functions ---
-	EnableFunction 
-	
-	' 4. --- Close the connection! ---
+	' 3. --- Close the connection! ---
 	' Only closes with Connection Device Button not Stop Button!
 	Select Case WhichButton
-		Case DEVICE_BLE
+		Case BUTTON_BLE
 			If bkHM10Client.IsInitialized Then
 				bkHM10Client.Disconnect
 				LogMessage("STATUS", "BLE Disconnected")
 				btnConnectHM10.Text = "Connect"
 			End If
 			
-		Case DEVICE_CLASSIC_BT
+		Case BUTTON_CLASSIC_BT
 			If astream.IsInitialized Then
 				astream.Close
 				btHC05Connection.Disconnect
@@ -874,7 +881,7 @@ Sub PerformUserAbort(WhichButton As Int, useMSGBox As Boolean)
 			End If
 			btnConnectHC05.Text = "Connect"
 			
-		Case DEVICE_WIFI
+		Case BUTTON_WIFI
 			If astream.IsInitialized Then
 				astream.Close
 				If WIFIClient.Connected = True Then
@@ -884,7 +891,7 @@ Sub PerformUserAbort(WhichButton As Int, useMSGBox As Boolean)
 			End If
 			btnConnectWIFI.Text = "Connect"
 			
-		Case DEVICE_TTLSERIAL
+		Case BUTTON_TTLSERIAL
 			If astream.IsInitialized Then
 				astream.Close
 				serialUSBTTL.Close
@@ -894,6 +901,15 @@ Sub PerformUserAbort(WhichButton As Int, useMSGBox As Boolean)
 			btnRefreshComUSBTTL.Enabled = True
 			
 	End Select
+	
+	
+	' 4. --- Enable the functions ---
+	If WhichButton = BUTTON_STOP Then
+		EnableFunction(False)
+	Else
+		EnableFunction(True)
+	End If
+	
 End Sub
 
 '--------------------------------------------------------
@@ -1092,12 +1108,34 @@ End Sub
 ' Start Handshake and Firmware Upload
 '--------------------------------------------------------
 Private Sub btnFlash_Click
-	ProcessFlashType(BUTTON_FLASH)
+	ProcessFlashType(BUTTON_FLASH, WhichDeviceConnection)
 End Sub
 Private Sub btnVerify_Click
-	ProcessFlashType(BUTTON_VERIFY)
+	ProcessFlashType(BUTTON_VERIFY, WhichDeviceConnection)
 End Sub
-Sub SendHandShakeBytes(WhichButton As Int)
+Sub ProcessFlashType(WhichButton As Int, WhichDevice As Int)
+	' Check if configuration .map available
+	If cmbPicList.Items.Size = 0 Then
+		xui.Msgbox2Async("Configuration is missing!", "Configuration", "Ok", "", "", Null)
+		' Validation Checks
+		'Else If btnConnectHC05.Text = "Connect" And btnOpenUSBTTL.Text = "Open Port" And btnConnectHM10.Text = "Connect"  And btnConnectWIFI.Text = "Connect" Then
+	Else If WhichDevice = DEVICE_NONE Then
+		xui.Msgbox2Async("Please connect or open port!", "Connection Required!", "Ok", "", "", Null)
+		' Flashing Logic
+	Else If btnFlash.Text = "Flash" Then
+		Dim sf2 As Object = xui.Msgbox2Async("If the PIC application is running, it will enter bootloader mode automatically. " & _
+  											 "If not, please click OK and then power cycle.", _
+                                      		 "Attention!", "Ok", "Cancel", "", Null)
+		Wait For (sf2) Msgbox_Result(ret As Int)
+		If ret = xui.DialogResponse_Positive Then
+			SendHandShakeBytes(WhichButton, WhichDevice)
+		End If
+		' Flash Stop Logic
+	Else If btnFlash.Text = "Stop" Then
+		PerformUserAbort(BUTTON_STOP, WhichDevice, True)
+	End If
+End Sub
+Sub SendHandShakeBytes(WhichButton As Int, WhichDevice As Int)
 	Dim rs As Object
 	Dim blnToggle As Boolean
 	Dim b() As Byte = Array As Byte(0x55)
@@ -1108,19 +1146,18 @@ Sub SendHandShakeBytes(WhichButton As Int)
 	Do While True
 		' Status boolean
 		If isOperationFailed = True Then 
-			EnableFunction
 			Return
 		End If
 		
 		' Exit and Start Config upload
 		If myPicStatus.blnHandShakeSuccess = True Then
 			Sleep(300) ' give firmware time to call ReceiveConfig.
-			SendConfigBytes(WhichButton)
+			SendConfigBytes(WhichButton, WhichDevice)
 			Return
 		Else
 			If blnToggle = False Then
 				' BLE
-				If WhichDeviceConnection = DEVICE_BLE Then
+				If WhichDevice = DEVICE_BLE Then
 					rs = bkHM10Client.Write(BLE_useUUID, b)
 					Wait For (rs) Complete (Result2 As PyWrapper)
 				' OTHERS (SSP, WIFI and TTL USB)
@@ -1130,7 +1167,7 @@ Sub SendHandShakeBytes(WhichButton As Int)
 				LogMessage("HANDSHAKE", "Sending: 0x55")
 			Else
 				' BLE
-				If WhichDeviceConnection = DEVICE_BLE Then
+				If WhichDevice = DEVICE_BLE Then
 					rs = bkHM10Client.Write(BLE_useUUID, b2)
 					Wait For (rs) Complete (Result2 As PyWrapper)
 				' OTHERS (SSP, WIFI and TTL USB)
@@ -1148,7 +1185,7 @@ Sub SendHandShakeBytes(WhichButton As Int)
 		blnToggle = Not(blnToggle)
 	Loop
 End Sub
-Sub SendConfigBytes(WhichButton As Int)
+Sub SendConfigBytes(WhichButton As Int, WhichDevice As Int)
 	' One time shot. The PIC will be ready to poll!
 	' Byte 1: 		0x01 = BLE
 	'				0x02 = BT Classic
@@ -1157,8 +1194,8 @@ Sub SendConfigBytes(WhichButton As Int)
 	' Byte 2 and 3: 0x00 and 0x14 = 16Bit Number MTU Size
 	' Byte 4: 		0x00 = Flash and Verify Byte for Byte
 	'				0x01 = Flash and Verify Checksum
-	' 				0x02 = Verify Byte for Byte only (Future Reserved)
-	' 				0x03 = Verify Checksum only (Future Reserved)
+	' 				0x02 = Verify Byte for Byte only
+	' 				0x03 = Verify Checksum only
 	
 	Dim rs As Object
 	Dim byteONE(1), byteTWO(1), byteTHREE(1), byteFourth(1) As Byte
@@ -1195,7 +1232,7 @@ Sub SendConfigBytes(WhichButton As Int)
 	End If
 
 	' BLE
-	If WhichDeviceConnection = DEVICE_BLE Then
+	If WhichDevice = DEVICE_BLE Then
 		rs = bkHM10Client.Write(BLE_useUUID, byteONE)
 		Wait For (rs) Complete (Result2 As PyWrapper)
 		Sleep(50)
@@ -1225,14 +1262,13 @@ Sub SendConfigBytes(WhichButton As Int)
 					
 	Do While myPicStatus.blnConfigOK = False
 		If isOperationFailed = True Then
-			EnableFunction
 			Return
 		End If
 		Sleep(50)
 	Loop
 		
 End Sub
-Sub SendFirmwareBytes
+Sub SendFirmwareBytes(WhichDevice As Int)
 	' Firmware Binary file must include all flash data including empty addresses!
 	Dim intBlockSize As Int
 	
@@ -1265,14 +1301,12 @@ Sub SendFirmwareBytes
 
 		' Check for global abort
 		If isOperationFailed = True Then
-			EnableFunction
 			Return
 		End If
 
 		' Wait for ACK or handle timeout
 		Do While myPicStatus.blnWriteACK = False
 			If isOperationFailed = True Then
-				EnableFunction
 				Return
 			End If
 
@@ -1298,7 +1332,7 @@ Sub SendFirmwareBytes
 				'------------------------------------------------------------------------
 				' BLE (Never configure .map to use this!
 				'------------------------------------------------------------------------
-				If WhichDeviceConnection = DEVICE_BLE Then
+				If WhichDevice = DEVICE_BLE Then
 					rs = bkHM10Client.WriteWithResponse(BLE_useUUID, b, False)
 					Wait For (rs) Complete (Result2 As PyWrapper)
 				'------------------------------------------------------------------------
@@ -1318,7 +1352,7 @@ Sub SendFirmwareBytes
 			'-----------------------------------------------------------------------------
 			' BLE
 			'-----------------------------------------------------------------------------
-			If WhichDeviceConnection = DEVICE_BLE Then
+			If WhichDevice = DEVICE_BLE Then
 				' BLE Flash Write is supported by MTU Size requested
 				' Need to test HM-20 supports over 400 mtu size!  
 				' HM-10 tested at 20 mtu really sucks!
@@ -1360,40 +1394,23 @@ Sub SendFirmwareBytes
 
 	LogMessage("FIRMWAREUPLOAD", "Firmware upload completed!")
 End Sub
-Sub ProcessFlashType(WhichButton As Int)
-	' Check if configuration .map available
-	If cmbPicList.Items.Size = 0 Then
-		xui.Msgbox2Async("Configuration is missing!", "Configuration", "Ok", "", "", Null)
-		' Validation Checks
-	Else If btnConnectHC05.Text = "Connect" And btnOpenUSBTTL.Text = "Open Port" And btnConnectHM10.Text = "Connect"  And btnConnectWIFI.Text = "Connect" Then
-		xui.Msgbox2Async("Please connect or open port!", "Connection Required!", "Ok", "", "", Null)
-		' Flashing Logic
-	Else If btnFlash.Text = "Flash" Then
-		Dim sf2 As Object = xui.Msgbox2Async("If the PIC application is running, it will enter bootloader mode automatically. " & _
-  											 "If not, please click OK and then power cycle.", _
-                                      		 "Attention!", "Ok", "Cancel", "", Null)
-		Wait For (sf2) Msgbox_Result(ret As Int)
-		If ret = xui.DialogResponse_Positive Then
-			SendHandShakeBytes(WhichButton)
-		End If
-		' Flash Stop Logic
-	Else If btnFlash.Text = "Stop" Then
-		PerformUserAbort(DEVICE_NONE, True)
-	End If
-End Sub
+
 Sub isOperationFailed As Boolean
 	' PIC reported timeout error (Handshake does not have this!)
 	If myPicStatus.blnTimeoutError = True Then
+		EnableFunction(False)
 		Return True
 	End If
 		
 	' Astream error or terminated
 	If myPicStatus.blnAstreamError = True Then
+		EnableFunction(True)
 		Return True
 	End If
 		
 	' Stop or Quit Detected
 	If myPicStatus.blnUserCancel = True Then
+		EnableFunction(False)
 		Return True
 	End If
 	
@@ -1480,7 +1497,7 @@ Sub DisableFunction
 	prgBar.Progress = 0		
 	
 End Sub
-Sub EnableFunction
+Sub EnableFunction(ResetConnectionState As Boolean)
 	' Buttons enabled and restore color
 	MenuBar1.Enabled = True
 	TabPane1.Enabled = True
@@ -1491,6 +1508,10 @@ Sub EnableFunction
 	btnFlash.Text = "Flash"
 	
 	myPicStatus.blnUserCancel = True
+	
+	If ResetConnectionState = True Then
+		WhichDeviceConnection = DEVICE_NONE
+	End If
 End Sub
 
 '--------------------------------------------------------
