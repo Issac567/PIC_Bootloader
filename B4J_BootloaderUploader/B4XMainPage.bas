@@ -32,7 +32,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Const VERSION As String = "12.40"
+	Private Const VERSION As String = "12.41"
 	
 	Private Const CONFIG_MAP As String = "config.map"
 	Private Const FLASH_BIN As String = "flash.bin"
@@ -316,6 +316,7 @@ Sub astream_Terminated
 		serialUSBTTL.Close
 		btHC05Connection.Disconnect
 	End If
+	EnableFunction(True)
 	LogMessage("STATUS", "Astream is terminated!")
 End Sub
 
@@ -332,7 +333,7 @@ Private Sub btHC05_DiscoveryFinished
 	If ListView1HC05.Items.Size > 0 Then 
 		btnConnectHC05.Enabled = True
 	End If
-	LogMessage("BLUETOOTH", "Discovery completed")
+	LogMessage("BT SPP", "Discovery completed")
 End Sub
 
 '--------------------------------------------------------
@@ -357,7 +358,8 @@ Private Sub btHM10_DeviceFound (Device As BleakDevice)
 	
 End Sub
 Private Sub btHM10_DeviceDisconnected (DeviceId As String)
-	LogMessage("STATUS", "BLE Disconnected! @ " & DeviceId)
+	EnableFunction(True)
+	LogMessage("BLE", "BLE Disconnected! @ " & DeviceId)
 End Sub
 Private Sub btHM10_CharNotify (Notification As BleakNotification)
 	Dim Buffer() As Byte = Notification.Value
@@ -509,7 +511,7 @@ Private Sub btnSearchHC05_Click
 			foundDevices.Clear
 			btnSearchHC05.Enabled = False
 			btnConnectHC05.Enabled = False
-			LogMessage("BLUETOOTH", "Searching, please wait...")
+			LogMessage("BT SPP", "Searching, please wait...")
 		Else
 			Log("Error starting discovery")
 		End If
@@ -540,7 +542,7 @@ Private Sub ConnectHC05
 		' Connect Bluetooth with Address selected from listview
 		Dim address As String = foundDevices.Get(ListView1HC05.SelectedItem)
 		btHC05.Connect(address)
-		LogMessage("STATUS", "Connecting to " & ListView1HC05.SelectedItem & "...")
+		LogMessage("BT SPP", "Connecting to " & ListView1HC05.SelectedItem & "...")
 		wait for btHC05_Connected (Success As Boolean, connection As BluetoothConnection)
 		btHC05Connection = connection
 		If Success Then
@@ -548,10 +550,10 @@ Private Sub ConnectHC05
 			astream.Initialize(connection.InputStream, connection.OutputStream, "astream")
 			WhichDeviceConnection = DEVICE_CLASSIC_BT
 			btnConnectHC05.Text = "Disconnect"
-			LogMessage("STATUS", "Bluetooth Connected! @ " & address)
-			LogMessage("STATUS", "Ready Flash")
+			LogMessage("BT SPP", "Bluetooth Connected! @ " & address)
+			LogMessage("BT SPP", "Ready Flash")
 		Else
-			LogMessage("STATUS", "Bluetooth Failed! @ " & address)
+			LogMessage("BT SPP", "Bluetooth Failed! @ " & address)
 		End If
 	Else
 		xui.Msgbox2Async("Please select Bluetooth fom the list!", "Select Bluetooth", "Ok", "", "", Null)
@@ -568,7 +570,7 @@ Private Sub btnStartScanHM10_Click
 			foundDevices.Clear
 			btnStartScanHM10.Enabled = False
 			btnStopScanHM10.Enabled = True
-			LogMessage("BLUETOOTH", "Searching, please wait...")
+			LogMessage("BLE", "Searching, please wait...")
 		Else
 			LogMessage("Python", Py.PyLastException)
 		End If
@@ -581,7 +583,7 @@ Private Sub btnStopScanHM10_Click
 	btnStopScanHM10.Enabled = False
 	If btHM10.IsScanning = True Then
 		btHM10.StopScan
-		LogMessage("BLUETOOTH", "Scan has stopped")
+		LogMessage("BLE", "Scan has stopped")
 	End If
 End Sub
 Private Sub btnConnectHM10_Click
@@ -609,7 +611,7 @@ Private Sub ConnectHM10
 		' Connect Bluetooth with Address selected from listview
 		Dim address As String = ListView1HM10.SelectedItem
 		bkHM10Client = btHM10.CreateClient(foundDevices.Get(address))
-		LogMessage("STATUS", "Connecting to " & ListView1HM10.SelectedItem & "...")
+		LogMessage("BLE", "Connecting to " & ListView1HM10.SelectedItem & "...")
 		Wait For (bkHM10Client.Connect) Complete (Success As Boolean)
 		If Success Then
 				
@@ -629,13 +631,13 @@ Private Sub ConnectHM10
 			Log("Negotiated MTU: " & RawMTU)
 			Log("Payload MTU (MTU-3): " & PayloadMTU)
 			Log("Universal MTU for PIC: " & UniversalMTU)
-			LogMessage("BLUETOOTH", "MTU Size = " & UniversalMTU)
+			LogMessage("BLE", "MTU Size = " & UniversalMTU)
 			'-----------------------------------------------------------------
 				
 			WhichDeviceConnection = DEVICE_BLE
 			btnConnectHM10.Text = "Disconnect"
 			btnStopScanHM10_Click
-			LogMessage("STATUS", "Bluetooth Connected! @ " & address)
+			LogMessage("BLE", "Bluetooth Connected! @ " & address)
 			For Each service As BleakService In bkHM10Client.Services.Values
 				Log("---------------------------------")
 				Log("Service: " & service.UUID)
@@ -646,21 +648,21 @@ Private Sub ConnectHM10
 						BLE_useUUID = Chara.UUID
 						Wait For (bkHM10Client.SetNotify(BLE_useUUID)) Complete (Result As PyWrapper)
 						If Result.IsSuccess = False Then
-							LogMessage("BLUETOOTH", "Failed to set notify!")
+							LogMessage("BLE", "Failed to set notify!")
 						Else
-							LogMessage("BLUETOOTH", "Notify set @ " & BLE_useUUID)
-							LogMessage("Status", "Ready Flash")
+							LogMessage("BLE", "Notify set @ " & BLE_useUUID)
+							LogMessage("BLE", "Ready Flash")
 						End If
 					End If
 				Next
 			Next
 				
 			If BLE_useUUID = "" Then
-				LogMessage("BLUETOOTH", "Characteristic UUID not found!")
+				LogMessage("BLE", "Characteristic UUID not found!")
 			End If
 		Else
 			Log(Py.PyLastException)
-			LogMessage("STATUS", "Bluetooth Failed! @ " & address)
+			LogMessage("BLE", "Bluetooth Failed! @ " & address)
 		End If
 	Else
 		xui.Msgbox2Async("Please select Bluetooth fom the list!", "Select Bluetooth", "Ok", "", "", Null)
@@ -683,17 +685,17 @@ Private Sub ConnectWIFI
 	Dim c As Socket
 	c.Initialize("client")
 	c.Connect(txtHostIPWIFI.text, txtPortWIFI.text, 5000)
-	LogMessage("STATUS", "Connecting @ " & txtHostIPWIFI.Text & ":" & txtPortWIFI.Text)
+	LogMessage("WIFI", "Connecting @ " & txtHostIPWIFI.Text & ":" & txtPortWIFI.Text)
 	Wait For client_Connected (Successful As Boolean)
 	If Successful Then
 		WIFIClient = c
 		astream.Initialize(WIFIClient.InputStream, WIFIClient.OutputStream, "astream")
 		WhichDeviceConnection = DEVICE_WIFI
 		btnConnectWIFI.Text = "Disconnect"
-		LogMessage("STATUS", "WIFI connected!")
-		LogMessage("Status", "Ready Flash")
+		LogMessage("WIFI", "WIFI connected!")
+		LogMessage("WIFI", "Ready Flash")
 	Else
-		LogMessage("STATUS", "WIFI connection failed!")
+		LogMessage("WIFI", "WIFI connection failed!")
 	End If
 End Sub
 
@@ -726,14 +728,14 @@ Private Sub OpenUSBTLL
 		astream.Initialize(serial1.GetInputStream, serial1.GetOutputStream, "astream")
 		serialUSBTTL = serial1
 	Catch
-		LogMessage("STATUS", "Error opening port" & LastException)
+		LogMessage("COM", "Error opening port" & LastException)
 		Return
 	End Try
 	WhichDeviceConnection = DEVICE_TTLSERIAL
 	btnOpenUSBTTL.Text = "Close Port"
 	btnRefreshComUSBTTL.Enabled = False
-	LogMessage("STATUS", "Serial COM opened")
-	LogMessage("Status", "Ready Flash")
+	LogMessage("COM", "Serial COM opened")
+	LogMessage("COM", "Ready Flash")
 End Sub
 
 Private Sub cmbPicList_SelectedIndexChanged(Index As Int, Value As Object)
@@ -869,37 +871,32 @@ Sub PerformUserAbort(WhichButton As Int, WhichDevice As Int, useMSGBox As Boolea
 		Case BUTTON_BLE
 			If bkHM10Client.IsInitialized Then
 				bkHM10Client.Disconnect
-				LogMessage("STATUS", "BLE Disconnected")
-				btnConnectHM10.Text = "Connect"
+				LogMessage("BLE", "BLE Disconnected")
 			End If
 			
 		Case BUTTON_CLASSIC_BT
 			If astream.IsInitialized Then
 				astream.Close
 				btHC05Connection.Disconnect
-				LogMessage("STATUS", "BT SSP Disconnected")
+				LogMessage("BT SPP", "BT SSP Disconnected")
 			End If
-			btnConnectHC05.Text = "Connect"
-			
+		
 		Case BUTTON_WIFI
 			If astream.IsInitialized Then
 				astream.Close
 				If WIFIClient.Connected = True Then
 					WIFIClient.Close
 				End If
-				LogMessage("STATUS", "WIFI Disconnected")
+				LogMessage("WIFI", "WIFI Disconnected")
 			End If
-			btnConnectWIFI.Text = "Connect"
-			
+		
 		Case BUTTON_TTLSERIAL
 			If astream.IsInitialized Then
 				astream.Close
 				serialUSBTTL.Close
-				LogMessage("STATUS", "Serial COM closed")
+				LogMessage("COM", "Serial COM closed")
 			End If
-			btnOpenUSBTTL.Text = "Open Port"
-			btnRefreshComUSBTTL.Enabled = True
-			
+				
 	End Select
 	
 	
@@ -1511,6 +1508,11 @@ Sub EnableFunction(ResetConnectionState As Boolean)
 	
 	If ResetConnectionState = True Then
 		WhichDeviceConnection = DEVICE_NONE
+		btnConnectHM10.Text = "Connect"
+		btnConnectHC05.Text = "Connect"
+		btnConnectWIFI.Text = "Connect"
+		btnOpenUSBTTL.Text = "Open Port"
+		btnRefreshComUSBTTL.Enabled = True
 	End If
 End Sub
 
