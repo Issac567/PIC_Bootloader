@@ -10,3 +10,13 @@
 .check-box {
   -fx-text-fill: black;
 }
+
+.text-field:disabled {
+  -fx-text-fill: #808080;
+  -fx-text-inner-color: #808080;
+}
+
+.text-field {
+  -fx-text-fill: black;
+  -fx-text-inner-color: black;
+}

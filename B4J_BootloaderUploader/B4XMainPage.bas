@@ -1350,11 +1350,13 @@ Sub SendFirmwareBytes(WhichDevice As Int)
 				' HM-10 tested at 20 mtu really sucks!
 				Dim bc As ByteConverter
 				Dim chunkSize As Int = Max(20, BLE_useMTUSize)
-
+				
+				' Write intBlockSize
 				If intBlockSize <= chunkSize Then
 					' Send block at once if it fits within MTU Size limits
 					rs = bkHM10Client.WriteWithResponse(BLE_useUUID, block, False)
 					Wait For (rs) Complete (Result2 As PyWrapper)
+				' Write fragment of intBlockSize
 				Else
 					' Fragment the block because its larger than the MTU Size
 					For x = 0 To intBlockSize - 1 Step chunkSize
