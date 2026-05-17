@@ -32,7 +32,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Const VERSION As String = "12.41"
+	Private Const VERSION As String = "12.42"
 	
 	Private Const CONFIG_MAP As String = "config.map"
 	Private Const FLASH_BIN As String = "flash.bin"
@@ -790,34 +790,29 @@ Sub CloseOtherConnection(WhichDevice As Int) As Boolean
 	' before opening new connection.  Switching from BLE to SSP requires scan or Search, if not
 	' it will crash!
 	
-	Dim State As Boolean = False
-	
-	' We can use WhichDevice but i prefer to look at the text!
 	' Close TTL USB Serial
-	If btnOpenUSBTTL.Text = "Close Port" Then
+	If WhichDevice = DEVICE_TTLSERIAL Then
 		PerformUserAbort(BUTTON_TTLSERIAL, WhichDevice, False)
-		State = True
-	End If
+		Return True
 	
 	' Close SSP
-	If btnConnectHC05.Text = "Disconnect" Then
+	Else If WhichDevice = DEVICE_CLASSIC_BT Then
 		PerformUserAbort(BUTTON_CLASSIC_BT, WhichDevice, False)
-		State = True
-	End If
+		Return True
 
 	' Close BLE
-	If btnConnectHM10.Text = "Disconnect" Then
+	Else If WhichDevice = DEVICE_BLE Then
 		PerformUserAbort(BUTTON_BLE, WhichDevice, False)
-		State = True
-	End If
+		Return True
 
-	' Close BLE
-	If btnConnectWIFI.Text = "Disconnect" Then
+	' Close WIFI
+	Else If WhichDevice = DEVICE_WIFI Then
 		PerformUserAbort(BUTTON_WIFI, WhichDevice, False)
-		State = True
+		Return True
+		
 	End If
 	
-	Return State
+	Return False
 End Sub
 Sub PerformUserAbort(WhichButton As Int, WhichDevice As Int, useMSGBox As Boolean)
 	' 1. --- Confirm with User ---
