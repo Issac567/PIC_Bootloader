@@ -1598,10 +1598,10 @@ Sub LoadConfiguration(SelectedPicName As String) As Boolean
 						chkCheckSum.Checked = myConfigMap.blnUseCheckSum
 						
 						' If port already open update stop bit parameter!
-						If btnOpenUSBTTL.Text = "Close Port" Then
+						If WhichDeviceConnection = DEVICE_TTLSERIAL Then
 							LogMessage("Status", "Reapplying Parameters to Serial Com")
-							btnOpenUSBTTL_Click ' Close
-							btnOpenUSBTTL_Click ' Open
+							PerformUserAbort(BUTTON_TTLSERIAL, WhichDeviceConnection, False) ' close
+							OpenUSBTLL ' open
 						End If
 						
 						LogMessage("", "---------------------------------------------------------")
