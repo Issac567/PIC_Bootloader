@@ -32,7 +32,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Const VERSION As String = "12.51"
+	Private Const VERSION As String = "12.52"
 	
 	Private Const CONFIG_MAP As String = "config.map"		' For ESP32 Uploader
 	Private Const FLASH_BIN As String = "flash.bin"			' For ESP32 Uploader
@@ -52,7 +52,7 @@ Sub Class_Globals
 	Private Const BUTTON_TTLSERIAL As Int = 6
 	Private Const BUTTON_STOP As Int = 7
 	
-	' If Button labels are changed, update them here!
+	' If Button labels need changing, update them here, too!
 	Private Const txt_CONNECT As String = "Connect"
 	Private Const txt_DISCONNECT As String = "Disconnect"
 	Private Const txt_OPEN_PORT As String = "Open Port"
@@ -758,22 +758,22 @@ Private Sub MenuBar1_Action
 		' Help
 		Case "Help TTL _USB"
 			Dim fx As JFX
-			fx.ShowExternalDocument("https://github.com/Issac567/PIC_Bootloader/blob/main/B4J_BootloaderUploader/Help/TTLUSBReadme.md")
+			fx.ShowExternalDocument("https://github.com/ElectronicFan/PIC_Bootloader/blob/main/B4J_BootloaderUploader/Help/TTLUSBReadme.md")
 		Case "Help HC-0_5"
 			Dim fx As JFX
-			fx.ShowExternalDocument("https://github.com/Issac567/PIC_Bootloader/blob/main/B4J_BootloaderUploader/Help/HC05Readme.md")
+			fx.ShowExternalDocument("https://github.com/ElectronicFan/PIC_Bootloader/blob/main/B4J_BootloaderUploader/Help/HC05Readme.md")
 		Case "Help HM-1_0"
 			Dim fx As JFX
-			fx.ShowExternalDocument("https://github.com/Issac567/PIC_Bootloader/blob/main/B4J_BootloaderUploader/Help/HC08Readme.md")
+			fx.ShowExternalDocument("https://github.com/ElectronicFan/PIC_Bootloader/blob/main/B4J_BootloaderUploader/Help/HC08Readme.md")
 		Case "Help DT-0_6"
 			Dim fx As JFX
-			fx.ShowExternalDocument("https://github.com/Issac567/PIC_Bootloader/blob/main/B4J_BootloaderUploader/Help/DT06Readme.md")
+			fx.ShowExternalDocument("https://github.com/ElectronicFan/PIC_Bootloader/blob/main/B4J_BootloaderUploader/Help/DT06Readme.md")
 		Case "Help _Bleak"
 			Dim fx As JFX
-			fx.ShowExternalDocument("https://github.com/Issac567/PIC_Bootloader/blob/main/B4J_BootloaderUploader/Help/BleakReadme.md")
+			fx.ShowExternalDocument("https://github.com/ElectronicFan/PIC_Bootloader/blob/main/B4J_BootloaderUploader/Help/BleakReadme.md")
 		Case "Help AT _Mode"
 			Dim fx As JFX
-			fx.ShowExternalDocument("https://github.com/Issac567/PIC_Bootloader/blob/main/B4J_BootloaderUploader/Help/ATMode.md")
+			fx.ShowExternalDocument("https://github.com/ElectronicFan/PIC_Bootloader/blob/main/B4J_BootloaderUploader/Help/ATMode.md")
 		Case "_About"
 			xui.Msgbox2Async("Bootloader Uploader Deluxe" & Chr(10) & "Version: " & VERSION, "About", "Ok", "", "", Null)
 	
