@@ -32,10 +32,10 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Const VERSION As String = "12.42"
+	Private Const VERSION As String = "12.43"
 	
-	Private Const CONFIG_MAP As String = "config.map"
-	Private Const FLASH_BIN As String = "flash.bin"
+	Private Const CONFIG_MAP As String = "config.map"		' For ESP32 Uploader
+	Private Const FLASH_BIN As String = "flash.bin"			' For ESP32 Uploader
 	
 	Private Const DEVICE_NONE As Int = 0
 	Private Const DEVICE_BLE As Int = 1
@@ -181,7 +181,7 @@ Private Sub B4XPage_Created (Root1 As B4XView)
 	TabPane1.LoadLayout("TabPane1", "Bluetooth HC-05")
 	TabPane1.LoadLayout("TabPane3", "Bluetooth HM-10")
 	TabPane1.LoadLayout("TabPane2", "Serial Com - TTL USB")
-	TabPane1.LoadLayout("TabPane4", "WIFI DT-06")		'DROP SUPPORT!
+	TabPane1.LoadLayout("TabPane4", "WIFI DT-06")	
 	
 	'B4XPages.AddPageAndCreate("AT Command Mode", ATCommandMode)
 	B4XPages.AddPage("AT Command Mode", ATCommandMode)
@@ -337,7 +337,7 @@ Private Sub btHC05_DiscoveryFinished
 End Sub
 
 '--------------------------------------------------------
-' HM-10 Bluetooth BLE Routine
+' HM-10/20 Bluetooth BLE Routine
 '--------------------------------------------------------
 Private Sub btHM10_DeviceFound (Device As BleakDevice)
 	'Log($"${Device.DeviceId}, Name=${Device.Name}, Services=${Device.ServiceUUIDS}, ServiceData=${Device.ServiceData}"$)
@@ -780,6 +780,7 @@ Private Sub MenuBar1_Action
 End Sub
 
 Private Sub TabPane1_TabChanged (SelectedTab As TabPage)
+	' Switching from BLE to SSP requires scan or Search, if not it will crash!
 	ListView1HC05.Items.Clear
 	ListView1HM10.Items.Clear
 End Sub
@@ -787,8 +788,7 @@ End Sub
 Sub CloseOtherConnection(WhichDevice As Int) As Boolean
 	' You cant use this when flashing is in progress due to tabpane1 disabled! 
 	' Only useful for switching from one connection device to another. Making sure all connection is closed 
-	' before opening new connection.  Switching from BLE to SSP requires scan or Search, if not
-	' it will crash!
+	' before opening new connection. 
 	
 	' Close TTL USB Serial
 	If WhichDevice = DEVICE_TTLSERIAL Then
@@ -817,7 +817,7 @@ End Sub
 Sub PerformUserAbort(WhichButton As Int, WhichDevice As Int, useMSGBox As Boolean)
 	' 1. --- Confirm with User ---
 	' msgbox triggers only for Stop button pressed!
-	If btnFlash.Text = "Stop" And useMSGBox = True Then
+	If WhichButton = BUTTON_STOP And useMSGBox = True Then
 		Dim sf3 As Object = xui.Msgbox2Async("Flash in progress! Do you want to stop?", "Flashing", "Yes", "", "No", Null)
 		Wait For (sf3) Msgbox_Result(ret2 As Int)
 		If ret2 = xui.DialogResponse_Positive Then
@@ -1100,21 +1100,24 @@ End Sub
 ' Start Handshake and Firmware Upload
 '--------------------------------------------------------
 Private Sub btnFlash_Click
-	ProcessFlashType(BUTTON_FLASH, WhichDeviceConnection)
+	If btnFlash.Text = "Flash" Then
+		ProcessFlashType(BUTTON_FLASH, WhichDeviceConnection)
+	Else
+		ProcessFlashType(BUTTON_STOP, WhichDeviceConnection)
+	End If
 End Sub
 Private Sub btnVerify_Click
 	ProcessFlashType(BUTTON_VERIFY, WhichDeviceConnection)
 End Sub
 Sub ProcessFlashType(WhichButton As Int, WhichDevice As Int)
-	' Check if configuration .map available
+		' Check if configuration .map available
 	If cmbPicList.Items.Size = 0 Then
 		xui.Msgbox2Async("Configuration is missing!", "Configuration", "Ok", "", "", Null)
-		' Validation Checks
-		'Else If btnConnectHC05.Text = "Connect" And btnOpenUSBTTL.Text = "Open Port" And btnConnectHM10.Text = "Connect"  And btnConnectWIFI.Text = "Connect" Then
+		' Make sure there is connection established
 	Else If WhichDevice = DEVICE_NONE Then
 		xui.Msgbox2Async("Please connect or open port!", "Connection Required!", "Ok", "", "", Null)
-		' Flashing Logic
-	Else If btnFlash.Text = "Flash" Then
+		' Flashing/Verifying Logic
+	Else If WhichButton = BUTTON_FLASH Then
 		Dim sf2 As Object = xui.Msgbox2Async("If the PIC application is running, it will enter bootloader mode automatically. " & _
   											 "If not, please click OK and then power cycle.", _
                                       		 "Attention!", "Ok", "Cancel", "", Null)
@@ -1123,8 +1126,8 @@ Sub ProcessFlashType(WhichButton As Int, WhichDevice As Int)
 			SendHandShakeBytes(WhichButton, WhichDevice)
 		End If
 		' Flash Stop Logic
-	Else If btnFlash.Text = "Stop" Then
-		PerformUserAbort(BUTTON_STOP, WhichDevice, True)
+	Else If WhichButton = BUTTON_STOP Then 
+		PerformUserAbort(WhichButton, WhichDevice, True)
 	End If
 End Sub
 Sub SendHandShakeBytes(WhichButton As Int, WhichDevice As Int)
@@ -1421,7 +1424,7 @@ Sub VerifyStatus
 		LogMessage("STATUS", "Programming/Verify Failed!")
 	End If
 End Sub
-Sub CompareFirmware() As Boolean
+Sub CompareFirmware As Boolean
 	' Make sure both arrays are the same length
 	If firmwareFile.Length <> firmwareVerify.Length Then
 		Return False
@@ -1516,7 +1519,7 @@ End Sub
 '--------------------------------------------------------
 ' Load all Map files from /configs and return PicName list
 '--------------------------------------------------------
-Sub LoadAllPicNames() As List
+Sub LoadAllPicNames As List
 	Dim picList As List
 	picList.Initialize
     
