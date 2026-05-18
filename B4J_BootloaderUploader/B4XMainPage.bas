@@ -32,7 +32,7 @@ Version=9.85
 'Ctrl + click to export as zip: ide://run?File=%B4X%\Zipper.jar&Args=Project.zip
 
 Sub Class_Globals
-	Private Const VERSION As String = "12.43"
+	Private Const VERSION As String = "12.51"
 	
 	Private Const CONFIG_MAP As String = "config.map"		' For ESP32 Uploader
 	Private Const FLASH_BIN As String = "flash.bin"			' For ESP32 Uploader
@@ -51,6 +51,14 @@ Sub Class_Globals
 	Private Const BUTTON_WIFI As Int = 5
 	Private Const BUTTON_TTLSERIAL As Int = 6
 	Private Const BUTTON_STOP As Int = 7
+	
+	' If Button labels are changed, update them here!
+	Private Const txt_CONNECT As String = "Connect"
+	Private Const txt_DISCONNECT As String = "Disconnect"
+	Private Const txt_OPEN_PORT As String = "Open Port"
+	Private Const txt_CLOSE_PORT As String = "Close Port"
+	Private Const txt_STOP As String = "Stop"
+	Private Const txt_FLASH As String = "Flash"
 	
 	'---------------------------------------
 	' Map Config Variables
@@ -228,7 +236,7 @@ End Sub
 Private Sub B4XPage_CloseRequest As ResumableSub
 	
 	' Flash in progress alert user!
-	If btnFlash.Text = "Stop" Then
+	If btnFlash.Text = txt_STOP Then
 		Dim sf4 As Object = xui.Msgbox2Async("Flash in progress!", "Quit?", "Yes", "", "No", Null)
 		Wait For (sf4) Msgbox_Result(ret3 As Int)
 				
@@ -520,7 +528,7 @@ Private Sub btnSearchHC05_Click
 	End If
 End Sub
 Private Sub btnConnectHC05_Click
-	If btnConnectHC05.Text = "Connect" Then
+	If btnConnectHC05.Text = txt_CONNECT Then
 		ConnectHC05
 	Else
 		PerformUserAbort(BUTTON_CLASSIC_BT, WhichDeviceConnection, False)
@@ -549,7 +557,7 @@ Private Sub ConnectHC05
 			If astream.IsInitialized Then astream.Close
 			astream.Initialize(connection.InputStream, connection.OutputStream, "astream")
 			WhichDeviceConnection = DEVICE_CLASSIC_BT
-			btnConnectHC05.Text = "Disconnect"
+			btnConnectHC05.Text = txt_DISCONNECT
 			LogMessage("BT SPP", "Bluetooth Connected! @ " & address)
 			LogMessage("BT SPP", "Ready Flash")
 		Else
@@ -587,7 +595,7 @@ Private Sub btnStopScanHM10_Click
 	End If
 End Sub
 Private Sub btnConnectHM10_Click
-	If btnConnectHM10.Text = "Connect" Then
+	If btnConnectHM10.Text = txt_CONNECT Then
 		ConnectHM10
 	Else
 		PerformUserAbort(BUTTON_BLE, WhichDeviceConnection, False)
@@ -635,7 +643,7 @@ Private Sub ConnectHM10
 			'-----------------------------------------------------------------
 				
 			WhichDeviceConnection = DEVICE_BLE
-			btnConnectHM10.Text = "Disconnect"
+			btnConnectHM10.Text = txt_DISCONNECT
 			btnStopScanHM10_Click
 			LogMessage("BLE", "Bluetooth Connected! @ " & address)
 			For Each service As BleakService In bkHM10Client.Services.Values
@@ -670,7 +678,7 @@ Private Sub ConnectHM10
 End Sub
 
 Private Sub btnConnectWIFI_Click
-	If btnConnectWIFI.Text = "Connect" Then
+	If btnConnectWIFI.Text = txt_CONNECT Then
 		ConnectWIFI
 	Else
 		PerformUserAbort(BUTTON_WIFI, WhichDeviceConnection, False)
@@ -691,7 +699,7 @@ Private Sub ConnectWIFI
 		WIFIClient = c
 		astream.Initialize(WIFIClient.InputStream, WIFIClient.OutputStream, "astream")
 		WhichDeviceConnection = DEVICE_WIFI
-		btnConnectWIFI.Text = "Disconnect"
+		btnConnectWIFI.Text = txt_DISCONNECT
 		LogMessage("WIFI", "WIFI connected!")
 		LogMessage("WIFI", "Ready Flash")
 	Else
@@ -708,7 +716,7 @@ Private Sub cmbPortUSBTTL_SelectedIndexChanged(Index As Int, Value As Object)
 	btnOpenUSBTTL.Enabled = Index > -1 'enable the button if there is a selected item
 End Sub
 Private Sub btnOpenUSBTTL_Click
-	If btnOpenUSBTTL.Text = "Open Port" Then
+	If btnOpenUSBTTL.Text = txt_OPEN_PORT Then
 		OpenUSBTLL
 	Else
 		PerformUserAbort(BUTTON_TTLSERIAL, WhichDeviceConnection, False)
@@ -732,7 +740,7 @@ Private Sub OpenUSBTLL
 		Return
 	End Try
 	WhichDeviceConnection = DEVICE_TTLSERIAL
-	btnOpenUSBTTL.Text = "Close Port"
+	btnOpenUSBTTL.Text = txt_CLOSE_PORT
 	btnRefreshComUSBTTL.Enabled = False
 	LogMessage("COM", "Serial COM opened")
 	LogMessage("COM", "Ready Flash")
@@ -1100,7 +1108,7 @@ End Sub
 ' Start Handshake and Firmware Upload
 '--------------------------------------------------------
 Private Sub btnFlash_Click
-	If btnFlash.Text = "Flash" Then
+	If btnFlash.Text = txt_FLASH Then
 		ProcessFlashType(BUTTON_FLASH, WhichDeviceConnection)
 	Else
 		ProcessFlashType(BUTTON_STOP, WhichDeviceConnection)
@@ -1117,7 +1125,7 @@ Sub ProcessFlashType(WhichButton As Int, WhichDevice As Int)
 	Else If WhichDevice = DEVICE_NONE Then
 		xui.Msgbox2Async("Please connect or open port!", "Connection Required!", "Ok", "", "", Null)
 		' Flashing/Verifying Logic
-	Else If WhichButton = BUTTON_FLASH Then
+	Else If WhichButton = BUTTON_FLASH Or WhichButton = BUTTON_VERIFY Then
 		Dim sf2 As Object = xui.Msgbox2Async("If the PIC application is running, it will enter bootloader mode automatically. " & _
   											 "If not, please click OK and then power cycle.", _
                                       		 "Attention!", "Ok", "Cancel", "", Null)
@@ -1478,7 +1486,7 @@ Sub DisableFunction
 	cmbPicList.Enabled = False
 	chkCheckSum.Enabled = False
 	btnVerify.Visible = False
-	btnFlash.Text = "Stop"
+	btnFlash.Text = txt_STOP
 
 	' Reset myPicStatus
 	myPicStatus.blnUserCancel = False
@@ -1502,16 +1510,16 @@ Sub EnableFunction(ResetConnectionState As Boolean)
 	cmbPicList.Enabled = True
 	chkCheckSum.Enabled = True
 	btnVerify.Visible = True
-	btnFlash.Text = "Flash"
+	btnFlash.Text = txt_FLASH
 	
 	myPicStatus.blnUserCancel = True
 	
 	If ResetConnectionState = True Then
 		WhichDeviceConnection = DEVICE_NONE
-		btnConnectHM10.Text = "Connect"
-		btnConnectHC05.Text = "Connect"
-		btnConnectWIFI.Text = "Connect"
-		btnOpenUSBTTL.Text = "Open Port"
+		btnConnectHM10.Text = txt_CONNECT
+		btnConnectHC05.Text = txt_CONNECT
+		btnConnectWIFI.Text = txt_CONNECT
+		btnOpenUSBTTL.Text = txt_OPEN_PORT
 		btnRefreshComUSBTTL.Enabled = True
 	End If
 End Sub
